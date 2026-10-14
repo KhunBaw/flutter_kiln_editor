@@ -35,7 +35,7 @@ Kiln lets developers lay out game scenes visually, add behaviors in an Inspector
   - `packages/kiln`: runtime, scene model and built-in behaviors.
   - `apps/kiln_editor`: the editor.
   - `examples/tap_game`: sample game.
-- Scenes are data-driven. There is no code generation, and the scene format is versioned (`"kiln": 1`).
+- Scenes are data-driven. Code generation is minimal (typed names only, written by the editor on save or by `dart run kiln:types`; no build_runner), and the scene format is versioned (`"kiln": 1`).
 - Built-in behaviors: Shape, Sprite, Text, OnTap, Timer, Prefab, Spawner, Tween, Condition, Collider, OnCollide.
 - Built-in actions: AddVariable, SetVariable, Destroy, LoadScene, PlaySound.
 - Editor features:

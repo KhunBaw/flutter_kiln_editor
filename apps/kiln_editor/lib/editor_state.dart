@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Offset;
 import 'package:flame/components.dart' show Vector2;
 import 'package:kiln/kiln.dart';
+import 'package:kiln/types_gen.dart';
 
 /// Holds the scene being edited. Every mutation goes through [edit] so undo/redo covers it.
 class EditorState extends ChangeNotifier {
@@ -165,7 +166,9 @@ class EditorState extends ChangeNotifier {
     _reset(scene, file);
   }
 
-  Future<void> save([String? to]) async {
+  /// Saves the scene. Inside `<project>/assets/scenes/` it also refreshes `lib/kiln.g.dart`
+  /// (typed scene/event/variable names) and returns a note about it; a failed refresh never fails the save.
+  Future<String?> save([String? to]) async {
     final target = to ?? path;
     if (target == null) throw StateError('No file path');
     // shortcut: direct overwrite (macOS sandbox only grants the chosen file, so no temp+rename); a crash mid-write can truncate.
@@ -173,6 +176,19 @@ class EditorState extends ChangeNotifier {
     path = target;
     dirty = false;
     notifyListeners();
+    final dir = projectDir;
+    if (dir == null || !target.startsWith('$dir/assets/scenes/')) return null;
+    try {
+      final r = await writeProjectTypes(dir);
+      return [
+        if (r.written) 'types updated',
+        if (r.skipped.isNotEmpty) 'skipped unreadable: ${r.skipped.join(', ')}',
+      ].join(' · ');
+    } on StateError {
+      return null; // not a Dart project: nothing to generate
+    } catch (e) {
+      return 'types not updated: $e';
+    }
   }
 
   void _reset(SceneDoc scene, String? file) {

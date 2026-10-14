@@ -1,6 +1,6 @@
 # Kiln
 
-A small Unity-style scene editor for [Flame](https://flame-engine.org). Build a casual game in the editor, save it as a `.kiln.json` scene, and play it in any Flutter app with the `kiln` runtime package. No code generation.
+A small Unity-style scene editor for [Flame](https://flame-engine.org). Build a casual game in the editor, save it as a `.kiln.json` scene, and play it in any Flutter app with the `kiln` runtime package. The editor can also generate typed names (scenes, events, variables) for your app code; no build_runner.
 
 ```
 packages/kiln        runtime: scene model, KilnGame, built-in behaviors
@@ -34,6 +34,31 @@ examples/tap_game    sample game made only of scene files
    ```
 
 `LoadScene` actions switch the widget to another scene asset (use it for win/lose/retry screens). For full control, build the game yourself: `GameWidget(game: KilnGame(SceneDoc.fromJson(json)))`.
+
+## Connect your app
+
+Pass a `KilnController` to talk to the running game:
+
+```dart
+final c = KilnController(variables: {'lives': 5}, keepVariables: true);
+
+KilnGameWidget(
+  asset: KilnScenes.level1,
+  controller: c,
+  onEvent: (name, value) {
+    if (name == KilnEvents.win) showWin(c.vars.coins);
+  },
+)
+
+c.emit(KilnEvents.pause);        // app -> game: OnEvent behaviors react
+c.loadScene(KilnScenes.level1);  // switch scene
+```
+
+- Game to app: the `Emit` action (`event`, optional templated `value` like `{score}`) fires `onEvent` / `c.events`.
+- App to game: `c.emit(name, value)` runs `OnEvent` behaviors; set `store` on the behavior to keep `value` in a variable.
+- Variables: `c.vars` is a `ChangeNotifier`, so `ListenableBuilder` works. `variables:` overrides a scene's starting values.
+- `keepVariables: true` keeps one set of variables across `LoadScene` (a new scene only adds missing defaults). `ResetVariables` puts the current scene's variables back to defaults.
+- Typed names: saving a scene under `<project>/assets/scenes/` in the editor rewrites `lib/kiln.g.dart` (`KilnScenes`, `KilnEvents`, `KilnVars`). Without the editor: `dart run kiln:types`.
 
 ## Scene model
 

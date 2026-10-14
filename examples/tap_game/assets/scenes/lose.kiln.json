@@ -45,6 +45,19 @@
               }
             ]
           }
+        },
+        {
+          "type": "Timer",
+          "props": {
+            "interval": 0.01,
+            "repeat": false,
+            "actions": [
+              {
+                "type": "Emit",
+                "event": "lose"
+              }
+            ]
+          }
         }
       ],
       "children": []

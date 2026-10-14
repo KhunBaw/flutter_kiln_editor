@@ -5,7 +5,7 @@ import 'package:flame_test/flame_test.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiln/kiln.dart';
-import 'package:kiln/src/builtins.dart' show Body;
+import 'package:kiln/src/builtins.dart' show Body, seedKilnRandom;
 
 const _examples = [
   '../../examples/tap_game/assets/scenes',
@@ -116,7 +116,10 @@ void main() {
   final shooterLoads = <String>[];
   testWithGame(
     'shooter: a fire-and-track bot scores; enemy fire and rams cost hp',
-    () => KilnGame(_load('level1.kiln.json', _examples[2]), onLoadScene: shooterLoads.add),
+    () {
+      seedKilnRandom(4); // bot gets hit only on some seeds
+      return KilnGame(_load('level1.kiln.json', _examples[2]), onLoadScene: shooterLoads.add);
+    },
     (g) async {
       final player = g.world.children.whereType<KilnEntity>().firstWhere((e) => e.node.name == 'Player');
       expect(g.vars['hp'], 3);

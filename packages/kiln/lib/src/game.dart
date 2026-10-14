@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flame/collisions.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'builtins.dart';
+import 'controller.dart';
 import 'registry.dart';
 import 'scene.dart';
 
@@ -25,7 +27,48 @@ class GameVariables extends ChangeNotifier {
     _values[key] = value;
     notifyListeners();
   }
+
+  // Type-safe reads: a missing or wrong-typed value falls back instead of throwing.
+  double number(String key) => switch (_values[key]) {
+    num v => v.toDouble(),
+    _ => 0,
+  };
+  String string(String key) => switch (_values[key]) {
+    null => '',
+    final v => '$v',
+  };
+  bool flag(String key) => _values[key] == true;
+
+  /// Adds [defaults] for keys not set yet (a new scene's variables on shared state).
+  void seed(Map<String, Object?> defaults) {
+    var changed = false;
+    for (final MapEntry(:key, :value) in defaults.entries) {
+      if (_values.containsKey(key)) continue;
+      _values[key] = value;
+      changed = true;
+    }
+    if (changed) notifyListeners();
+  }
+
+  /// Puts [names] (all of [defaults] when empty) back to their [defaults].
+  void reset(Map<String, Object?> defaults, [Iterable<String> names = const []]) {
+    for (final k in names.isEmpty ? defaults.keys : names) {
+      if (defaults.containsKey(k)) _values[k] = defaults[k];
+    }
+    notifyListeners();
+  }
 }
+
+final _slot = RegExp(r'\{(\w+)\}');
+
+/// Fills "{name}" slots with variable values; whole doubles print without ".0".
+String fillTemplate(String template, GameVariables vars) => template.replaceAllMapped(_slot, (m) {
+  final v = vars[m[1]!];
+  return switch (v) {
+    double d when d == d.roundToDouble() => d.toInt().toString(),
+    _ => '${v ?? ''}',
+  };
+});
 
 /// Plays a [SceneDoc]. Scene coordinates map 1:1 to a fixed-resolution camera (top-left origin).
 class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
@@ -37,9 +80,12 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
     this.onLoadScene,
     this.playSound,
     this.playMusic,
+    this.onEmit,
+    GameVariables? vars,
     AssetBundle? bundle,
   }) : registry = registry ?? KilnRegistry(),
-       vars = GameVariables(scene.variables),
+       // Shared vars (kept across scenes) only gain this scene's missing defaults.
+       vars = vars == null ? GameVariables(scene.variables) : (vars..seed(scene.variables)),
        super(
          camera: CameraComponent.withFixedResolution(width: scene.size.x, height: scene.size.y),
        ) {
@@ -63,7 +109,10 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
   final void Function(String? file)? playMusic;
   bool musicOn = false;
 
-  final Map<String, Set<VoidCallback>> _events = {};
+  /// Every Emit, passed out to the app (see KilnController.events).
+  final void Function(String event, Object? value)? onEmit;
+
+  final Map<String, Set<void Function(Object? value)>> _events = {};
   int _emitDepth = 0;
   final Set<void Function(KeyEvent event)> keyListeners = {};
 
@@ -142,18 +191,21 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
     return best;
   }
 
-  VoidCallback on(String event, VoidCallback handler) {
+  VoidCallback on(String event, void Function(Object? value) handler) {
     _events.putIfAbsent(event, () => {}).add(handler);
     return () => _events[event]?.remove(handler);
   }
 
-  void emit(String event) {
+  /// Runs OnEvent listeners for [event] and tells the app ([onEmit]); inert while editing.
+  void emit(String event, {Object? value}) {
+    if (editing) return;
     // Guards against handlers that re-emit their own event forever.
     if (_emitDepth > 16) return debugPrint('kiln: Emit("$event") nested too deep, dropped');
     _emitDepth++;
     try {
+      onEmit?.call(event, value);
       for (final h in [...?_events[event]]) {
-        h();
+        h(value);
       }
     } finally {
       _emitDepth--;
@@ -247,28 +299,54 @@ class KilnEntity extends PositionComponent
 }
 
 /// Embed point for apps: loads a `.kiln.json` asset and runs it.
+/// Give it a [controller] to read variables, send events and change scenes from the app.
 class KilnGameWidget extends StatefulWidget {
-  const KilnGameWidget({super.key, required this.asset, this.registry});
+  const KilnGameWidget({super.key, required this.asset, this.registry, this.controller, this.onEvent});
 
   final String asset;
   final KilnRegistry? registry;
+  final KilnController? controller;
+
+  /// Shortcut for listening to [KilnController.events].
+  final void Function(String event, Object? value)? onEvent;
 
   @override
   State<KilnGameWidget> createState() => _KilnGameWidgetState();
 }
 
 class _KilnGameWidgetState extends State<KilnGameWidget> {
+  late final KilnController _c = widget.controller ?? KilnController();
   late String _asset = widget.asset;
-  late Future<KilnGame> _game = _load();
+  late Future<KilnGame> _game;
+  StreamSubscription<KilnEvent>? _sub;
 
-  Future<KilnGame> _load() => rootBundle
-      .loadString(_asset)
-      .then((s) => KilnGame(SceneDoc.fromJson(jsonDecode(s)), registry: widget.registry, onLoadScene: _goTo));
+  @override
+  void initState() {
+    super.initState();
+    _c.attach(_goTo);
+    _sub = _c.events.listen((e) => widget.onEvent?.call(e.name, e.value));
+    _game = _load();
+  }
+
+  Future<KilnGame> _load() {
+    final asset = _asset;
+    return rootBundle
+        .loadString(asset)
+        .then((s) => _c.createGame(SceneDoc.fromJson(jsonDecode(s)), asset, registry: widget.registry));
+  }
 
   void _goTo(String asset) => setState(() {
     _asset = asset;
     _game = _load();
   });
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    _c.attach(null);
+    if (widget.controller == null) _c.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => FutureBuilder(

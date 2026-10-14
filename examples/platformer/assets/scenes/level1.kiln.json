@@ -991,6 +991,9 @@
             "with": "Player",
             "actions": [
               {
+                "type": "ResetVariables"
+              },
+              {
                 "type": "LoadScene",
                 "scene": "assets/scenes/level1.kiln.json"
               }

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:kiln/kiln.dart';
 
+import 'kiln.g.dart';
+
 void main() => runApp(
-  const MaterialApp(
+  MaterialApp(
     debugShowCheckedModeBanner: false,
     home: Scaffold(
-      backgroundColor: Color(0xFF161814),
-      body: KilnGameWidget(asset: 'assets/scenes/level1.kiln.json'),
+      backgroundColor: const Color(0xFF161814),
+      body: KilnGameWidget(
+        asset: KilnScenes.level1,
+        // Coins collected carry from level1 into the win scene.
+        controller: KilnController(keepVariables: true),
+      ),
     ),
   ),
 );

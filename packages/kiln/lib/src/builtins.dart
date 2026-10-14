@@ -162,8 +162,10 @@ final builtinBehaviors = <BehaviorDef>[
   }),
   BehaviorDef('OnEvent', const [
     PropDef('event', PropKind.string, 'event'),
+    // Variable that receives the event's value (e.g. sent by the app) before the actions run.
+    PropDef('store', PropKind.string, ''),
     PropDef('actions', PropKind.actions, []),
-  ], (e, p) => _OnEvent(p.string('event'), p.list('actions'))),
+  ], (e, p) => _OnEvent(p.string('event'), p.string('store'), p.list('actions'))),
   BehaviorDef('OnKey', const [
     PropDef('key', PropKind.choice, 'Space', options: keyNames),
     PropDef('on', PropKind.choice, 'down', options: ['down', 'up', 'held']),
@@ -266,7 +268,10 @@ final builtinBehaviors = <BehaviorDef>[
   ], (e, p) => _OffScreen(world: p.string('area') == 'world', margin: p.number('margin'), actions: p.list('actions'))),
 ];
 
-final _rng = Random();
+var _rng = Random();
+
+@visibleForTesting
+void seedKilnRandom(int seed) => _rng = Random(seed);
 
 /// Parses "idle:0-3, run:4-9, hit:10" into inclusive frame ranges clamped to [0, frames).
 Map<String, (int, int)> parseClips(String spec, int frames) {
@@ -359,8 +364,22 @@ final builtinActions = <ActionDef>[
   }, targeted: false),
   ActionDef(
     'Emit',
-    const [PropDef('event', PropKind.string, 'event')],
-    (self, a) => self.game.emit(a.string('event')),
+    // value: optional text sent with the event; "{name}" slots read variables.
+    const [PropDef('event', PropKind.string, 'event'), PropDef('value', PropKind.string, '')],
+    (self, a) => self.game.emit(
+      a.string('event'),
+      value: a.string('value').isEmpty ? null : fillTemplate(a.string('value'), self.game.vars),
+    ),
+    targeted: false,
+  ),
+  ActionDef(
+    'ResetVariables',
+    // Comma list; empty resets every variable this scene defines.
+    const [PropDef('names', PropKind.string, '')],
+    (self, a) => self.game.vars.reset(self.game.scene.variables, [
+      for (final n in a.string('names').split(','))
+        if (n.trim().isNotEmpty) n.trim(),
+    ]),
     targeted: false,
   ),
   ActionDef('SetProp', const [
@@ -848,16 +867,20 @@ class Motion extends Component with ParentIsA<KilnEntity> {
 }
 
 class _OnEvent extends Component with ParentIsA<KilnEntity> {
-  _OnEvent(this.event, this.actions);
+  _OnEvent(this.event, this.store, this.actions);
 
-  final String event;
+  final String event, store;
   final List<Object?> actions;
   VoidCallback? _off;
 
   @override
   void onMount() {
     super.onMount();
-    if (!parent.game.editing) _off = parent.game.on(event, () => parent.runActions(actions));
+    if (parent.game.editing) return;
+    _off = parent.game.on(event, (value) {
+      if (store.isNotEmpty) parent.game.vars[store] = value;
+      parent.runActions(actions);
+    });
   }
 
   @override
@@ -1018,17 +1041,8 @@ class _VarText extends TextComponent with HasGameReference<KilnGame> {
   _VarText(this.template, TextStyle style) : super(textRenderer: TextPaint(style: style));
 
   final String template;
-  static final _slot = RegExp(r'\{(\w+)\}');
 
-  void _refresh() {
-    text = template.replaceAllMapped(_slot, (m) {
-      final v = game.vars[m[1]!];
-      return switch (v) {
-        double d when d == d.roundToDouble() => d.toInt().toString(),
-        _ => '${v ?? ''}',
-      };
-    });
-  }
+  void _refresh() => text = fillTemplate(template, game.vars);
 
   @override
   void onMount() {

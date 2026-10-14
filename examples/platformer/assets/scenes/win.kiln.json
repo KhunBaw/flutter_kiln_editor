@@ -5,7 +5,9 @@
     640.0,
     360.0
   ],
-  "variables": {},
+  "variables": {
+    "coins": 0
+  },
   "entities": [
     {
       "id": "title",
@@ -47,7 +49,7 @@
         {
           "type": "Text",
           "props": {
-            "text": "Press Space to run again",
+            "text": "Coins: {coins}  \u00b7  Press Space to run again",
             "fontSize": 18,
             "color": "#BDBFB4"
           }
@@ -74,6 +76,9 @@
             "key": "Space",
             "on": "down",
             "actions": [
+              {
+                "type": "ResetVariables"
+              },
               {
                 "type": "LoadScene",
                 "scene": "assets/scenes/level1.kiln.json"

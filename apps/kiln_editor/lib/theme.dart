@@ -99,7 +99,7 @@ String factorOf(BehaviorData b) {
     'Camera' =>
       p.number('deadzoneW') == 0 && p.number('deadzoneH') == 0 ? 'follow' : 'zone ${n('deadzoneW')}×${n('deadzoneH')}',
     'OnKey' => '${p.string('key')} ${p.string('on')}',
-    'OnEvent' => p.string('event'),
+    'OnEvent' => p.string('store').isEmpty ? p.string('event') : '${p.string('event')} → ${p.string('store')}',
     'OffScreen' => 'leaves ${p.string('area')}',
     'Velocity' => '${n('vx')}·${n('vy')} px/s',
     'Body' => 'g ${n('gravity')}',

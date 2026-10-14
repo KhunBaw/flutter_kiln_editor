@@ -169,8 +169,8 @@ class _EditorPageState extends State<EditorPage> {
         ))?.path;
         if (target == null) return;
       }
-      await s.save(target);
-      _toast('Saved $target');
+      final note = await s.save(target);
+      _toast('Saved $target${note == null || note.isEmpty ? '' : ' · $note'}');
     } catch (e) {
       _toast('Save failed: $e');
     }

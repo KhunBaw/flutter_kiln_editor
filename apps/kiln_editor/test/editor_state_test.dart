@@ -44,6 +44,36 @@ void main() {
     expect(s.doc.entities.single.children, isEmpty);
   });
 
+  test('save in project scenes dir writes lib/kiln.g.dart; no pubspec or other folder writes nothing', () async {
+    final dir = await Directory.systemTemp.createTemp('kiln_proj');
+    addTearDown(() => dir.delete(recursive: true));
+    await Directory('${dir.path}/assets/scenes').create(recursive: true);
+    final scene = '${dir.path}/assets/scenes/level.kiln.json';
+    final gen = File('${dir.path}/lib/kiln.g.dart');
+    final s = EditorState()
+      ..projectDir = dir.path
+      ..addEntity();
+    s.edit((d) => d.variables['coins'] = 0);
+
+    expect(await s.save(scene), isNull); // no pubspec: nothing to generate
+    expect(gen.existsSync(), isFalse);
+
+    await File('${dir.path}/pubspec.yaml').writeAsString('name: demo\n');
+    expect(await s.save(scene), 'types updated');
+    expect(gen.readAsStringSync(), allOf(contains('level'), contains('coins')));
+    expect(await s.save(scene), '');
+
+    gen.deleteSync();
+    expect(await s.save('${dir.path}/other.kiln.json'), isNull); // outside assets/scenes
+    expect(gen.existsSync(), isFalse);
+  });
+
+  test('factorOf OnEvent shows the stored variable', () {
+    BehaviorData ev(Map<String, Object?> p) => BehaviorData('OnEvent', p);
+    expect(factorOf(ev({'event': 'grant'})), 'grant');
+    expect(factorOf(ev({'event': 'grant', 'store': 'bonus'})), 'grant → bonus');
+  });
+
   test('save/load round trip; bad file keeps current scene', () async {
     final dir = await Directory.systemTemp.createTemp('kiln');
     final s = EditorState()..addEntity();
