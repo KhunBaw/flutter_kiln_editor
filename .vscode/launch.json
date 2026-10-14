@@ -10,6 +10,14 @@
             "deviceId": "macos"
         },
         {
+            "name": "platformer (macOS)",
+            "request": "launch",
+            "type": "dart",
+            "cwd": "examples/platformer",
+            "program": "lib/main.dart",
+            "deviceId": "macos"
+        },
+        {
             "name": "kiln_editor (macOS)",
             "request": "launch",
             "type": "dart",

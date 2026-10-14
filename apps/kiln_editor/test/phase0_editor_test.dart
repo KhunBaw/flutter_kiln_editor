@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:flame/components.dart' show Vector2;
+import 'package:flame/game.dart' show GameWidget;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiln/kiln.dart';
 import 'package:kiln_editor/editor_state.dart';
@@ -110,5 +112,38 @@ void main() {
     await tester.enterText(find.widgetWithText(Field, 'TAGS'), 'enemy,  boss ,');
     await tester.pump();
     expect(s.selected!.tags, ['enemy', 'boss']);
+  });
+
+  testWidgets('Play: arrow keys reach the running game', (tester) async {
+    final s = await boot(tester);
+    s.addEntity(
+      name: 'hero',
+      behaviors: [
+        BehaviorData('Shape'),
+        BehaviorData('OnKey', {
+          'key': 'ArrowRight',
+          'on': 'held',
+          'actions': [
+            {'type': 'SetProp', 'prop': 'x', 'mode': 'add', 'value': 2},
+          ],
+        }),
+      ],
+    );
+    await tester.pump();
+    await tester.tap(find.byTooltip('Play (⌘P)'));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    final game = tester.widget<GameWidget<KilnGame>>(find.byWidgetPredicate((w) => w is GameWidget<KilnGame>)).game!;
+    final hero = game.world.children.whereType<KilnEntity>().single;
+    final x0 = hero.x;
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowRight);
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowRight);
+    expect(hero.x, greaterThan(x0 + 5));
+    await tester.tap(find.byTooltip('Stop (⌘P)'));
+    await tester.pump(const Duration(seconds: 1));
   });
 }
