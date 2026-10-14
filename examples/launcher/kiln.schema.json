@@ -1633,6 +1633,12 @@
           "options": []
         },
         {
+          "key": "var",
+          "kind": "string",
+          "default": "i",
+          "options": []
+        },
+        {
           "key": "actions",
           "kind": "actions",
           "default": [],
@@ -1648,6 +1654,18 @@
           "key": "list",
           "kind": "string",
           "default": "items",
+          "options": []
+        },
+        {
+          "key": "var",
+          "kind": "string",
+          "default": "item",
+          "options": []
+        },
+        {
+          "key": "index",
+          "kind": "string",
+          "default": "i",
           "options": []
         },
         {

@@ -1518,18 +1518,28 @@ final _dataActions = <ActionDef>[
   ),
   ActionDef(
     'Repeat',
-    const [PropDef('count', PropKind.number, 3), PropDef('actions', PropKind.actions, [])],
-    (self, a) => _loop(self, a, a.number('count').floor(), (i) => {'i': i.toDouble()}),
+    // var: name of the 0-based counter; give nested loops different names.
+    const [
+      PropDef('count', PropKind.number, 3),
+      PropDef('var', PropKind.string, 'i'),
+      PropDef('actions', PropKind.actions, []),
+    ],
+    (self, a) => _loop(self, a, a.number('count').floor(), (i) => {a.string('var'): i.toDouble()}),
     targeted: false,
   ),
   ActionDef(
     'ForEach',
-    // list: name of a list variable (or a "=formula" giving a list); runs once per item with `item` and `i`.
-    const [PropDef('list', PropKind.string, 'items'), PropDef('actions', PropKind.actions, [])],
+    // list: name of a list variable (or a "=formula" giving a list); each item is `var`, its position `index`.
+    const [
+      PropDef('list', PropKind.string, 'items'),
+      PropDef('var', PropKind.string, 'item'),
+      PropDef('index', PropKind.string, 'i'),
+      PropDef('actions', PropKind.actions, []),
+    ],
     (self, a) {
       final src = a['list'];
       final l = src is List ? src : self.game.vars.list('$src');
-      _loop(self, a, l.length, (i) => {'item': l[i], 'i': i.toDouble()});
+      _loop(self, a, l.length, (i) => {a.string('var'): l[i], a.string('index'): i.toDouble()});
     },
     targeted: false,
   ),
@@ -1597,6 +1607,7 @@ class StateMachine extends Component with ParentIsA<KilnEntity> {
       final t = Props(raw is Map<String, Object?> ? raw : const {});
       final from = t.string('from');
       if (from.isNotEmpty && from != '*' && from != state) continue;
+      if (t.string('to') == state) continue;
       final src = t.string('when').replaceFirst(RegExp(r'^\s*='), '');
       if (src.isNotEmpty && truthy(evalExpr(src, ExprScope(parent.game, parent)))) {
         return go(t.string('to'));

@@ -465,6 +465,7 @@ No properties.
 | Property | Kind | Default |
 |---|---|---|
 | `count` | number | `3` |
+| `var` | string | `i` |
 | `actions` | actions | `[]` |
 
 ### ForEach
@@ -472,6 +473,8 @@ No properties.
 | Property | Kind | Default |
 |---|---|---|
 | `list` | string | `items` |
+| `var` | string | `item` |
+| `index` | string | `i` |
 | `actions` | actions | `[]` |
 
 ### Animate
