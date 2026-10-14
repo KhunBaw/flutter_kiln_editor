@@ -534,7 +534,8 @@ Widget propEditor(EditorState s, KilnRegistry reg, PropDef d, Map<String, Object
       scrub: d.defaultValue is num && (d.defaultValue as num).abs() < 10 && d.defaultValue != 0 ? 0.05 : 1,
       onReset: reset,
     ),
-    PropKind.string => Field(title, v, set, onReset: reset),
+    // If.expr / Condition.expr hold a bare formula; every other string prop only validates after a leading '='.
+    PropKind.string => Field(title, v, set, onReset: reset, formula: d.key == 'expr'),
     PropKind.image || PropKind.audio => _AssetField(s, d, title, v, set, reset),
     PropKind.color => _ColorField(title, v, set, reset),
     PropKind.bool => Row2(
@@ -561,9 +562,12 @@ Widget propEditor(EditorState s, KilnRegistry reg, PropDef d, Map<String, Object
       title,
       v,
       set,
+      // JSON when it starts like JSON (invalid JSON is rejected); anything else stays text (Wheel's old format).
       parse: (t) {
+        final x = t.trimLeft();
+        if (!x.startsWith('[') && !x.startsWith('{')) return t;
         try {
-          return jsonDecode(t);
+          return jsonDecode(x);
         } on FormatException {
           return null;
         }

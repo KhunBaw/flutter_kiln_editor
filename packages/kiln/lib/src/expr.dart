@@ -193,7 +193,7 @@ Start a text or number field with `=` to make it a formula, e.g. `=self.x + 20` 
 - numbers `1`, `2.5`; text `'hi'` or `"hi"`; `true`, `false`, `null`; lists `[1, 2]`; maps `{'k': 1}`
 - a game variable by name (`score`), or a loop local (`i`, `item`)
 - `self` / `other` (the collision partner) with `.x .y .angle .width .height .vx .vy .spin .visible .name`, or the entity's own variables (`self.hp`, `self.state`, `self.stateTime`)
-- `pointer.x`, `pointer.y`, `pointer.down` (needs an OnPointer or Joystick), `time` (seconds of play)
+- `pointer.x`, `pointer.y`, `pointer.down` (needs an OnPointer or Joystick), `time` (seconds of play), `dt` (last frame, seconds)
 - `list[i]`, `map.key`, `map['key']`
 
 ## Operators
@@ -422,6 +422,7 @@ class _Parser {
       'self' => (s) => s.self,
       'other' => (s) => s.other,
       'time' => (s) => s.game.time,
+      'dt' => (s) => s.game.dt,
       'pointer' => (s) => {'x': s.game.pointer.x, 'y': s.game.pointer.y, 'down': s.game.pointerDown},
       _ => (s) => s.locals.containsKey(name) ? s.locals[name] : s.game.vars[name],
     };

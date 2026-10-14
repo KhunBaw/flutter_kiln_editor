@@ -289,6 +289,7 @@ class Field extends StatefulWidget {
     this.leading,
     this.trailing,
     this.hint,
+    this.formula = false,
     this.scrub,
     this.suffix,
     this.compact = false,
@@ -304,6 +305,9 @@ class Field extends StatefulWidget {
   final Widget? leading;
   final Widget? trailing;
   final String? hint;
+
+  /// The whole text is a formula (no leading `=` needed), e.g. If.expr.
+  final bool formula;
 
   /// Units per pixel of horizontal drag on the label; null disables scrubbing.
   final double? scrub;
@@ -412,10 +416,11 @@ class _FieldState extends State<Field> {
     },
   );
 
-  /// Parse error of a "=formula" in the field, else null.
+  /// Parse error of a "=formula" in the field (or any text, for [Field.formula] fields), else null.
   String? get _formulaError {
     final t = _c.text.trimLeft();
-    return t.startsWith('=') ? exprError(t.substring(1)) : null;
+    if (t.startsWith('=')) return exprError(t.substring(1));
+    return widget.formula && t.isNotEmpty ? exprError(t) : null;
   }
 
   @override

@@ -34,8 +34,10 @@ class WheelData extends ChangeNotifier {
   int limit = 5;
   final List<Prize> prizes;
 
-  /// The `slices` variable text; `|` and `;` can't appear in a label.
-  String get spec => [for (final p in prizes) '${_clean(p.label)}|${p.image}|${p.weight}'].join(';');
+  /// The `slices` variable: one map per prize.
+  List<Map<String, Object?>> get spec => [
+    for (final p in prizes) {'label': p.label, 'image': p.image, 'weight': p.weight},
+  ];
 
   List<double> get rates {
     final total = prizes.fold<double>(0, (a, p) => a + p.weight);
@@ -46,8 +48,6 @@ class WheelData extends ChangeNotifier {
     change();
     notifyListeners();
   }
-
-  static String _clean(String s) => s.replaceAll(RegExp(r'[|;\n]'), ' ');
 }
 
 void main() => runApp(const WheelApp());

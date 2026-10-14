@@ -219,7 +219,7 @@ No properties.
 
 | Property | Kind | Default |
 |---|---|---|
-| `slices` | string | `Coins|coin.png|40;Gem|gem.png|10;Star|star.png|1` |
+| `slices` | json | `Coins|coin.png|40;Gem|gem.png|10;Star|star.png|1` |
 | `variable` | string | `slices` |
 | `resultVar` | string | `result` |
 | `limit` | number | `0` |

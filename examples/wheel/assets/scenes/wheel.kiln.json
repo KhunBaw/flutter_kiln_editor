@@ -6,7 +6,14 @@
     700.0
   ],
   "variables": {
-    "slices": "Coins|coin.png|40;Clover|clover.png|30;Heart|heart.png|15;Gift|gift.png|10;Gem|gem.png|4;Star|star.png|1",
+    "slices": [
+      {"label": "Coins", "image": "coin.png", "weight": 40},
+      {"label": "Clover", "image": "clover.png", "weight": 30},
+      {"label": "Heart", "image": "heart.png", "weight": 15},
+      {"label": "Gift", "image": "gift.png", "weight": 10},
+      {"label": "Gem", "image": "gem.png", "weight": 4},
+      {"label": "Star", "image": "star.png", "weight": 1}
+    ],
     "background": "bg_night.png",
     "result": "-",
     "spins": 0,

@@ -319,4 +319,9 @@ void main() {
       expect(exprError('$f()'), isNot(contains('unknown function')), reason: f);
     }
   });
+
+  testWithGame('dt is the last frame length', () => KilnGame(scene([ent('a', [])])), (g) async {
+    g.update(0.25);
+    expect(evalExpr('dt * 4', ExprScope(g, named(g, 'a'))), 1);
+  });
 }

@@ -363,8 +363,8 @@ final builtinBehaviors = <BehaviorDef>[
   BehaviorDef(
     'Wheel',
     const [
-      // Slices as `label|image|weight|#colour;...`; the variable below overrides it when set (app-controlled).
-      PropDef('slices', PropKind.string, 'Coins|coin.png|40;Gem|gem.png|10;Star|star.png|1'),
+      // Slices as a list of {label, image, weight, color} or text `label|image|weight|#colour;...`; the variable below overrides it when set (app-controlled).
+      PropDef('slices', PropKind.json, 'Coins|coin.png|40;Gem|gem.png|10;Star|star.png|1'),
       PropDef('variable', PropKind.string, 'slices'),
       PropDef('resultVar', PropKind.string, 'result'),
       // Spin limit: 0 = unlimited; the number in the `limitVar` variable overrides it. Spins count into `spinsVar`; `leftVar` shows what remains.

@@ -23,13 +23,13 @@ extension KilnVars on GameVariables {
   set limit(double v) => this['limit'] = v;
   String get result => string('result');
   set result(String v) => this['result'] = v;
-  String get slices => string('slices');
-  set slices(String v) => this['slices'] = v;
+  List<Object?> get slices => list('slices');
+  set slices(List<Object?> v) => this['slices'] = v;
   double get spins => number('spins');
   set spins(double v) => this['spins'] = v;
 
   /// Typed start values for `KilnController(variables: ...)`; null keeps the scene default.
-  static Map<String, Object?> initial({String? background, double? left, double? limit, String? result, String? slices, double? spins}) => {
+  static Map<String, Object?> initial({String? background, double? left, double? limit, String? result, List<Object?>? slices, double? spins}) => {
     if (background != null) 'background': background,
     if (left != null) 'left': left,
     if (limit != null) 'limit': limit,

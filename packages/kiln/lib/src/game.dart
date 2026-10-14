@@ -256,6 +256,7 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
   @override
   void updateTree(double dt) {
     if (!editing) time += dt;
+    this.dt = editing ? 0 : dt;
     super.updateTree(editing ? 0 : dt);
     for (final f in [...afterUpdate]) {
       f();
@@ -287,6 +288,9 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
     final l = [...logs.value, message];
     logs.value = l.length > 100 ? l.sublist(l.length - 100) : l;
   }
+
+  /// Seconds the last frame took; formulas read it as `dt`.
+  double dt = 0;
 
   /// Seconds of play so far (frozen while editing).
   double time = 0;

@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kiln/kiln.dart';
 import 'package:kiln_editor/editor_state.dart';
 import 'package:kiln_editor/main.dart';
+import 'package:kiln_editor/theme.dart';
 import 'package:kiln_editor/widgets.dart';
 
 EditorState stateOf(WidgetTester t) => (t.state<State>(find.byType(EditorPage)) as dynamic).s as EditorState;
@@ -173,6 +174,33 @@ void main() {
     expect(find.textContaining('hp  7', findRichText: true), findsWidgets);
     await tester.tap(find.byTooltip('Stop (⌘P)'));
     await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('a bad formula tints its field; If.expr is checked without a leading =', (tester) async {
+    final s = await boot(tester);
+    await tester.tap(find.byTooltip('Add entity'));
+    await tester.pump();
+    s.edit(
+      (_) => s.selected!.behaviors.add(
+        BehaviorData('OnTap', {
+          'actions': [
+            {'type': 'If', 'expr': 'score >'},
+          ],
+        }),
+      ),
+    );
+    await tester.pump();
+    Color? fill(String label) => tester
+        .widget<TextField>(find.descendant(of: find.widgetWithText(Field, label), matching: find.byType(TextField)))
+        .decoration
+        ?.fillColor;
+    expect(fill('Expr'), isNot(Z.z1)); // tinted
+    await tester.enterText(
+      find.descendant(of: find.widgetWithText(Field, 'Expr'), matching: find.byType(TextField)),
+      'score > 1',
+    );
+    await tester.pump();
+    expect(fill('Expr'), isNot(Z.danger.withAlpha(48)));
   });
 
   testWidgets('Tilemap: PAINT in the inspector, pick a tile, click and drag the scene', (tester) async {
