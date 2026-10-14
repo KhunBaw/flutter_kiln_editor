@@ -9,12 +9,7 @@ abstract final class KilnScenes {
   static const lose = 'assets/scenes/lose.kiln.json';
   static const sandbox = 'assets/scenes/sandbox.kiln.json';
   static const win = 'assets/scenes/win.kiln.json';
-  static const all = [
-    'assets/scenes/level1.kiln.json',
-    'assets/scenes/lose.kiln.json',
-    'assets/scenes/sandbox.kiln.json',
-    'assets/scenes/win.kiln.json',
-  ];
+  static const all = ['assets/scenes/level1.kiln.json', 'assets/scenes/lose.kiln.json', 'assets/scenes/sandbox.kiln.json', 'assets/scenes/win.kiln.json'];
 }
 
 abstract final class KilnEvents {
@@ -27,4 +22,10 @@ extension KilnVars on GameVariables {
   set score(double v) => this['score'] = v;
   double get time => number('time');
   set time(double v) => this['time'] = v;
+
+  /// Typed start values for `KilnController(variables: ...)`; null keeps the scene default.
+  static Map<String, Object?> initial({double? score, double? time}) => {
+    if (score != null) 'score': score,
+    if (time != null) 'time': time,
+  };
 }

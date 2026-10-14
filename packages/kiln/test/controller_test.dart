@@ -233,6 +233,8 @@ void main() {
       expect(src, contains("Object? get bonus => this['bonus'];"));
       expect(src, contains("String get label => string('label');"));
       expect(src, contains("double get numberVar => number('number');"));
+      expect(src, contains("static Map<String, Object?> initial({Object? bonus, double? classVar, double? coins,"));
+      expect(src, contains("if (classVar != null) 'class': classVar"));
       // Stable output: key order of the input does not matter.
       final x = {'assets/scenes/b.kiln.json': {}, 'assets/scenes/a.kiln.json': {}};
       expect(generateTypes(x), generateTypes(Map.fromEntries(x.entries.toList().reversed)));

@@ -16,4 +16,9 @@ abstract final class KilnEvents {
 extension KilnVars on GameVariables {
   double get coins => number('coins');
   set coins(double v) => this['coins'] = v;
+
+  /// Typed start values for `KilnController(variables: ...)`; null keeps the scene default.
+  static Map<String, Object?> initial({double? coins}) => {
+    if (coins != null) 'coins': coins,
+  };
 }

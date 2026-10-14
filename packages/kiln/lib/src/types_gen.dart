@@ -78,6 +78,7 @@ String generateTypes(Map<String, Object?> scenes) {
     ..writeln()
     ..writeln('extension KilnVars on GameVariables {');
   final varIds = _Names(_varsReserved);
+  final params = <String>[], entries = <String>[];
   for (final name in vars.keys.toList()..sort()) {
     final id = varIds.of(name), k = _lit(name);
     final (type, read) = switch (vars[name]) {
@@ -89,8 +90,20 @@ String generateTypes(Map<String, Object?> scenes) {
     b
       ..writeln('  $type get $id => $read;')
       ..writeln('  set $id($type v) => this[$k] = v;');
+    params.add(type == 'Object?' ? 'Object? $id' : '$type? $id');
+    entries.add('if ($id != null) $k: $id');
   }
-  b.writeln('}');
+  b
+    ..writeln()
+    ..writeln('  /// Typed start values for `KilnController(variables: ...)`; null keeps the scene default.')
+    ..writeln(
+      params.isEmpty
+          ? '  static Map<String, Object?> initial() => {};'
+          : '  static Map<String, Object?> initial({${params.join(', ')}}) => {\n'
+                '${entries.map((e) => '    $e,\n').join()}'
+                '  };',
+    )
+    ..writeln('}');
   return b.toString();
 }
 

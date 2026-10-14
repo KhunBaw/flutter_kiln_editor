@@ -18,4 +18,10 @@ extension KilnVars on GameVariables {
   set pigs(double v) => this['pigs'] = v;
   double get shots => number('shots');
   set shots(double v) => this['shots'] = v;
+
+  /// Typed start values for `KilnController(variables: ...)`; null keeps the scene default.
+  static Map<String, Object?> initial({double? pigs, double? shots}) => {
+    if (pigs != null) 'pigs': pigs,
+    if (shots != null) 'shots': shots,
+  };
 }

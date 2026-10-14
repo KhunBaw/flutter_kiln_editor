@@ -18,4 +18,10 @@ extension KilnVars on GameVariables {
   set hp(double v) => this['hp'] = v;
   double get score => number('score');
   set score(double v) => this['score'] = v;
+
+  /// Typed start values for `KilnController(variables: ...)`; null keeps the scene default.
+  static Map<String, Object?> initial({double? hp, double? score}) => {
+    if (hp != null) 'hp': hp,
+    if (score != null) 'score': score,
+  };
 }

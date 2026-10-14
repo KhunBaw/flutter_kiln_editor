@@ -59,7 +59,7 @@ c.loadScene(KilnScenes.level1);  // switch scene
 - App to game: `c.emit(name, value)` runs `OnEvent` behaviors; set `store` on the behavior to keep `value` in a variable.
 - Variables: `c.vars` is a `ChangeNotifier`, so `ListenableBuilder` works. `variables:` overrides a scene's starting values.
 - `keepVariables: true` keeps one set of variables across `LoadScene` (a new scene only adds missing defaults). `ResetVariables` puts the current scene's variables back to defaults.
-- Typed names: saving a scene under `<project>/assets/scenes/` in the editor rewrites `lib/kiln.g.dart` (`KilnScenes`, `KilnEvents`, `KilnVars`). Without the editor: `dart run kiln:types`.
+- Typed names: saving a scene under `<project>/assets/scenes/` in the editor rewrites `lib/kiln.g.dart` (`KilnScenes`, `KilnEvents`, `KilnVars`; `KilnVars.initial(...)` builds typed start values for `KilnController(variables:)`). Without the editor: `dart run kiln:types`.
 
 ## Scene model
 
