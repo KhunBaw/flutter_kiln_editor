@@ -1,0 +1,175 @@
+{
+  "kiln": 1,
+  "name": "Idle clicker",
+  "size": [
+    800.0,
+    600.0
+  ],
+  "variables": {
+    "coins": 0,
+    "owned": 0
+  },
+  "entities": [
+    {
+      "id": "cookie",
+      "name": "cookie",
+      "position": [
+        240.0,
+        330.0
+      ],
+      "size": [
+        180.0,
+        180.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#E8B04A",
+            "shape": "oval"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Click!",
+            "fontSize": 16
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "AddVariable",
+                "name": "coins",
+                "value": "=1 + owned"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "shop",
+      "name": "shop",
+      "position": [
+        560.0,
+        330.0
+      ],
+      "size": [
+        180.0,
+        90.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#7FB7A4",
+            "shape": "oval"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Buy farm",
+            "fontSize": 16
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "If",
+                "expr": "=coins >= floor(10 * 1.15 ^ owned)",
+                "then": [
+                  {
+                    "type": "AddVariable",
+                    "name": "coins",
+                    "value": "=-floor(10 * 1.15 ^ owned)"
+                  },
+                  {
+                    "type": "AddVariable",
+                    "name": "owned",
+                    "value": 1
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "farm",
+      "name": "farm",
+      "position": [
+        700.0,
+        520.0
+      ],
+      "size": [
+        20.0,
+        20.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#E8A0A8",
+            "shape": "oval"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "",
+            "fontSize": 16
+          }
+        },
+        {
+          "type": "Timer",
+          "props": {
+            "interval": 1,
+            "actions": [
+              {
+                "type": "AddVariable",
+                "name": "coins",
+                "value": "=owned"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "Status",
+      "name": "Status",
+      "position": [
+        400.0,
+        30.0
+      ],
+      "size": [
+        760.0,
+        40.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "Coins: {coins}   Farms: {owned}   (farm price = 10 x 1.15^farms)",
+            "fontSize": 20
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

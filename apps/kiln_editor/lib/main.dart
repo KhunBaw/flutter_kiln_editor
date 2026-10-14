@@ -152,6 +152,15 @@ class _EditorPageState extends State<EditorPage> {
     if (await _confirmDiscard()) s.newScene();
   }
 
+  Future<void> _fromTemplate(String id) async {
+    if (!await _confirmDiscard()) return;
+    try {
+      await s.newFromTemplate(id);
+    } catch (e) {
+      _toast('Template failed: $e');
+    }
+  }
+
   Future<void> _open() async {
     if (!await _confirmDiscard()) return;
     try {
@@ -200,6 +209,13 @@ class _EditorPageState extends State<EditorPage> {
           PlatformMenuItemGroup(
             members: [
               _item('New Scene', _new, const SingleActivator(LogicalKeyboardKey.keyN, meta: true)),
+              PlatformMenu(
+                label: 'New from Template',
+                menus: [
+                  for (final MapEntry(:key, :value) in EditorState.templates.entries)
+                    _item(value, () => _fromTemplate(key)),
+                ],
+              ),
               _item('Open Project Folder…', _openProject),
               _item('Open Scene…', _open, const SingleActivator(LogicalKeyboardKey.keyO, meta: true)),
             ],

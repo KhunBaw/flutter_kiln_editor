@@ -1,0 +1,281 @@
+{
+  "kiln": 1,
+  "name": "Tower defense",
+  "size": [
+    800.0,
+    600.0
+  ],
+  "variables": {
+    "score": 0,
+    "waves": [
+      2,
+      3
+    ]
+  },
+  "entities": [
+    {
+      "id": "tower",
+      "name": "tower",
+      "position": [
+        100.0,
+        100.0
+      ],
+      "size": [
+        44.0,
+        44.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#E8B04A",
+            "shape": "oval"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Tower",
+            "fontSize": 16
+          }
+        },
+        {
+          "type": "Timer",
+          "props": {
+            "interval": 0.2,
+            "actions": [
+              {
+                "type": "If",
+                "expr": "=count('#enemy') > 0 && dist(self, nearest('#enemy')) < 250",
+                "then": [
+                  {
+                    "type": "Shoot",
+                    "prefab": "Bolt",
+                    "aim": "target",
+                    "at": "#enemy",
+                    "speed": 600,
+                    "cooldown": 0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "director",
+      "name": "director",
+      "position": [
+        160.0,
+        100.0
+      ],
+      "size": [
+        20.0,
+        20.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#7FB7A4"
+          }
+        },
+        {
+          "type": "OnEvent",
+          "props": {
+            "event": "wave",
+            "actions": [
+              {
+                "type": "If",
+                "expr": "=len(waves) > 0",
+                "then": [
+                  {
+                    "type": "Repeat",
+                    "count": "=waves[0]",
+                    "var": "k",
+                    "actions": [
+                      {
+                        "type": "Spawn",
+                        "prefab": "Enemy",
+                        "x": "=k * 30",
+                        "y": 0
+                      }
+                    ]
+                  },
+                  {
+                    "type": "ListRemove",
+                    "name": "waves",
+                    "index": 0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "Enemy",
+      "name": "Enemy",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "size": [
+        20.0,
+        20.0
+      ],
+      "angle": 0.0,
+      "tags": [
+        "enemy"
+      ],
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#E8A0A8"
+          }
+        },
+        {
+          "type": "Prefab",
+          "props": {}
+        },
+        {
+          "type": "Collider",
+          "props": {}
+        },
+        {
+          "type": "Health",
+          "props": {
+            "hp": 2,
+            "death": [
+              {
+                "type": "AddVariable",
+                "name": "score",
+                "value": 1
+              },
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "Bolt",
+      "name": "Bolt",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "size": [
+        10.0,
+        10.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#A9C4E8"
+          }
+        },
+        {
+          "type": "Prefab",
+          "props": {}
+        },
+        {
+          "type": "Collider",
+          "props": {}
+        },
+        {
+          "type": "OnCollide",
+          "props": {
+            "with": "#enemy",
+            "actions": [
+              {
+                "type": "Damage",
+                "target": "other",
+                "amount": 1
+              },
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "Status",
+      "name": "Status",
+      "position": [
+        400.0,
+        30.0
+      ],
+      "size": [
+        760.0,
+        40.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "Score: {score}   Waves left: {waves}",
+            "fontSize": 20
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "btn Next wave",
+      "name": "btn Next wave",
+      "position": [
+        600.0,
+        520.0
+      ],
+      "size": [
+        200.0,
+        56.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#3A3F4B"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Next wave",
+            "fontSize": 18
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "Emit",
+                "event": "wave"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

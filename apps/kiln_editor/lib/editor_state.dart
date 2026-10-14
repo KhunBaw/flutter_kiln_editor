@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Offset;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flame/components.dart' show Vector2;
 import 'package:kiln/kiln.dart';
 import 'package:kiln/types_gen.dart';
@@ -425,6 +426,20 @@ class EditorState extends ChangeNotifier {
   void removeEntity(String id) => edit((d) => _remove(d.entities, id));
 
   void newScene() => _reset(SceneDoc(), null);
+
+  /// Starter scenes bundled with the editor (`assets/templates/ID.kiln.json`), by id.
+  static const templates = {
+    'idle': 'Idle clicker',
+    'puzzle': 'Match-3 puzzle',
+    'strategy': 'Tower defense',
+    'rpg': 'RPG shop',
+    'action': 'Boss fight',
+  };
+
+  Future<void> newFromTemplate(String id) async {
+    final text = await rootBundle.loadString('assets/templates/$id.kiln.json');
+    _reset(SceneDoc.fromJson(jsonDecode(text)), null);
+  }
 
   /// Opens a project folder; returns the custom behavior/action types added from its `kiln.schema.json`.
   Future<List<String>> openProject(String dir) async {

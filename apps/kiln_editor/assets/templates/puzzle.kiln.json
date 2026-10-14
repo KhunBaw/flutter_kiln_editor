@@ -1,0 +1,223 @@
+{
+  "kiln": 1,
+  "name": "Match-3 puzzle",
+  "size": [
+    800.0,
+    600.0
+  ],
+  "variables": {
+    "score": 0
+  },
+  "entities": [
+    {
+      "id": "board",
+      "name": "board",
+      "position": [
+        128.0,
+        128.0
+      ],
+      "size": [
+        256.0,
+        256.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Tilemap",
+          "props": {
+            "tile": 64,
+            "cols": 4,
+            "solid": "",
+            "tiles": [
+              1,
+              1,
+              2,
+              3,
+              2,
+              3,
+              3,
+              3,
+              1,
+              2,
+              1,
+              2,
+              3,
+              1,
+              2,
+              1
+            ]
+          }
+        },
+        {
+          "type": "OnPointer",
+          "props": {
+            "down": [
+              {
+                "type": "SetTile",
+                "c": "=cellX(pointer.x)",
+                "r": "=cellY(pointer.y)",
+                "tile": "=tile(cellX(pointer.x), cellY(pointer.y)) % 3 + 1"
+              },
+              {
+                "type": "Emit",
+                "event": "check"
+              }
+            ]
+          }
+        },
+        {
+          "type": "OnEvent",
+          "props": {
+            "event": "check",
+            "actions": [
+              {
+                "type": "Repeat",
+                "count": 4,
+                "var": "r",
+                "actions": [
+                  {
+                    "type": "Repeat",
+                    "count": 2,
+                    "var": "c",
+                    "actions": [
+                      {
+                        "type": "If",
+                        "expr": "=tile(c, r) > 0 && tile(c, r) == tile(c + 1, r) && tile(c, r) == tile(c + 2, r)",
+                        "then": [
+                          {
+                            "type": "FillTiles",
+                            "c": "=c",
+                            "r": "=r",
+                            "w": 3,
+                            "h": 1,
+                            "tile": 0
+                          },
+                          {
+                            "type": "AddVariable",
+                            "name": "score",
+                            "value": 3
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "OnEvent",
+          "props": {
+            "event": "gravity",
+            "actions": [
+              {
+                "type": "Repeat",
+                "count": 3,
+                "var": "pass",
+                "actions": [
+                  {
+                    "type": "Repeat",
+                    "count": 3,
+                    "var": "r",
+                    "actions": [
+                      {
+                        "type": "Repeat",
+                        "count": 4,
+                        "var": "c",
+                        "actions": [
+                          {
+                            "type": "If",
+                            "expr": "=tile(c, r) > 0 && tile(c, r + 1) == 0",
+                            "then": [
+                              {
+                                "type": "SetTile",
+                                "c": "=c",
+                                "r": "=r + 1",
+                                "tile": "=tile(c, r)"
+                              },
+                              {
+                                "type": "SetTile",
+                                "c": "=c",
+                                "r": "=r",
+                                "tile": 0
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "Status",
+      "name": "Status",
+      "position": [
+        400.0,
+        30.0
+      ],
+      "size": [
+        760.0,
+        40.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "Score: {score}   Click a tile to change it; three in a row clear",
+            "fontSize": 20
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "btn Drop tiles",
+      "name": "btn Drop tiles",
+      "position": [
+        600.0,
+        200.0
+      ],
+      "size": [
+        200.0,
+        56.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#3A3F4B"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Drop tiles",
+            "fontSize": 18
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "Emit",
+                "event": "gravity"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

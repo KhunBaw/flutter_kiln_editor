@@ -688,7 +688,7 @@
       "props": [
         {
           "key": "slices",
-          "kind": "string",
+          "kind": "json",
           "default": "Coins|coin.png|40;Gem|gem.png|10;Star|star.png|1",
           "options": []
         },

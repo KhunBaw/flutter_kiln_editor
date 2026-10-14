@@ -1,0 +1,254 @@
+{
+  "kiln": 1,
+  "name": "RPG shop",
+  "size": [
+    800.0,
+    600.0
+  ],
+  "variables": {
+    "gold": 50,
+    "pick": 0,
+    "inventory": [],
+    "items": [
+      {
+        "name": "Potion",
+        "price": 20
+      },
+      {
+        "name": "Sword",
+        "price": 40
+      }
+    ]
+  },
+  "entities": [
+    {
+      "id": "shop",
+      "name": "shop",
+      "position": [
+        100.0,
+        100.0
+      ],
+      "size": [
+        20.0,
+        20.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#E8B04A"
+          }
+        },
+        {
+          "type": "OnEvent",
+          "props": {
+            "event": "buy",
+            "store": "pick",
+            "actions": [
+              {
+                "type": "If",
+                "expr": "=gold >= items[pick].price",
+                "then": [
+                  {
+                    "type": "AddVariable",
+                    "name": "gold",
+                    "value": "=-items[pick].price"
+                  },
+                  {
+                    "type": "ListAdd",
+                    "name": "inventory",
+                    "value": "=items[pick].name"
+                  }
+                ],
+                "else": [
+                  {
+                    "type": "Emit",
+                    "event": "poor"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "OnEvent",
+          "props": {
+            "event": "tally",
+            "actions": [
+              {
+                "type": "SetVariable",
+                "name": "potions",
+                "value": 0
+              },
+              {
+                "type": "ForEach",
+                "list": "inventory",
+                "var": "it",
+                "actions": [
+                  {
+                    "type": "If",
+                    "expr": "=it == 'Potion'",
+                    "then": [
+                      {
+                        "type": "AddVariable",
+                        "name": "potions",
+                        "value": 1
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "Status",
+      "name": "Status",
+      "position": [
+        400.0,
+        30.0
+      ],
+      "size": [
+        760.0,
+        40.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "Gold: {gold}   Bag: {inventory}   Potions: {potions}",
+            "fontSize": 20
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "btn Buy Potion (20)",
+      "name": "btn Buy Potion (20)",
+      "position": [
+        200.0,
+        200.0
+      ],
+      "size": [
+        200.0,
+        56.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#3A3F4B"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Buy Potion (20)",
+            "fontSize": 18
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "Emit",
+                "event": "buy",
+                "value": 0
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "btn Buy Sword (40)",
+      "name": "btn Buy Sword (40)",
+      "position": [
+        200.0,
+        280.0
+      ],
+      "size": [
+        200.0,
+        56.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#3A3F4B"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Buy Sword (40)",
+            "fontSize": 18
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "Emit",
+                "event": "buy",
+                "value": 1
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "btn Count potions",
+      "name": "btn Count potions",
+      "position": [
+        200.0,
+        360.0
+      ],
+      "size": [
+        200.0,
+        56.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#3A3F4B"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Count potions",
+            "fontSize": 18
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "Emit",
+                "event": "tally"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "kiln": 1,
+  "name": "Boss fight",
+  "size": [
+    800.0,
+    600.0
+  ],
+  "variables": {
+    "playerHp": 10
+  },
+  "entities": [
+    {
+      "id": "boss",
+      "name": "boss",
+      "position": [
+        400.0,
+        260.0
+      ],
+      "size": [
+        160.0,
+        160.0
+      ],
+      "angle": 0.0,
+      "variables": {
+        "hp": 3
+      },
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#E8B04A",
+            "shape": "oval"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Boss",
+            "fontSize": 16
+          }
+        },
+        {
+          "type": "StateMachine",
+          "props": {
+            "initial": "idle",
+            "states": [
+              {
+                "name": "idle"
+              },
+              {
+                "name": "attack",
+                "enter": [
+                  {
+                    "type": "AddVariable",
+                    "name": "playerHp",
+                    "value": -2
+                  }
+                ]
+              },
+              {
+                "name": "dead",
+                "enter": [
+                  {
+                    "type": "Emit",
+                    "event": "bossdead"
+                  },
+                  {
+                    "type": "Destroy"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "*",
+                "to": "dead",
+                "when": "=self.hp <= 0"
+              },
+              {
+                "from": "idle",
+                "to": "attack",
+                "when": "=self.stateTime >= 1"
+              },
+              {
+                "from": "attack",
+                "to": "idle",
+                "when": "=self.stateTime >= 0.5"
+              }
+            ]
+          }
+        },
+        {
+          "type": "OnEvent",
+          "props": {
+            "event": "hit",
+            "actions": [
+              {
+                "type": "AddVariable",
+                "name": "hp",
+                "value": -1,
+                "scope": "self"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "Status",
+      "name": "Status",
+      "position": [
+        400.0,
+        30.0
+      ],
+      "size": [
+        760.0,
+        40.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "Player HP: {playerHp}   Hit the boss 3 times",
+            "fontSize": 20
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "btn Hit",
+      "name": "btn Hit",
+      "position": [
+        400.0,
+        500.0
+      ],
+      "size": [
+        200.0,
+        56.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#3A3F4B"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Hit",
+            "fontSize": 18
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "Emit",
+                "event": "hit"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

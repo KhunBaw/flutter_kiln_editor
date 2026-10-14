@@ -203,6 +203,20 @@ void main() {
     expect(fill('Expr'), isNot(Z.danger.withAlpha(48)));
   });
 
+  testWidgets('every bundled template loads, plays and has a status line', (tester) async {
+    final s = await boot(tester);
+    for (final id in EditorState.templates.keys) {
+      await tester.runAsync(() => s.newFromTemplate(id));
+      expect(s.doc.name, EditorState.templates[id]);
+      expect(s.doc.entities.any((e) => e.name == 'Status'), isTrue, reason: id);
+      expect(s.dirty, isFalse);
+      final g = KilnGame(s.copyDoc());
+      await tester.runAsync(() async {
+        await g.onLoad();
+      });
+    }
+  });
+
   testWidgets('Tilemap: PAINT in the inspector, pick a tile, click and drag the scene', (tester) async {
     final s = await boot(tester);
     s.setTimeline(open: false); // give the scene its full height
