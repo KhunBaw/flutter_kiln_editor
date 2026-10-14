@@ -1,0 +1,1330 @@
+{
+  "behaviors": [
+    {
+      "type": "Shape",
+      "props": [
+        {
+          "key": "shape",
+          "kind": "choice",
+          "default": "rect",
+          "options": [
+            "rect",
+            "oval"
+          ]
+        },
+        {
+          "key": "color",
+          "kind": "color",
+          "default": "#4488FF",
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Sprite",
+      "props": [
+        {
+          "key": "image",
+          "kind": "image",
+          "default": "",
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "SpriteAnimation",
+      "props": [
+        {
+          "key": "image",
+          "kind": "image",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "cols",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        },
+        {
+          "key": "rows",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        },
+        {
+          "key": "fps",
+          "kind": "number",
+          "default": 8,
+          "options": []
+        },
+        {
+          "key": "clips",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "start",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "loop",
+          "kind": "bool",
+          "default": true,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Text",
+      "props": [
+        {
+          "key": "text",
+          "kind": "string",
+          "default": "Text {score}",
+          "options": []
+        },
+        {
+          "key": "fontSize",
+          "kind": "number",
+          "default": 24,
+          "options": []
+        },
+        {
+          "key": "color",
+          "kind": "color",
+          "default": "#FFFFFF",
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "OnTap",
+      "props": [
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Timer",
+      "props": [
+        {
+          "key": "interval",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        },
+        {
+          "key": "repeat",
+          "kind": "bool",
+          "default": true,
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Prefab",
+      "props": []
+    },
+    {
+      "type": "Spawner",
+      "props": [
+        {
+          "key": "prefab",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "interval",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        },
+        {
+          "key": "max",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Tween",
+      "props": [
+        {
+          "key": "kind",
+          "kind": "choice",
+          "default": "moveBy",
+          "options": [
+            "moveBy",
+            "scaleBy",
+            "rotateBy"
+          ]
+        },
+        {
+          "key": "x",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "y",
+          "kind": "number",
+          "default": -50,
+          "options": []
+        },
+        {
+          "key": "duration",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        },
+        {
+          "key": "loop",
+          "kind": "choice",
+          "default": "pingpong",
+          "options": [
+            "once",
+            "repeat",
+            "pingpong"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Condition",
+      "props": [
+        {
+          "key": "variable",
+          "kind": "string",
+          "default": "score",
+          "options": []
+        },
+        {
+          "key": "op",
+          "kind": "choice",
+          "default": ">=",
+          "options": [
+            "==",
+            "!=",
+            ">",
+            ">=",
+            "<",
+            "<="
+          ]
+        },
+        {
+          "key": "value",
+          "kind": "number",
+          "default": 10,
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Collider",
+      "props": [
+        {
+          "key": "shape",
+          "kind": "choice",
+          "default": "rect",
+          "options": [
+            "rect",
+            "circle"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "OnCollide",
+      "props": [
+        {
+          "key": "with",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        },
+        {
+          "key": "exit",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Tilemap",
+      "props": [
+        {
+          "key": "image",
+          "kind": "image",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "tile",
+          "kind": "number",
+          "default": 32,
+          "options": []
+        },
+        {
+          "key": "cols",
+          "kind": "number",
+          "default": 10,
+          "options": []
+        },
+        {
+          "key": "tiles",
+          "kind": "tiles",
+          "default": [],
+          "options": []
+        },
+        {
+          "key": "solid",
+          "kind": "string",
+          "default": "1",
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "GridMove",
+      "props": [
+        {
+          "key": "cell",
+          "kind": "number",
+          "default": 32,
+          "options": []
+        },
+        {
+          "key": "time",
+          "kind": "number",
+          "default": 0.12,
+          "options": []
+        },
+        {
+          "key": "keys",
+          "kind": "choice",
+          "default": "both",
+          "options": [
+            "both",
+            "arrows",
+            "wasd"
+          ]
+        },
+        {
+          "key": "push",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "block",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "onStep",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Dialogue",
+      "props": [
+        {
+          "key": "lines",
+          "kind": "string",
+          "default": "Hello!|How are you?",
+          "options": []
+        },
+        {
+          "key": "choices",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "variable",
+          "kind": "string",
+          "default": "answer",
+          "options": []
+        },
+        {
+          "key": "open",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "fontSize",
+          "kind": "number",
+          "default": 18,
+          "options": []
+        },
+        {
+          "key": "color",
+          "kind": "color",
+          "default": "#FFFFFF",
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "OnEvent",
+      "props": [
+        {
+          "key": "event",
+          "kind": "string",
+          "default": "event",
+          "options": []
+        },
+        {
+          "key": "store",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "OnKey",
+      "props": [
+        {
+          "key": "key",
+          "kind": "choice",
+          "default": "Space",
+          "options": [
+            "Space",
+            "Enter",
+            "Escape",
+            "Tab",
+            "Shift",
+            "Control",
+            "Alt",
+            "ArrowUp",
+            "ArrowDown",
+            "ArrowLeft",
+            "ArrowRight",
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H",
+            "I",
+            "J",
+            "K",
+            "L",
+            "M",
+            "N",
+            "O",
+            "P",
+            "Q",
+            "R",
+            "S",
+            "T",
+            "U",
+            "V",
+            "W",
+            "X",
+            "Y",
+            "Z",
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9"
+          ]
+        },
+        {
+          "key": "on",
+          "kind": "choice",
+          "default": "down",
+          "options": [
+            "down",
+            "up",
+            "held"
+          ]
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Velocity",
+      "props": [
+        {
+          "key": "vx",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "vy",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "spin",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "space",
+          "kind": "choice",
+          "default": "world",
+          "options": [
+            "world",
+            "local"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Camera",
+      "props": [
+        {
+          "key": "deadzoneW",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "deadzoneH",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "clamp",
+          "kind": "bool",
+          "default": true,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Body",
+      "props": [
+        {
+          "key": "gravity",
+          "kind": "number",
+          "default": 1400,
+          "options": []
+        },
+        {
+          "key": "maxFall",
+          "kind": "number",
+          "default": 900,
+          "options": []
+        },
+        {
+          "key": "friction",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "coyote",
+          "kind": "number",
+          "default": 0.1,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Solid",
+      "props": [
+        {
+          "key": "oneWay",
+          "kind": "bool",
+          "default": false,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "OnLand",
+      "props": [
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Parallax",
+      "props": [
+        {
+          "key": "factorX",
+          "kind": "number",
+          "default": 0.5,
+          "options": []
+        },
+        {
+          "key": "factorY",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Move8",
+      "props": [
+        {
+          "key": "speed",
+          "kind": "number",
+          "default": 220,
+          "options": []
+        },
+        {
+          "key": "keys",
+          "kind": "choice",
+          "default": "both",
+          "options": [
+            "both",
+            "arrows",
+            "wasd"
+          ]
+        },
+        {
+          "key": "joystick",
+          "kind": "bool",
+          "default": false,
+          "options": []
+        },
+        {
+          "key": "turn",
+          "kind": "bool",
+          "default": false,
+          "options": []
+        },
+        {
+          "key": "bounded",
+          "kind": "bool",
+          "default": true,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Health",
+      "props": [
+        {
+          "key": "hp",
+          "kind": "number",
+          "default": 3,
+          "options": []
+        },
+        {
+          "key": "invulnerable",
+          "kind": "number",
+          "default": 0.5,
+          "options": []
+        },
+        {
+          "key": "variable",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "hurt",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        },
+        {
+          "key": "death",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Follow",
+      "props": [
+        {
+          "key": "target",
+          "kind": "string",
+          "default": "Player",
+          "options": []
+        },
+        {
+          "key": "speed",
+          "kind": "number",
+          "default": 100,
+          "options": []
+        },
+        {
+          "key": "stop",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "pathfind",
+          "kind": "bool",
+          "default": false,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Patrol",
+      "props": [
+        {
+          "key": "points",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "speed",
+          "kind": "number",
+          "default": 100,
+          "options": []
+        },
+        {
+          "key": "loop",
+          "kind": "choice",
+          "default": "loop",
+          "options": [
+            "loop",
+            "pingpong",
+            "once"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Wander",
+      "props": [
+        {
+          "key": "speed",
+          "kind": "number",
+          "default": 60,
+          "options": []
+        },
+        {
+          "key": "interval",
+          "kind": "number",
+          "default": 1.5,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "LookAt",
+      "props": [
+        {
+          "key": "target",
+          "kind": "string",
+          "default": "Player",
+          "options": []
+        },
+        {
+          "key": "offset",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "OffScreen",
+      "props": [
+        {
+          "key": "area",
+          "kind": "choice",
+          "default": "view",
+          "options": [
+            "view",
+            "world"
+          ]
+        },
+        {
+          "key": "margin",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "RigidBody",
+      "props": [
+        {
+          "key": "type",
+          "kind": "choice",
+          "default": "dynamic",
+          "options": [
+            "dynamic",
+            "static",
+            "kinematic"
+          ]
+        },
+        {
+          "key": "shape",
+          "kind": "choice",
+          "default": "box",
+          "options": [
+            "box",
+            "circle"
+          ]
+        },
+        {
+          "key": "density",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        },
+        {
+          "key": "restitution",
+          "kind": "number",
+          "default": 0.2,
+          "options": []
+        },
+        {
+          "key": "friction",
+          "kind": "number",
+          "default": 0.5,
+          "options": []
+        },
+        {
+          "key": "gravityScale",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        },
+        {
+          "key": "fixedRotation",
+          "kind": "bool",
+          "default": false,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Joint",
+      "props": [
+        {
+          "key": "kind",
+          "kind": "choice",
+          "default": "revolute",
+          "options": [
+            "revolute",
+            "distance",
+            "rope"
+          ]
+        },
+        {
+          "key": "other",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "anchorX",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "anchorY",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "otherAnchorX",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "otherAnchorY",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "collide",
+          "kind": "bool",
+          "default": false,
+          "options": []
+        },
+        {
+          "key": "frequency",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "damping",
+          "kind": "number",
+          "default": 0.5,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "DragLaunch",
+      "props": [
+        {
+          "key": "power",
+          "kind": "number",
+          "default": 6,
+          "options": []
+        },
+        {
+          "key": "maxPull",
+          "kind": "number",
+          "default": 120,
+          "options": []
+        },
+        {
+          "key": "grab",
+          "kind": "number",
+          "default": 24,
+          "options": []
+        },
+        {
+          "key": "onLaunch",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "AddVariable",
+      "props": [
+        {
+          "key": "name",
+          "kind": "string",
+          "default": "score",
+          "options": []
+        },
+        {
+          "key": "value",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "SetVariable",
+      "props": [
+        {
+          "key": "name",
+          "kind": "string",
+          "default": "score",
+          "options": []
+        },
+        {
+          "key": "value",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "Destroy",
+      "props": []
+    },
+    {
+      "type": "PlaySound",
+      "props": [
+        {
+          "key": "file",
+          "kind": "audio",
+          "default": "",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "LoadScene",
+      "props": [
+        {
+          "key": "scene",
+          "kind": "string",
+          "default": "assets/scenes/level1.kiln.json",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "Emit",
+      "props": [
+        {
+          "key": "event",
+          "kind": "string",
+          "default": "event",
+          "options": []
+        },
+        {
+          "key": "value",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "ResetVariables",
+      "props": [
+        {
+          "key": "names",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "SetProp",
+      "props": [
+        {
+          "key": "prop",
+          "kind": "choice",
+          "default": "x",
+          "options": [
+            "x",
+            "y",
+            "angle",
+            "width",
+            "height",
+            "visible",
+            "vx",
+            "vy",
+            "spin"
+          ]
+        },
+        {
+          "key": "mode",
+          "kind": "choice",
+          "default": "set",
+          "options": [
+            "set",
+            "add"
+          ]
+        },
+        {
+          "key": "value",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Spawn",
+      "props": [
+        {
+          "key": "prefab",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "x",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "y",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "angle",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Jump",
+      "props": [
+        {
+          "key": "force",
+          "kind": "number",
+          "default": 600,
+          "options": []
+        },
+        {
+          "key": "air",
+          "kind": "bool",
+          "default": false,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Shoot",
+      "props": [
+        {
+          "key": "prefab",
+          "kind": "string",
+          "default": "Bullet",
+          "options": []
+        },
+        {
+          "key": "speed",
+          "kind": "number",
+          "default": 600,
+          "options": []
+        },
+        {
+          "key": "aim",
+          "kind": "choice",
+          "default": "facing",
+          "options": [
+            "facing",
+            "target"
+          ]
+        },
+        {
+          "key": "at",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "cooldown",
+          "kind": "number",
+          "default": 0.2,
+          "options": []
+        },
+        {
+          "key": "offset",
+          "kind": "number",
+          "default": 20,
+          "options": []
+        },
+        {
+          "key": "spread",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Damage",
+      "props": [
+        {
+          "key": "amount",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Heal",
+      "props": [
+        {
+          "key": "amount",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Burst",
+      "props": [
+        {
+          "key": "count",
+          "kind": "number",
+          "default": 12,
+          "options": []
+        },
+        {
+          "key": "speed",
+          "kind": "number",
+          "default": 140,
+          "options": []
+        },
+        {
+          "key": "life",
+          "kind": "number",
+          "default": 0.5,
+          "options": []
+        },
+        {
+          "key": "size",
+          "kind": "number",
+          "default": 3,
+          "options": []
+        },
+        {
+          "key": "color",
+          "kind": "color",
+          "default": "#E9C548",
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Flip",
+      "props": [
+        {
+          "key": "face",
+          "kind": "choice",
+          "default": "toggle",
+          "options": [
+            "toggle",
+            "left",
+            "right"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "PlayAnim",
+      "props": [
+        {
+          "key": "clip",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "PlayMusic",
+      "props": [
+        {
+          "key": "file",
+          "kind": "audio",
+          "default": "",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "StopMusic",
+      "props": [],
+      "targeted": false
+    },
+    {
+      "type": "SaveGame",
+      "props": [
+        {
+          "key": "slot",
+          "kind": "string",
+          "default": "save",
+          "options": []
+        },
+        {
+          "key": "names",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "LoadGame",
+      "props": [
+        {
+          "key": "slot",
+          "kind": "string",
+          "default": "save",
+          "options": []
+        },
+        {
+          "key": "names",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ],
+      "targeted": false
+    }
+  ]
+}

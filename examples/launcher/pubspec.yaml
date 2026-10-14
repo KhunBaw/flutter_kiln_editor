@@ -1,0 +1,27 @@
+name: launcher
+description: "Kiln example: slingshot physics game (RigidBody, Joint, DragLaunch). Scene files plus one registerForge2d call."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.1
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  kiln:
+    path: ../../packages/kiln
+  kiln_forge2d:
+    path: ../../packages/kiln_forge2d
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/scenes/

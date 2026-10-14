@@ -1,0 +1,455 @@
+{
+  "kiln": 1,
+  "name": "level1",
+  "size": [
+    800,
+    450
+  ],
+  "variables": {
+    "shots": 0,
+    "pigs": 0
+  },
+  "entities": [
+    {
+      "id": "sky",
+      "name": "Sky",
+      "position": [
+        400,
+        225
+      ],
+      "size": [
+        800,
+        450
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#23304A"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "ground",
+      "name": "Ground",
+      "position": [
+        400,
+        430
+      ],
+      "size": [
+        800,
+        40
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#4C7A3F"
+          }
+        },
+        {
+          "type": "RigidBody",
+          "props": {
+            "type": "static",
+            "friction": 0.8
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "rect"
+          }
+        }
+      ],
+      "children": [],
+      "tags": [
+        "ground"
+      ]
+    },
+    {
+      "id": "post",
+      "name": "Post",
+      "position": [
+        120,
+        385
+      ],
+      "size": [
+        10,
+        70
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#7A5A3A"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "c1",
+      "name": "Crate",
+      "position": [
+        600,
+        390
+      ],
+      "size": [
+        40,
+        40
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#C9824A"
+          }
+        },
+        {
+          "type": "RigidBody",
+          "props": {
+            "density": 1,
+            "friction": 0.6,
+            "restitution": 0.1
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "c2",
+      "name": "Crate",
+      "position": [
+        600,
+        350
+      ],
+      "size": [
+        40,
+        40
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#C9824A"
+          }
+        },
+        {
+          "type": "RigidBody",
+          "props": {
+            "density": 1,
+            "friction": 0.6,
+            "restitution": 0.1
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "c3",
+      "name": "Crate",
+      "position": [
+        680,
+        390
+      ],
+      "size": [
+        40,
+        40
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#C9824A"
+          }
+        },
+        {
+          "type": "RigidBody",
+          "props": {
+            "density": 1,
+            "friction": 0.6,
+            "restitution": 0.1
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "c4",
+      "name": "Crate",
+      "position": [
+        680,
+        350
+      ],
+      "size": [
+        40,
+        40
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#C9824A"
+          }
+        },
+        {
+          "type": "RigidBody",
+          "props": {
+            "density": 1,
+            "friction": 0.6,
+            "restitution": 0.1
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "plank",
+      "name": "Plank",
+      "position": [
+        640,
+        322
+      ],
+      "size": [
+        140,
+        16
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#A8743F"
+          }
+        },
+        {
+          "type": "RigidBody",
+          "props": {
+            "density": 1,
+            "friction": 0.6,
+            "restitution": 0.1
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "pig",
+      "name": "Pig",
+      "position": [
+        640,
+        296
+      ],
+      "size": [
+        32,
+        32
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#8DBE5A"
+          }
+        },
+        {
+          "type": "RigidBody",
+          "props": {
+            "shape": "circle",
+            "density": 0.6,
+            "restitution": 0.1
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "circle"
+          }
+        },
+        {
+          "type": "OnCollide",
+          "props": {
+            "with": "#ground",
+            "actions": [
+              {
+                "type": "Burst",
+                "color": "#8DBE5A"
+              },
+              {
+                "type": "AddVariable",
+                "name": "pigs",
+                "value": 1
+              },
+              {
+                "type": "Destroy",
+                "target": "self"
+              }
+            ]
+          }
+        }
+      ],
+      "children": [],
+      "tags": [
+        "pig"
+      ]
+    },
+    {
+      "id": "bell",
+      "name": "Bell",
+      "position": [
+        420,
+        190
+      ],
+      "size": [
+        30,
+        30
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#E9C548"
+          }
+        },
+        {
+          "type": "RigidBody",
+          "props": {
+            "shape": "circle",
+            "density": 1.5,
+            "restitution": 0.4
+          }
+        },
+        {
+          "type": "Joint",
+          "props": {
+            "kind": "rope",
+            "other": "",
+            "anchorX": 0,
+            "anchorY": 0,
+            "otherAnchorX": 420,
+            "otherAnchorY": 30
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "ball",
+      "name": "Ball",
+      "position": [
+        120,
+        335
+      ],
+      "size": [
+        26,
+        26
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#E8606A"
+          }
+        },
+        {
+          "type": "RigidBody",
+          "props": {
+            "shape": "circle",
+            "density": 2,
+            "restitution": 0.35,
+            "friction": 0.4
+          }
+        },
+        {
+          "type": "DragLaunch",
+          "props": {
+            "power": 5.5,
+            "maxPull": 110,
+            "grab": 24,
+            "onLaunch": [
+              {
+                "type": "AddVariable",
+                "name": "shots",
+                "value": 1
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "hud",
+      "name": "HUD",
+      "position": [
+        400,
+        24
+      ],
+      "size": [
+        760,
+        30
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "Shots {shots}   Pigs {pigs}   drag the ball back and let go   R restarts",
+            "fontSize": 14,
+            "color": "#E8E6DC"
+          }
+        },
+        {
+          "type": "Condition",
+          "props": {
+            "variable": "pigs",
+            "op": ">=",
+            "value": 1,
+            "actions": [
+              {
+                "type": "Emit",
+                "event": "win"
+              }
+            ]
+          }
+        },
+        {
+          "type": "OnKey",
+          "props": {
+            "key": "R",
+            "on": "down",
+            "actions": [
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/level1.kiln.json"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

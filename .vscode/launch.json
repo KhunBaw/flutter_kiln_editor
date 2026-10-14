@@ -26,6 +26,22 @@
             "deviceId": "macos"
         },
         {
+            "name": "sokoban (macOS)",
+            "request": "launch",
+            "type": "dart",
+            "cwd": "examples/sokoban",
+            "program": "lib/main.dart",
+            "deviceId": "macos"
+        },
+        {
+            "name": "launcher (macOS)",
+            "request": "launch",
+            "type": "dart",
+            "cwd": "examples/launcher",
+            "program": "lib/main.dart",
+            "deviceId": "macos"
+        },
+        {
             "name": "kiln_editor (macOS)",
             "request": "launch",
             "type": "dart",

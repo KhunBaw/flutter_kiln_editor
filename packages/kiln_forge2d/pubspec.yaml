@@ -1,0 +1,24 @@
+name: kiln_forge2d
+description: "Physics for Kiln scenes: RigidBody, Joint and DragLaunch behaviors on Forge2D."
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.13.1
+  flutter: ">=1.17.0"
+
+resolution: workspace
+
+dependencies:
+  flame: ^1.38.2
+  flutter:
+    sdk: flutter
+  forge2d: ^0.14.2
+  kiln:
+    path: ../kiln
+
+dev_dependencies:
+  flame_test: ^2.3.1
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

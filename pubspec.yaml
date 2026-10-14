@@ -4,7 +4,10 @@ environment:
   sdk: ^3.13.1
 workspace:
   - packages/kiln
+  - packages/kiln_forge2d
   - apps/kiln_editor
   - examples/tap_game
   - examples/platformer
   - examples/shooter
+  - examples/sokoban
+  - examples/launcher
