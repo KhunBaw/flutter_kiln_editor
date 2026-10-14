@@ -4,6 +4,7 @@ import 'dart:ui' show Image;
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/particles.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
@@ -151,7 +152,11 @@ final builtinBehaviors = <BehaviorDef>[
   ) {
     final only = p.string('with');
     e.collideHandlers.add((other) {
-      if (only.isEmpty || other.node.name == only) e.runActions(p.list('actions'));
+      if (only.isEmpty ||
+          other.node.name == only ||
+          (only.startsWith('#') && other.node.tags.contains(only.substring(1)))) {
+        e.runActions(p.list('actions'), other: other);
+      }
     });
     return null;
   }),
@@ -164,12 +169,20 @@ final builtinBehaviors = <BehaviorDef>[
     PropDef('on', PropKind.choice, 'down', options: ['down', 'up', 'held']),
     PropDef('actions', PropKind.actions, []),
   ], (e, p) => _OnKey(_keys[p.string('key')], p.string('on'), p.list('actions'))),
-  BehaviorDef('Velocity', const [
-    PropDef('vx', PropKind.number, 0),
-    PropDef('vy', PropKind.number, 0),
-    PropDef('spin', PropKind.number, 0),
-    PropDef('space', PropKind.choice, 'world', options: ['world', 'local']),
-  ], (e, p) => Motion(p.number('vx'), p.number('vy'), p.number('spin'), local: p.string('space') == 'local')),
+  BehaviorDef(
+    'Velocity',
+    const [
+      PropDef('vx', PropKind.number, 0),
+      PropDef('vy', PropKind.number, 0),
+      PropDef('spin', PropKind.number, 0),
+      PropDef('space', PropKind.choice, 'world', options: ['world', 'local']),
+    ],
+    (e, p) => _oneMover(
+      e,
+      'Velocity',
+      () => Motion(p.number('vx'), p.number('vy'), p.number('spin'), local: p.string('space') == 'local'),
+    ),
+  ),
   BehaviorDef('Camera', const [
     PropDef('deadzoneW', PropKind.number, 0),
     PropDef('deadzoneH', PropKind.number, 0),
@@ -183,11 +196,15 @@ final builtinBehaviors = <BehaviorDef>[
       PropDef('friction', PropKind.number, 0),
       PropDef('coyote', PropKind.number, 0.1),
     ],
-    (e, p) => Body(
-      gravity: p.number('gravity'),
-      maxFall: p.number('maxFall'),
-      friction: p.number('friction'),
-      coyote: p.number('coyote'),
+    (e, p) => _oneMover(
+      e,
+      'Body',
+      () => Body(
+        gravity: p.number('gravity'),
+        maxFall: p.number('maxFall'),
+        friction: p.number('friction'),
+        coyote: p.number('coyote'),
+      ),
     ),
   ),
   BehaviorDef('Solid', const [PropDef('oneWay', PropKind.bool, false)], (e, p) => Solid(oneWay: p.flag('oneWay'))),
@@ -199,6 +216,49 @@ final builtinBehaviors = <BehaviorDef>[
     PropDef('factorX', PropKind.number, 0.5),
     PropDef('factorY', PropKind.number, 0),
   ], (e, p) => _Parallax(Vector2(p.number('factorX'), p.number('factorY')))),
+  BehaviorDef(
+    'Move8',
+    const [
+      PropDef('speed', PropKind.number, 220),
+      PropDef('keys', PropKind.choice, 'both', options: ['both', 'arrows', 'wasd']),
+      PropDef('joystick', PropKind.bool, false),
+      PropDef('turn', PropKind.bool, false),
+      PropDef('bounded', PropKind.bool, true),
+    ],
+    (e, p) => _Move8(
+      p.number('speed'),
+      p.string('keys'),
+      joystick: p.flag('joystick'),
+      turn: p.flag('turn'),
+      bounded: p.flag('bounded'),
+    ),
+  ),
+  BehaviorDef('Health', const [
+    PropDef('hp', PropKind.number, 3),
+    PropDef('invulnerable', PropKind.number, 0.5),
+    PropDef('variable', PropKind.string, ''),
+    PropDef('hurt', PropKind.actions, []),
+    PropDef('death', PropKind.actions, []),
+  ], (e, p) => Health(p)),
+  BehaviorDef('Follow', const [
+    PropDef('target', PropKind.string, 'Player'),
+    PropDef('speed', PropKind.number, 100),
+    PropDef('stop', PropKind.number, 0),
+  ], (e, p) => _Follow(p.string('target'), p.number('speed'), p.number('stop'))),
+  BehaviorDef('Patrol', const [
+    // World points "x,y; x,y; …" visited in order.
+    PropDef('points', PropKind.string, ''),
+    PropDef('speed', PropKind.number, 100),
+    PropDef('loop', PropKind.choice, 'loop', options: ['loop', 'pingpong', 'once']),
+  ], (e, p) => _Patrol(parsePoints(p.string('points')), p.number('speed'), p.string('loop'))),
+  BehaviorDef('Wander', const [
+    PropDef('speed', PropKind.number, 60),
+    PropDef('interval', PropKind.number, 1.5),
+  ], (e, p) => _Wander(p.number('speed'), _minPeriod(p.number('interval')))),
+  BehaviorDef('LookAt', const [
+    PropDef('target', PropKind.string, 'Player'),
+    PropDef('offset', PropKind.number, 0),
+  ], (e, p) => _LookAt(p.string('target'), p.number('offset'))),
   BehaviorDef('OffScreen', const [
     PropDef('area', PropKind.choice, 'view', options: ['view', 'world']),
     PropDef('margin', PropKind.number, 0),
@@ -334,6 +394,72 @@ final builtinActions = <ActionDef>[
     if (body != null && (a.flag('air') || body.canJump)) body.jump(a.number('force'));
   }),
   ActionDef(
+    'Shoot',
+    const [
+      PropDef('prefab', PropKind.string, 'Bullet'),
+      PropDef('speed', PropKind.number, 600),
+      PropDef('aim', PropKind.choice, 'facing', options: ['facing', 'target']),
+      PropDef('at', PropKind.string, ''),
+      PropDef('cooldown', PropKind.number, 0.2),
+      PropDef('offset', PropKind.number, 20),
+      PropDef('spread', PropKind.number, 0),
+    ],
+    (self, a) {
+      final g = self.game, prefab = a.string('prefab');
+      final key = 'shoot:$prefab';
+      if (g.time < (self.readyAt[key] ?? 0)) return;
+      self.readyAt[key] = g.time + a.number('cooldown');
+      final aimed = a.string('aim') == 'target' ? g.nearest(self, a.string('at')) : null;
+      var dir = aimed == null
+          ? Vector2(cos(self.absoluteAngle), sin(self.absoluteAngle))
+          : (aimed.absoluteCenter - self.absoluteCenter);
+      if (dir.isZero()) dir = Vector2(1, 0);
+      dir.normalize();
+      // Spread: a random turn within ±spread/2 radians.
+      if (a.number('spread') != 0) dir.rotate((_rng.nextDouble() - 0.5) * a.number('spread'));
+      final shot = g.spawn(prefab, self.absoluteCenter + dir * a.number('offset'), angle: atan2(dir.y, dir.x));
+      if (shot == null) return debugPrint('kiln: Shoot on ${self.node.name}: no prefab named "$prefab"');
+      shot.launch = dir * a.number('speed');
+    },
+  ),
+  ActionDef('Damage', const [PropDef('amount', PropKind.number, 1)], (self, a) {
+    for (final h in self.children.whereType<Health>()) {
+      h.damage(a.number('amount'));
+    }
+  }),
+  ActionDef('Heal', const [PropDef('amount', PropKind.number, 1)], (self, a) {
+    for (final h in self.children.whereType<Health>()) {
+      h.heal(a.number('amount'));
+    }
+  }),
+  ActionDef(
+    'Burst',
+    const [
+      PropDef('count', PropKind.number, 12),
+      PropDef('speed', PropKind.number, 140),
+      PropDef('life', PropKind.number, 0.5),
+      PropDef('size', PropKind.number, 3),
+      PropDef('color', PropKind.color, '#E9C548'),
+    ],
+    (self, a) {
+      final paint = Paint()..color = a.color('color');
+      final speed = a.number('speed'), r = max(0.5, a.number('size'));
+      self.game.world.add(
+        ParticleSystemComponent(
+          position: self.absoluteCenter,
+          particle: Particle.generate(
+            count: a.number('count').round().clamp(1, 500),
+            lifespan: max(0.05, a.number('life')),
+            generator: (i) => AcceleratedParticle(
+              speed: (Vector2(1, 0)..rotate(_rng.nextDouble() * 2 * pi)) * (speed * (0.4 + _rng.nextDouble() * 0.6)),
+              child: CircleParticle(radius: r, paint: paint),
+            ),
+          ),
+        ),
+      );
+    },
+  ),
+  ActionDef(
     'Flip',
     const [
       PropDef('face', PropKind.choice, 'toggle', options: ['toggle', 'left', 'right']),
@@ -361,8 +487,7 @@ final builtinActions = <ActionDef>[
 
 void _setProp(KilnEntity e, String prop, double v, {required bool add}) {
   double next(double cur) => add ? cur + v : v;
-  // A pending (not yet mounted) Motion counts too, so repeated calls in one frame never stack two.
-  Motion vel() => e.children.whereType<Motion>().firstOrNull ?? (e.motion ??= Motion(0, 0, 0)..addToParent(e));
+  Motion vel() => motionOf(e);
   switch (prop) {
     case 'x':
       e.x = next(e.x);
@@ -493,6 +618,220 @@ class _Parallax extends Component with ParentIsA<KilnEntity> {
   void onRemove() => parent.game.afterUpdate.remove(_apply);
 }
 
+/// Parses "x,y; x,y" into points; malformed pairs are skipped.
+List<Vector2> parsePoints(String spec) => [
+  for (final pair in spec.split(';'))
+    if (pair.split(',').map((v) => double.tryParse(v.trim())).toList() case [final x?, final y?]) Vector2(x, y),
+];
+
+/// Hit points with a grace window after each hit; mirrors hp into a game variable when one is named.
+class Health extends Component with ParentIsA<KilnEntity> {
+  Health(Props p)
+    : hp = max(1, p.number('hp')),
+      maxHp = max(1, p.number('hp')),
+      invulnerable = max(0, p.number('invulnerable')),
+      variable = p.string('variable'),
+      hurt = p.list('hurt'),
+      death = p.list('death');
+
+  double hp;
+  final double maxHp, invulnerable;
+  final String variable;
+  final List<Object?> hurt, death;
+  double _safeUntil = -1;
+
+  bool get dead => hp <= 0;
+
+  void _sync() {
+    if (variable.isNotEmpty) parent.game.vars[variable] = hp;
+  }
+
+  @override
+  void onMount() {
+    super.onMount();
+    _sync();
+  }
+
+  void damage(double n) {
+    final g = parent.game;
+    if (dead || n <= 0 || g.time < _safeUntil) return;
+    hp = max(0, hp - n);
+    _safeUntil = g.time + invulnerable;
+    _sync();
+    parent.runActions(dead ? death : hurt);
+  }
+
+  void heal(double n) {
+    if (dead || n <= 0) return;
+    hp = min(maxHp, hp + n);
+    _sync();
+  }
+}
+
+/// Keyboard (and optional on-screen joystick) steering at a fixed speed; `turn` faces the move direction.
+class _Move8 extends Component with ParentIsA<KilnEntity> {
+  _Move8(this.speed, String keys, {required this.joystick, required this.turn, required this.bounded})
+    : _dirs = [
+        if (keys != 'wasd') ...[
+          (LogicalKeyboardKey.arrowLeft, -1, 0),
+          (LogicalKeyboardKey.arrowRight, 1, 0),
+          (LogicalKeyboardKey.arrowUp, 0, -1),
+          (LogicalKeyboardKey.arrowDown, 0, 1),
+        ],
+        if (keys != 'arrows') ...[
+          (LogicalKeyboardKey.keyA, -1, 0),
+          (LogicalKeyboardKey.keyD, 1, 0),
+          (LogicalKeyboardKey.keyW, 0, -1),
+          (LogicalKeyboardKey.keyS, 0, 1),
+        ],
+      ];
+
+  final double speed;
+  final bool joystick, turn, bounded;
+  final List<(LogicalKeyboardKey, int, int)> _dirs;
+
+  // After movement this frame: keep the whole box inside the world.
+  void _clamp() {
+    final r = parent.toAbsoluteRect(), w = parent.game.scene.worldSize;
+    final dx = r.left < 0 ? -r.left : (r.right > w.x ? w.x - r.right : 0.0);
+    final dy = r.top < 0 ? -r.top : (r.bottom > w.y ? w.y - r.bottom : 0.0);
+    if (dx != 0 || dy != 0) parent.position.add(Vector2(dx, dy));
+  }
+
+  JoystickComponent? _stick;
+
+  @override
+  void onMount() {
+    super.onMount();
+    final g = parent.game;
+    if (g.editing) return;
+    g.keyPollers++;
+    if (bounded) g.afterUpdate.add(_clamp);
+    if (joystick) {
+      g.camera.viewport.add(
+        _stick = JoystickComponent(
+          knob: CircleComponent(radius: 22, paint: Paint()..color = const Color(0x99E8E6DC)),
+          background: CircleComponent(radius: 56, paint: Paint()..color = const Color(0x33E8E6DC)),
+          margin: const EdgeInsets.only(left: 36, bottom: 36),
+        ),
+      );
+    }
+  }
+
+  @override
+  void onRemove() {
+    if (!parent.game.editing) parent.game.keyPollers--;
+    parent.game.afterUpdate.remove(_clamp);
+    _stick?.removeFromParent();
+  }
+
+  @override
+  void update(double dt) {
+    final g = parent.game;
+    if (g.editing) return;
+    final dir = Vector2.zero();
+    for (final (k, x, y) in _dirs) {
+      if (g.keysDown.contains(k)) dir.add(Vector2(x.toDouble(), y.toDouble()));
+    }
+    if (_stick case final s? when !s.relativeDelta.isZero()) dir.setFrom(s.relativeDelta);
+    if (dir.length > 1) dir.normalize();
+    motionOf(parent).v.setFrom(dir * speed);
+    if (turn && !dir.isZero()) parent.angle = atan2(dir.y, dir.x);
+  }
+}
+
+/// Steers toward the nearest [target] (name or #tag) until within [stop] pixels.
+class _Follow extends Component with ParentIsA<KilnEntity> {
+  _Follow(this.target, this.speed, this.stop);
+
+  final String target;
+  final double speed, stop;
+
+  @override
+  void update(double dt) {
+    final g = parent.game;
+    if (g.editing) return;
+    final t = g.nearest(parent, target);
+    final d = t == null ? Vector2.zero() : t.absoluteCenter - parent.absoluteCenter;
+    motionOf(parent).v.setFrom(d.length > max(stop, 0.5) ? (d..normalize()) * speed : Vector2.zero());
+  }
+}
+
+/// Walks between world points; `once` stops at the last one.
+class _Patrol extends Component with ParentIsA<KilnEntity> {
+  _Patrol(this.points, this.speed, this.mode);
+
+  final List<Vector2> points;
+  final double speed;
+  final String mode;
+  int _i = 0, _step = 1;
+
+  @override
+  void update(double dt) {
+    if (parent.game.editing || points.isEmpty) return;
+    final m = motionOf(parent);
+    final d = points[_i] - parent.absoluteCenter;
+    // Arrived (or would overshoot this frame): advance to the next point.
+    if (d.length <= max(speed * dt, 0.5)) {
+      parent.position.add(d); // land exactly on the point so legs don't drift
+      if (points.length == 1 || (mode == 'once' && _i == points.length - 1)) {
+        m.v.setZero();
+        return;
+      }
+      if (mode == 'pingpong' && (_i + _step < 0 || _i + _step >= points.length)) _step = -_step;
+      _i = (_i + _step) % points.length;
+    }
+    final to = points[_i] - parent.absoluteCenter;
+    m.v.setFrom(to.isZero() ? Vector2.zero() : (to..normalize()) * speed);
+  }
+}
+
+/// Picks a new random heading (or a pause) every [interval] seconds.
+class _Wander extends Component with ParentIsA<KilnEntity> {
+  _Wander(this.speed, this.interval);
+
+  final double speed, interval;
+  double _next = 0;
+
+  @override
+  void update(double dt) {
+    final g = parent.game;
+    if (g.editing || g.time < _next) return;
+    _next = g.time + interval;
+    // One in four turns is a pause, so wanderers don't look like billiard balls.
+    motionOf(parent).v
+        .setFrom(_rng.nextInt(4) == 0 ? Vector2.zero() : (Vector2(1, 0)..rotate(_rng.nextDouble() * 2 * pi)) * speed);
+  }
+}
+
+/// Turns to face the nearest [target]; [offset] (radians) corrects art that doesn't point right.
+class _LookAt extends Component with ParentIsA<KilnEntity> {
+  _LookAt(this.target, this.offset);
+
+  final String target;
+  final double offset;
+
+  @override
+  void update(double dt) {
+    final g = parent.game;
+    if (g.editing) return;
+    final t = g.nearest(parent, target);
+    if (t == null) return;
+    final d = t.absoluteCenter - parent.absoluteCenter;
+    if (!d.isZero()) parent.angle = atan2(d.y, d.x) + offset;
+  }
+}
+
+/// Two movers would both integrate position, so only the first Velocity/Body on an entity counts.
+Motion? _oneMover(KilnEntity e, String type, Motion Function() make) {
+  if (e.motion == null) return make();
+  debugPrint('kiln: $type on ${e.node.name} ignored: the entity already has a Velocity or Body');
+  return null;
+}
+
+/// The entity's mover, adding a still one if it has none. Pending ones count, so a frame never stacks two.
+Motion motionOf(KilnEntity e) => e.motion ??= Motion(0, 0, 0)..addToParent(e);
+
 /// Moves its entity each frame; `local` velocity is rotated by the entity's angle.
 class Motion extends Component with ParentIsA<KilnEntity> {
   Motion(double vx, double vy, this.spin, {this.local = false}) : v = Vector2(vx, vy);
@@ -598,14 +937,16 @@ class _Camera extends Component with ParentIsA<KilnEntity> {
   }
 }
 
-/// Runs actions once when the entity's box stops overlapping the view (or world), grown by [margin].
+/// Runs actions once each time the entity's box leaves the view (or world), grown by [margin].
 class _OffScreen extends Component with ParentIsA<KilnEntity> {
   _OffScreen({required this.world, required this.margin, required this.actions});
 
   final bool world;
   final double margin;
   final List<Object?> actions;
-  bool _out = false;
+
+  /// Starts "out" so things spawned off-screen (incoming enemies) fire only after they enter and leave.
+  bool _out = true;
 
   @override
   void update(double dt) {

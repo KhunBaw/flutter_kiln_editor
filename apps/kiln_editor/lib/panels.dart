@@ -1213,6 +1213,7 @@ Widget _target(EditorState s, Map<String, Object?> raw, String id) {
       onSelected: (v) => set(v, merge: false),
       itemBuilder: (_) => [
         const PopupMenuItem(value: '', height: 30, child: Text('self')),
+        const PopupMenuItem(value: 'other', height: 30, child: Text('other (collision partner)')),
         for (final n in names) PopupMenuItem(value: n, height: 30, child: Text(n)),
         for (final t in tags) PopupMenuItem(value: '#$t', height: 30, child: Text('#$t')),
       ],

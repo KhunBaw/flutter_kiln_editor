@@ -67,6 +67,10 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
   int _emitDepth = 0;
   final Set<void Function(KeyEvent event)> keyListeners = {};
 
+  /// Keys held right now, and how many behaviors read them each frame (Move8).
+  Set<LogicalKeyboardKey> keysDown = {};
+  int keyPollers = 0;
+
   /// Run once per frame after every component updated (camera-relative placement).
   final Set<VoidCallback> afterUpdate = {};
 
@@ -89,6 +93,7 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
 
   @override
   void updateTree(double dt) {
+    if (!editing) time += dt;
     super.updateTree(editing ? 0 : dt);
     for (final f in [...afterUpdate]) {
       f();
@@ -112,13 +117,29 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
     }
   }
 
-  /// Entities an action addresses: empty/`self` → [self], `#tag` → tagged, else by name.
-  List<KilnEntity> targets(KilnEntity self, String target) {
+  /// Seconds of play so far (frozen while editing).
+  double time = 0;
+
+  /// Entities an action addresses: empty/`self` → [self], `other` → the collision partner, `#tag` → tagged, else by name.
+  List<KilnEntity> targets(KilnEntity self, String target, {KilnEntity? other}) {
     if (target.isEmpty || target == 'self') return [self];
+    if (target == 'other') return [?other];
     final all = world.descendants().whereType<KilnEntity>().where((e) => !e.isRemoving);
     return target.startsWith('#')
         ? all.where((e) => e.node.tags.contains(target.substring(1))).toList()
         : all.where((e) => e.node.name == target).toList();
+  }
+
+  /// Closest entity [target] addresses (name or #tag), excluding [self].
+  KilnEntity? nearest(KilnEntity self, String target) {
+    KilnEntity? best;
+    var bestD = double.infinity;
+    for (final e in targets(self, target)) {
+      if (e == self) continue;
+      final d = e.absoluteCenter.distanceToSquared(self.absoluteCenter);
+      if (d < bestD) (best, bestD) = (e, d);
+    }
+    return best;
   }
 
   VoidCallback on(String event, VoidCallback handler) {
@@ -155,7 +176,9 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
 
   @override
   KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    if (editing || keyListeners.isEmpty) return KeyEventResult.ignored;
+    if (editing) return KeyEventResult.ignored;
+    keysDown = {...keysPressed};
+    if (keyListeners.isEmpty && keyPollers == 0) return KeyEventResult.ignored;
     for (final l in [...keyListeners]) {
       l(event);
     }
@@ -173,8 +196,14 @@ class KilnEntity extends PositionComponent
   final List<void Function(KilnEntity other)> collideHandlers = [];
   final List<VoidCallback> landHandlers = [];
 
-  /// Set when an action adds a Motion at runtime, before it mounts.
+  /// The entity's one mover (Velocity, Body, or one added by an action), set before it mounts.
   Motion? motion;
+
+  /// Initial world velocity for a spawned projectile; applied to [motion] once behaviors load.
+  Vector2? launch;
+
+  /// Next game time each cooldown key (e.g. a Shoot prefab) is ready again.
+  final Map<String, double> readyAt = {};
 
   @override
   Future<void> onLoad() async {
@@ -185,12 +214,15 @@ class KilnEntity extends PositionComponent
         continue;
       }
       final c = await def.create(this, Props(b.props).withDefaults(def.props));
+      if (c is Motion) motion ??= c;
       if (c != null) await add(c);
     }
+    if (launch case final v?) motionOf(this).v.setFrom(v);
     await addAll(node.children.map(KilnEntity.new));
   }
 
-  void runActions(List<Object?> actions) => game.registry.runActions(this, actions);
+  /// [other] is the entity on the far side of a collision; actions can target it as `other`.
+  void runActions(List<Object?> actions, {KilnEntity? other}) => game.registry.runActions(this, actions, other: other);
 
   @override
   void onTapDown(TapDownEvent event) {

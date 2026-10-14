@@ -1,0 +1,559 @@
+{
+  "kiln": 1,
+  "name": "level1",
+  "size": [
+    480.0,
+    720.0
+  ],
+  "variables": {
+    "score": 0,
+    "hp": 3
+  },
+  "entities": [
+    {
+      "id": "bullet",
+      "name": "Bullet",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "size": [
+        14.0,
+        5.0
+      ],
+      "angle": 0.0,
+      "tags": [
+        "bullet"
+      ],
+      "behaviors": [
+        {
+          "type": "Prefab",
+          "props": {}
+        },
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#E9C548"
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "rect"
+          }
+        },
+        {
+          "type": "OnCollide",
+          "props": {
+            "with": "#enemy",
+            "actions": [
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        },
+        {
+          "type": "OffScreen",
+          "props": {
+            "area": "view",
+            "margin": 40,
+            "actions": [
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "enemy",
+      "name": "Drone",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "size": [
+        34.0,
+        34.0
+      ],
+      "angle": 0.0,
+      "tags": [
+        "enemy"
+      ],
+      "behaviors": [
+        {
+          "type": "Prefab",
+          "props": {}
+        },
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#C96A42"
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "circle"
+          }
+        },
+        {
+          "type": "Velocity",
+          "props": {
+            "vx": 0,
+            "vy": 120,
+            "spin": 0,
+            "space": "world"
+          }
+        },
+        {
+          "type": "Health",
+          "props": {
+            "hp": 2,
+            "invulnerable": 0,
+            "variable": "",
+            "hurt": [
+              {
+                "type": "Burst",
+                "count": 6,
+                "speed": 90,
+                "life": 0.45,
+                "size": 3,
+                "color": "#E8E6DC"
+              }
+            ],
+            "death": [
+              {
+                "type": "Burst",
+                "count": 14,
+                "speed": 160,
+                "life": 0.45,
+                "size": 3,
+                "color": "#C96A42"
+              },
+              {
+                "type": "AddVariable",
+                "name": "score",
+                "value": 10
+              },
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        },
+        {
+          "type": "OnCollide",
+          "props": {
+            "with": "#bullet",
+            "actions": [
+              {
+                "type": "Damage",
+                "amount": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "OnCollide",
+          "props": {
+            "with": "Player",
+            "actions": [
+              {
+                "type": "Damage",
+                "target": "other",
+                "amount": 1
+              },
+              {
+                "type": "Burst",
+                "count": 14,
+                "speed": 160,
+                "life": 0.45,
+                "size": 3,
+                "color": "#C96A42"
+              },
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        },
+        {
+          "type": "OffScreen",
+          "props": {
+            "area": "view",
+            "margin": 40,
+            "actions": [
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "gunner",
+      "name": "Gunner",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "size": [
+        40.0,
+        40.0
+      ],
+      "angle": 0.0,
+      "tags": [
+        "enemy"
+      ],
+      "behaviors": [
+        {
+          "type": "Prefab",
+          "props": {}
+        },
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#8B9958"
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "circle"
+          }
+        },
+        {
+          "type": "Velocity",
+          "props": {
+            "vx": 0,
+            "vy": 70,
+            "spin": 0,
+            "space": "world"
+          }
+        },
+        {
+          "type": "LookAt",
+          "props": {
+            "target": "Player",
+            "offset": 0
+          }
+        },
+        {
+          "type": "Timer",
+          "props": {
+            "interval": 1.4,
+            "repeat": true,
+            "actions": [
+              {
+                "type": "Shoot",
+                "prefab": "Shot",
+                "speed": 260,
+                "aim": "target",
+                "at": "Player",
+                "cooldown": 0,
+                "offset": 26,
+                "spread": 0
+              }
+            ]
+          }
+        },
+        {
+          "type": "Health",
+          "props": {
+            "hp": 4,
+            "invulnerable": 0,
+            "variable": "",
+            "hurt": [
+              {
+                "type": "Burst",
+                "count": 6,
+                "speed": 90,
+                "life": 0.45,
+                "size": 3,
+                "color": "#E8E6DC"
+              }
+            ],
+            "death": [
+              {
+                "type": "Burst",
+                "count": 24,
+                "speed": 200,
+                "life": 0.45,
+                "size": 3,
+                "color": "#8B9958"
+              },
+              {
+                "type": "AddVariable",
+                "name": "score",
+                "value": 30
+              },
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        },
+        {
+          "type": "OnCollide",
+          "props": {
+            "with": "#bullet",
+            "actions": [
+              {
+                "type": "Damage",
+                "amount": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "OffScreen",
+          "props": {
+            "area": "view",
+            "margin": 40,
+            "actions": [
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "shot",
+      "name": "Shot",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "size": [
+        10.0,
+        10.0
+      ],
+      "angle": 0.0,
+      "tags": [
+        "shot"
+      ],
+      "behaviors": [
+        {
+          "type": "Prefab",
+          "props": {}
+        },
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#E0525F"
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "circle"
+          }
+        },
+        {
+          "type": "OnCollide",
+          "props": {
+            "with": "Player",
+            "actions": [
+              {
+                "type": "Damage",
+                "target": "other",
+                "amount": 1
+              },
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        },
+        {
+          "type": "OffScreen",
+          "props": {
+            "area": "view",
+            "margin": 40,
+            "actions": [
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "drones",
+      "name": "DroneWaves",
+      "position": [
+        240.0,
+        -30.0
+      ],
+      "size": [
+        400.0,
+        10.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Spawner",
+          "props": {
+            "prefab": "Drone",
+            "interval": 0.9,
+            "max": 0
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "gunners",
+      "name": "GunnerWaves",
+      "position": [
+        240.0,
+        -40.0
+      ],
+      "size": [
+        360.0,
+        10.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Spawner",
+          "props": {
+            "prefab": "Gunner",
+            "interval": 4,
+            "max": 0
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "player",
+      "name": "Player",
+      "position": [
+        240.0,
+        640.0
+      ],
+      "size": [
+        36.0,
+        36.0
+      ],
+      "angle": -1.5707963267948966,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#4488FF"
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "circle"
+          }
+        },
+        {
+          "type": "Move8",
+          "props": {
+            "speed": 280,
+            "keys": "both",
+            "joystick": false,
+            "turn": false,
+            "bounded": true
+          }
+        },
+        {
+          "type": "OnKey",
+          "props": {
+            "key": "Space",
+            "on": "held",
+            "actions": [
+              {
+                "type": "Shoot",
+                "prefab": "Bullet",
+                "speed": 720,
+                "aim": "facing",
+                "at": "",
+                "cooldown": 0.16,
+                "offset": 24,
+                "spread": 0
+              }
+            ]
+          }
+        },
+        {
+          "type": "Health",
+          "props": {
+            "hp": 3,
+            "invulnerable": 1,
+            "variable": "hp",
+            "hurt": [
+              {
+                "type": "Burst",
+                "count": 10,
+                "speed": 120,
+                "life": 0.45,
+                "size": 3,
+                "color": "#4488FF"
+              }
+            ],
+            "death": [
+              {
+                "type": "Burst",
+                "count": 30,
+                "speed": 220,
+                "life": 0.45,
+                "size": 3,
+                "color": "#4488FF"
+              },
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/lose.kiln.json"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "hud",
+      "name": "HUD",
+      "position": [
+        240.0,
+        24.0
+      ],
+      "size": [
+        460.0,
+        30.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "SCORE {score}     HP {hp}",
+            "fontSize": 20,
+            "color": "#E8E6DC"
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

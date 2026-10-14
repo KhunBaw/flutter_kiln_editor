@@ -1,0 +1,88 @@
+{
+  "kiln": 1,
+  "name": "lose",
+  "size": [
+    480.0,
+    720.0
+  ],
+  "variables": {},
+  "entities": [
+    {
+      "id": "title",
+      "name": "Title",
+      "position": [
+        240.0,
+        320.0
+      ],
+      "size": [
+        440.0,
+        50.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "SHIP DOWN",
+            "fontSize": 40,
+            "color": "#E0525F"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "hint",
+      "name": "Hint",
+      "position": [
+        240.0,
+        380.0
+      ],
+      "size": [
+        440.0,
+        30.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "Press Space to fly again",
+            "fontSize": 18,
+            "color": "#BDBFB4"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "restart",
+      "name": "Restart",
+      "position": [
+        240.0,
+        600.0
+      ],
+      "size": [
+        10.0,
+        10.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "OnKey",
+          "props": {
+            "key": "Space",
+            "on": "down",
+            "actions": [
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/level1.kiln.json"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

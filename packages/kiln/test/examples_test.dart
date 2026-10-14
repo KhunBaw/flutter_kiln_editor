@@ -7,7 +7,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kiln/kiln.dart';
 import 'package:kiln/src/builtins.dart' show Body;
 
-const _examples = ['../../examples/tap_game/assets/scenes', '../../examples/platformer/assets/scenes'];
+const _examples = [
+  '../../examples/tap_game/assets/scenes',
+  '../../examples/platformer/assets/scenes',
+  '../../examples/shooter/assets/scenes',
+];
 const _scenes = '../../examples/tap_game/assets/scenes';
 
 SceneDoc _load(String name, [String dir = _scenes]) =>
@@ -106,6 +110,30 @@ void main() {
         g.update(1 / 60);
       }
       expect(loads, ['assets/scenes/level1.kiln.json']);
+    },
+  );
+
+  final shooterLoads = <String>[];
+  testWithGame(
+    'shooter: a fire-and-track bot scores; enemy fire and rams cost hp',
+    () => KilnGame(_load('level1.kiln.json', _examples[2]), onLoadScene: shooterLoads.add),
+    (g) async {
+      final player = g.world.children.whereType<KilnEntity>().firstWhere((e) => e.node.name == 'Player');
+      expect(g.vars['hp'], 3);
+      for (var t = 0.0; t < 25 && shooterLoads.isEmpty; t += 1 / 60) {
+        final foe = g.nearest(player, '#enemy');
+        final keys = {LogicalKeyboardKey.space};
+        if (foe != null && (foe.x - player.x).abs() > 6) {
+          keys.add(foe.x < player.x ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight);
+        }
+        g.onKeyEvent(_key(LogicalKeyboardKey.space), keys);
+        g.update(1 / 60);
+        await g.ready();
+      }
+      expect(g.vars['score'], greaterThan(50));
+      // The bot never dodges, so it gets hit; dying sends it to the lose scene.
+      expect((g.vars['hp'] as num) < 3 || shooterLoads.isNotEmpty, isTrue);
+      if (shooterLoads.isNotEmpty) expect(shooterLoads, ['assets/scenes/lose.kiln.json']);
     },
   );
 }

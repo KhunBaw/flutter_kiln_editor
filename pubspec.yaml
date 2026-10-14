@@ -7,3 +7,4 @@ workspace:
   - apps/kiln_editor
   - examples/tap_game
   - examples/platformer
+  - examples/shooter

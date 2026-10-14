@@ -109,7 +109,7 @@ class KilnRegistry {
     return added;
   }
 
-  void runActions(KilnEntity self, List<Object?> list) {
+  void runActions(KilnEntity self, List<Object?> list, {KilnEntity? other}) {
     for (final raw in list) {
       final args = Props(raw is Map<String, Object?> ? raw : const {});
       final def = actions[args.string('type')];
@@ -118,13 +118,13 @@ class KilnRegistry {
         continue;
       }
       final full = args.withDefaults(def.props);
-      for (final t in def.targeted ? self.game.targets(self, args.string(targetKey)) : [self]) {
+      for (final t in def.targeted ? self.game.targets(self, args.string(targetKey), other: other) : [self]) {
         def.run(t, full);
       }
     }
   }
 
-  /// Every action accepts this arg: empty/`self`, an entity name, or `#tag`.
+  /// Every action accepts this arg: empty/`self`, `other` (collision partner), an entity name, or `#tag`.
   static const targetKey = 'target';
 }
 

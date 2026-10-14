@@ -36,9 +36,17 @@ enum Family {
 
   static Family of(String type) => switch (type) {
     'Shape' || 'Sprite' || 'SpriteAnimation' || 'Text' || 'Tween' || 'Camera' || 'Parallax' => render,
-    'OnTap' || 'OnKey' => input,
-    'Timer' || 'Spawner' || 'Condition' || 'Prefab' || 'OnEvent' || 'OffScreen' || 'OnLand' => logic,
-    'Collider' || 'OnCollide' || 'Velocity' || 'Body' || 'Solid' => physics,
+    'OnTap' || 'OnKey' || 'Move8' => input,
+    'Timer' || 'Spawner' || 'Condition' || 'Prefab' || 'OnEvent' || 'OffScreen' || 'OnLand' || 'Health' => logic,
+    'Collider' ||
+    'OnCollide' ||
+    'Velocity' ||
+    'Body' ||
+    'Solid' ||
+    'Follow' ||
+    'Patrol' ||
+    'Wander' ||
+    'LookAt' => physics,
     _ => custom,
   };
 }
@@ -97,6 +105,11 @@ String factorOf(BehaviorData b) {
     'Body' => 'g ${n('gravity')}',
     'Solid' => p.flag('oneWay') ? 'one-way' : 'solid',
     'Parallax' => '×${n('factorX')}·${n('factorY')}',
+    'Move8' => '${n('speed')} px/s ${p.string('keys')}',
+    'Health' => '${n('hp')} hp',
+    'Follow' || 'LookAt' => p.string('target'),
+    'Patrol' => '${p.string('points').split(';').where((x) => x.trim().isNotEmpty).length} points',
+    'Wander' => '${n('speed')} px/s',
     'Text' => p.string('text'),
     'Tween' => switch (p.string('kind')) {
       'rotateBy' => '${n('x')} rad / ${n('duration')}s',
