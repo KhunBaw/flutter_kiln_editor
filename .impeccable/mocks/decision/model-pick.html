@@ -1,0 +1,70 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--k0:#0b0b0b;--k1:#111;--k2:#181818;--k3:#242424;--k5:#4a4a4a;--k8:#9c9a94;--paper:#f4f1ea;--y:#e6ff3a;--p:#ff4fa3;--c:#3ad7ff}
+body{width:1440px;height:900px;overflow:hidden;background:var(--k1);color:var(--paper);font:13px/18px 'Archivo',sans-serif}
+.n{font-family:'Archivo Narrow',sans-serif}
+.top{height:44px;display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--k0);border-bottom:1px solid var(--k3)}
+.btn{height:28px;padding:0 10px;display:flex;align-items:center;border:1px solid var(--k3);border-radius:2px;color:var(--k8);font:600 12px 'Archivo Narrow';letter-spacing:.05em}
+.go{border-color:var(--y);color:var(--y)}
+.crumb{margin-left:16px;font:600 13px 'Archivo Narrow'}
+.main{display:grid;grid-template-columns:248px 1fr 340px;height:856px}
+.ph{height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid var(--k3);font:700 12px 'Archivo Narrow';letter-spacing:.14em;text-transform:uppercase;color:var(--k8)}
+.panel{background:var(--k2);border-right:1px solid var(--k3)}
+.row{height:30px;display:flex;align-items:center;gap:10px;padding:0 12px}
+.row.sel{background:var(--k3)}
+.mark{width:12px;height:12px;position:relative}
+.mark:before,.mark:after{content:'';position:absolute;background:var(--k5)}
+.mark:before{left:5px;top:0;width:2px;height:12px}.mark:after{top:5px;left:0;width:12px;height:2px}
+.sel .mark:before,.sel .mark:after{background:var(--y)}
+.stage{background:var(--k0);display:flex;align-items:center;justify-content:center;position:relative}
+.board{width:440px;height:770px;background:#070707;position:relative;border:1px solid var(--k3)}
+.hud{position:absolute;top:28px;width:100%;text-align:center;font:500 22px 'Archivo'}
+.balloon{position:absolute;left:182px;top:330px;width:77px;height:99px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7a09a,#d9464a 45%,#9f2c31)}
+.tape{position:absolute;background:var(--y)}
+.spike{position:absolute;width:14px;height:14px}
+.spike:before,.spike:after{content:'';position:absolute;background:var(--p)}
+.spike:before{left:6px;top:0;width:3px;height:14px}.spike:after{top:6px;left:0;width:14px;height:3px}
+.lbl{position:absolute;font:700 11px 'Archivo Narrow';letter-spacing:.08em;color:#0b0b0b;background:var(--y);padding:1px 5px}
+.insp{background:var(--k2)}
+.fld{display:grid;grid-template-columns:52px 1fr 52px 1fr;gap:6px 8px;padding:10px 12px;align-items:center}
+.lab{font:600 11px 'Archivo Narrow';letter-spacing:.1em;text-transform:uppercase;color:var(--k8)}
+.in{height:26px;background:var(--k1);border:1px solid var(--k3);padding:0 8px;display:flex;align-items:center}
+.cues{margin:6px 12px;border-top:1px solid var(--k3)}
+.cue{display:grid;grid-template-columns:40px 1fr auto;gap:8px;padding:9px 0;border-bottom:1px solid var(--k3);align-items:center}
+.q{font:700 15px 'Archivo Narrow';color:var(--y)}
+.sub{color:var(--k8);font-size:12px}
+.go2{font:700 11px 'Archivo Narrow';letter-spacing:.08em;color:var(--c)}
+</style></head><body>
+<div class="top"><div class="btn">NEW</div><div class="btn">PROJECT</div><div class="btn">OPEN</div><div class="btn">SAVE</div>
+<div class="btn" style="margin-left:8px">UNDO</div><div class="btn">REDO</div><div class="btn go" style="margin-left:8px">CURTAIN UP ▶</div>
+<div class="crumb">tap_game / level1.kiln.json</div></div>
+<div class="main">
+<div class="panel"><div class="ph">Cast <span>+</span></div>
+<div class="row"><b class="n">level1</b><span class="sub" style="margin-left:auto">400×700</span></div>
+<div class="row"><i class="mark"></i>hud</div>
+<div class="row sel"><i class="mark"></i>Balloon<span class="sub" style="margin-left:auto">prefab</span></div>
+<div class="row"><i class="mark"></i>spawner</div>
+<div class="row"><i class="mark"></i>rules</div></div>
+<div class="stage"><div class="board">
+<div class="hud">Score: 0/10 &nbsp; Time: 30</div>
+<div class="spike" style="left:213px;top:28px"></div>
+<div class="spike" style="left:213px;top:760px"></div>
+<div class="balloon"></div>
+<div class="tape" style="left:172px;top:320px;width:22px;height:3px"></div><div class="tape" style="left:172px;top:320px;width:3px;height:22px"></div>
+<div class="tape" style="left:247px;top:436px;width:22px;height:3px"></div><div class="tape" style="left:266px;top:417px;width:3px;height:22px"></div>
+<div class="lbl" style="left:172px;top:298px">BALLOON · 200,350</div>
+</div></div>
+<div class="insp"><div class="ph">Cue sheet <span style="color:var(--y)">Balloon</span></div>
+<div class="fld"><span class="lab">Name</span><div class="in" style="grid-column:span 3">Balloon</div>
+<span class="lab">X</span><div class="in">200</div><span class="lab">Y</span><div class="in">350</div>
+<span class="lab">W</span><div class="in">70</div><span class="lab">H</span><div class="in">90</div></div>
+<div class="cues">
+<div class="cue"><span class="q">Q1</span><div>Sprite<div class="sub">balloon.png</div></div><span class="go2">ALWAYS</span></div>
+<div class="cue"><span class="q">Q2</span><div>Tween moveBy<div class="sub">0, −850 · 5s · once</div></div><span class="go2">ON LOAD</span></div>
+<div class="cue"><span class="q">Q3</span><div>Timer → Destroy<div class="sub">5s · once</div></div><span class="go2">AFTER 5s</span></div>
+<div class="cue"><span class="q">Q4</span><div>OnTap<div class="sub">PlaySound pop.wav → AddVariable score +1 → Destroy</div></div><span class="go2">ON TAP</span></div>
+</div></div>
+</div></body></html>

@@ -1,0 +1,462 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-14T17:51:12+00:00",
+  "title": "Design System: Kiln Editor",
+  "extensions": {
+    "colorMeta": {
+      "z0": {
+        "role": "neutral",
+        "displayName": "Board Black",
+        "dartName": "Z.z0",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "z1": {
+        "role": "neutral",
+        "displayName": "Sheet Black",
+        "dartName": "Z.z1",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "z2": {
+        "role": "neutral",
+        "displayName": "Panel Olive",
+        "dartName": "Z.z2",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "z3": {
+        "role": "neutral",
+        "displayName": "Rule Olive",
+        "dartName": "Z.z3",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "z4": {
+        "role": "neutral",
+        "displayName": "Edge Olive",
+        "dartName": "Z.z4",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "z5": {
+        "role": "neutral",
+        "displayName": "Frame Olive",
+        "dartName": "Z.z5",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "z6": {
+        "role": "neutral",
+        "displayName": "Muted Olive",
+        "dartName": "Z.z6",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "z7": {
+        "role": "neutral",
+        "displayName": "Hint Olive",
+        "dartName": "Z.z7",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "z8": {
+        "role": "neutral",
+        "displayName": "Label Grey",
+        "dartName": "Z.z8",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "z9": {
+        "role": "neutral",
+        "displayName": "Head Bone",
+        "dartName": "Z.z9",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "z10": {
+        "role": "neutral",
+        "displayName": "Bone",
+        "dartName": "Z.z10",
+        "tonalRamp": [
+          "#0F110E",
+          "#1D1F1A",
+          "#252821",
+          "#30332B",
+          "#3D4137",
+          "#6A6F62",
+          "#BDBFB4",
+          "#E8E6DC"
+        ]
+      },
+      "mark": {
+        "role": "primary",
+        "displayName": "Marker Chit Yellow",
+        "dartName": "Z.mark",
+        "canonical": "oklch(83.3% 0.145 92.7)",
+        "tonalRamp": [
+          "#130900",
+          "#312300",
+          "#524000",
+          "#755F01",
+          "#9B801C",
+          "#C2A233",
+          "#EAC64A",
+          "#FFEC83"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Burnt Signal",
+        "dartName": "Z.danger",
+        "canonical": "oklch(68.2% 0.138 36.4)",
+        "tonalRamp": [
+          "#210000",
+          "#461002",
+          "#6D2A18",
+          "#974630",
+          "#C26349",
+          "#EB8568",
+          "#FFAD92",
+          "#FFD6BE"
+        ]
+      },
+      "family-render": {
+        "role": "secondary",
+        "displayName": "Render Khaki",
+        "dartName": "Family.render",
+        "canonical": "oklch(77.6% 0.081 91.5)",
+        "tonalRamp": [
+          "#110A00",
+          "#2D2409",
+          "#4C4120",
+          "#6E6038",
+          "#918152",
+          "#B7A46D",
+          "#DBC890",
+          "#FFEEBB"
+        ]
+      },
+      "family-input": {
+        "role": "secondary",
+        "displayName": "Field-Grey Blue",
+        "dartName": "Family.input",
+        "canonical": "oklch(65.3% 0.041 246.0)",
+        "tonalRamp": [
+          "#040C14",
+          "#1A2631",
+          "#354452",
+          "#516474",
+          "#6F8599",
+          "#92A8BC",
+          "#B8CCDF",
+          "#DFF1FF"
+        ]
+      },
+      "family-logic": {
+        "role": "secondary",
+        "displayName": "Logic Rust",
+        "dartName": "Family.logic",
+        "canonical": "oklch(62.7% 0.132 42.7)",
+        "tonalRamp": [
+          "#220000",
+          "#461000",
+          "#6D2B0B",
+          "#964725",
+          "#C1653E",
+          "#E48A66",
+          "#FFB291",
+          "#FFDBBD"
+        ]
+      },
+      "family-physics": {
+        "role": "secondary",
+        "displayName": "Physics Olive",
+        "dartName": "Family.physics",
+        "canonical": "oklch(65.6% 0.090 118.9)",
+        "tonalRamp": [
+          "#090D00",
+          "#222903",
+          "#3E471A",
+          "#5C6733",
+          "#7D8A4C",
+          "#9FAD6F",
+          "#C3D199",
+          "#E9F5C4"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "head": {
+        "displayName": "Head",
+        "dartName": "T.head",
+        "purpose": "Panel headers, section rules, counter names, breadcrumb, dialog title, selection tag. Uppercase in use."
+      },
+      "label": {
+        "displayName": "Label",
+        "dartName": "T.label",
+        "purpose": "Field labels, text buttons, add-frame labels, board caption. Uppercase in use."
+      },
+      "code": {
+        "displayName": "Code",
+        "dartName": "T.code",
+        "purpose": "Entity codes, action case numbers, scene size; at 700/z10 it is the factor strip."
+      },
+      "body": {
+        "displayName": "Body",
+        "dartName": "T.body",
+        "purpose": "Names, menus, tooltips, snackbars, dialog content, empty states."
+      },
+      "value": {
+        "displayName": "Value",
+        "dartName": "T.value",
+        "purpose": "Every editable TextField and dropdown value."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "tooltip-wait",
+        "value": "500ms",
+        "purpose": "Tooltip show delay (TooltipThemeData.waitDuration)."
+      }
+    ],
+    "breakpoints": [],
+    "layout": {
+      "toolbarHeight": "44px",
+      "hierarchyWidth": "248px",
+      "inspectorWidth": "340px",
+      "panelHeaderHeight": "34px",
+      "rowHeight": "30px",
+      "controlHeight": "28px",
+      "indentPerDepth": "14px",
+      "labelColumn": "74px",
+      "boardPadding": "40px",
+      "boardDotPitch": "24px",
+      "boardDotSize": "1.5px"
+    },
+    "platform": "Flutter desktop; tokens are Dart constants in apps/kiln_editor/lib/theme.dart (Z, Family, T, kilnTheme). HTML/CSS snippets are approximations for preview only."
+  },
+  "components": [
+    {
+      "name": "Text Button",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Toolbar and dialog command: condensed uppercase label, 2px corners, z4 overlay.",
+      "html": "<button class=\"ds-btn-text\">SAVE</button><button class=\"ds-btn-text\" disabled>REDO</button>",
+      "css": ".ds-btn-text{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:600;letter-spacing:.9px;color:#BDBFB4;background:transparent;border:0;border-radius:2px;height:28px;padding:0 10px;cursor:pointer}.ds-btn-text:hover{background:#30332B}.ds-btn-text:focus-visible{outline:1px solid #E9C548;outline-offset:0}.ds-btn-text:disabled{color:#50554A;background:transparent;cursor:default}"
+    },
+    {
+      "name": "Play Button",
+      "kind": "button",
+      "refersTo": "button-play",
+      "description": "The one filled button: marker yellow while stopped.",
+      "html": "<button class=\"ds-btn-play\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M8 5v14l11-7z\"/></svg>PLAY</button>",
+      "css": ".ds-btn-play{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:600;letter-spacing:.9px;display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;background:#E9C548;color:#161814;border:1px solid #E9C548;border-radius:2px;cursor:pointer}.ds-btn-play:hover{filter:brightness(.92)}.ds-btn-play:focus-visible{outline:1px solid #E8E6DC;outline-offset:1px}"
+    },
+    {
+      "name": "Stop Button",
+      "kind": "button",
+      "refersTo": "button-stop",
+      "description": "Play's live state: transparent with a danger outline.",
+      "html": "<button class=\"ds-btn-stop\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M6 6h12v12H6z\"/></svg>STOP</button>",
+      "css": ".ds-btn-stop{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:600;letter-spacing:.9px;display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;background:transparent;color:#E0775A;border:1px solid #E0775A;border-radius:2px;cursor:pointer}.ds-btn-stop:hover{background:#30332B}.ds-btn-stop:focus-visible{outline:1px solid #E9C548;outline-offset:1px}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Labeled inspector field: 74px condensed label column, dense tabular value input.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">DURATION</span><input class=\"ds-field-input\" value=\"5\"></label>",
+      "css": ".ds-field{display:flex;align-items:center;width:300px;background:#1D1F1A;padding:6px 12px}.ds-field-label{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:600;letter-spacing:.9px;color:#8E9286;width:74px;flex:none}.ds-field-input{font-family:'Barlow',sans-serif;font-size:13px;font-variant-numeric:tabular-nums;flex:1;min-width:0;background:#161814;color:#E8E6DC;border:1px solid #30332B;border-radius:2px;padding:7px 8px;caret-color:#E9C548;outline:none}.ds-field-input:hover{border-color:#3D4137}.ds-field-input:focus-visible,.ds-field-input:focus{border-color:#E9C548}.ds-field-input::selection{background:rgba(233,197,72,.32)}"
+    },
+    {
+      "name": "Hierarchy Row",
+      "kind": "nav",
+      "refersTo": "hierarchy-row",
+      "description": "Code column, name, family stripes; selection is a z4 fill, yellow code and 3px yellow inset bar.",
+      "html": "<div class=\"ds-hier\"><div class=\"ds-row\"><span class=\"ds-code\">E1</span><span class=\"ds-name\">hud</span><i style=\"background:#C9B57A\"></i></div><div class=\"ds-row ds-sel\"><span class=\"ds-code\">E2</span><span class=\"ds-name\">Balloon</span><i style=\"background:#C96A42\"></i><i style=\"background:#C9B57A\"></i><i style=\"background:#C9B57A\"></i><i style=\"background:#7C93A8\"></i></div><div class=\"ds-row\"><span class=\"ds-code\">E3</span><span class=\"ds-name\">spawner</span><i style=\"background:#C96A42\"></i></div></div>",
+      "css": ".ds-hier{width:248px;background:#1D1F1A;padding:4px 0}.ds-row{position:relative;display:flex;align-items:center;height:30px;padding:0 12px;cursor:pointer}.ds-row:hover{background:#252821}.ds-row.ds-sel{background:#30332B}.ds-row.ds-sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#E9C548}.ds-code{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:#8E9286;width:30px}.ds-sel .ds-code{color:#E9C548}.ds-name{font-family:'Barlow',sans-serif;font-size:13px;line-height:18px;color:#E8E6DC;flex:1}.ds-row i{width:6px;height:14px;margin-left:2px;border-radius:1px}"
+    },
+    {
+      "name": "Behavior Counter",
+      "kind": "custom",
+      "refersTo": "counter-head",
+      "description": "Signature: die-cut counter with family field, uppercase name, ruled factor strip, and a ruled body.",
+      "html": "<div class=\"ds-counter\"><div class=\"ds-counter-head\" tabindex=\"0\"><span class=\"ds-fam\" style=\"background:#C96A42\">L</span><span class=\"ds-cname\">TIMER</span><span class=\"ds-factor\">5s ×1</span><span class=\"ds-x\">×</span></div><div class=\"ds-counter-body\"><span class=\"ds-field-label\">INTERVAL</span> <span class=\"ds-v\">5</span></div></div>",
+      "css": ".ds-counter{width:316px}.ds-counter-head{display:flex;align-items:stretch;height:34px;background:#161814;border:1px solid #30332B;border-radius:3px 3px 0 0;overflow:hidden;cursor:pointer}.ds-counter-head:hover{background:#252821}.ds-counter-head:focus-visible{outline:1px solid #E9C548}.ds-fam{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:700;width:30px;display:flex;align-items:center;justify-content:center;color:#161814}.ds-cname{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.3px;color:#E8E6DC;display:flex;align-items:center;margin-left:10px;flex:1}.ds-factor{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#E8E6DC;max-width:150px;padding:0 10px;display:flex;align-items:center;border-left:1px solid #30332B;border-right:1px solid #30332B}.ds-x{width:28px;display:flex;align-items:center;justify-content:center;color:#8E9286}.ds-counter-body{background:#161814;border:1px solid #30332B;border-top:0;padding:10px 10px 4px}.ds-field-label{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:600;letter-spacing:.9px;color:#8E9286}.ds-v{font-family:'Barlow',sans-serif;font-size:13px;color:#E8E6DC}"
+    },
+    {
+      "name": "Selection Marker",
+      "kind": "custom",
+      "refersTo": "selection-tag",
+      "description": "Scene-board selection: 1px yellow rule, two 8px corner tabs, code tag above.",
+      "html": "<div class=\"ds-board\"><div class=\"ds-sel-box\"><span class=\"ds-tag\">E2 · BALLOON</span><i class=\"ds-tl\"></i><i class=\"ds-br\"></i></div></div>",
+      "css": ".ds-board{position:relative;width:260px;height:160px;background-color:#0F110E;background-image:radial-gradient(#252821 0.75px,transparent 0.9px);background-size:24px 24px;background-position:12px 12px}.ds-sel-box{position:absolute;left:100px;top:60px;width:58px;height:74px;border:1px solid #E9C548}.ds-tag{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:700;letter-spacing:.8px;position:absolute;left:-1px;top:-24px;height:20px;padding:0 6px;display:flex;align-items:center;white-space:nowrap;background:#E9C548;color:#161814}.ds-tl,.ds-br{position:absolute;width:8px;height:8px;background:#E9C548}.ds-tl{left:-5px;top:-5px}.ds-br{right:-5px;bottom:-5px}"
+    },
+    {
+      "name": "Add Frame",
+      "kind": "button",
+      "refersTo": "add-frame",
+      "description": "Full-width outlined slot that adds a variable, behavior or action.",
+      "html": "<button class=\"ds-add\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z\"/></svg>ADD BEHAVIOR</button>",
+      "css": ".ds-add{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:600;letter-spacing:.9px;width:316px;height:30px;display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;color:#8E9286;border:1px solid #30332B;border-radius:3px;cursor:pointer}.ds-add:hover{background:#252821}.ds-add:focus-visible{outline:1px solid #E9C548;outline-offset:-1px}"
+    },
+    {
+      "name": "Panel Header",
+      "kind": "nav",
+      "refersTo": "panel-header",
+      "description": "34px uppercase panel title over a z3 rule; inspector shows the selected code in yellow.",
+      "html": "<div class=\"ds-head\"><span>INSPECTOR</span><span class=\"ds-head-code\">E2</span></div>",
+      "css": ".ds-head{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.3px;color:#BDBFB4;width:340px;height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 12px;background:#1D1F1A;border-bottom:1px solid #252821;box-sizing:border-box}.ds-head-code{letter-spacing:0;font-weight:600;color:#E9C548}"
+    },
+    {
+      "name": "Dialog",
+      "kind": "card",
+      "refersTo": "dialog",
+      "description": "Confirm dialog: z2 slab, z4 rule, condensed title, danger action.",
+      "html": "<div class=\"ds-dialog\"><div class=\"ds-dt\">DISCARD UNSAVED CHANGES?</div><p>Changes to scene since the last save will be lost.</p><div class=\"ds-da\"><button class=\"ds-db\">KEEP EDITING</button><button class=\"ds-db ds-danger\">DISCARD</button></div></div>",
+      "css": ".ds-dialog{width:318px;background:#1D1F1A;border:1px solid #30332B;border-radius:2px;padding:24px;color:#E8E6DC}.ds-dt{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.3px;color:#E8E6DC}.ds-dialog p{font-family:'Barlow',sans-serif;font-size:13px;line-height:18px;margin:14px 0 18px}.ds-da{display:flex;justify-content:flex-end;gap:4px}.ds-db{font-family:'Barlow Semi Condensed','Barlow',sans-serif;font-size:13px;font-weight:600;letter-spacing:.9px;background:transparent;border:0;border-radius:2px;height:28px;padding:0 10px;color:#BDBFB4;cursor:pointer}.ds-db:hover{background:#30332B}.ds-db:focus-visible{outline:1px solid #E9C548}.ds-danger{color:#E0775A}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Counter Sheet",
+    "overview": "Kiln Editor is a wargame component sheet laid on a matte map board. Every behavior attached to an entity is a die-cut counter: a solid family field carrying one letter, the behavior name in condensed capitals, and a ruled factor strip printed with the counter's key numbers. Entities carry short codes (`SC`, `E1`, `E2`…) shared between the hierarchy, the scene marker and the inspector header, so one item is addressed the same way everywhere. Everything lives in `apps/kiln_editor/lib/theme.dart`: the `Z` neutral ramp, the `Family` enum, the `T` text styles, and `kilnTheme()`.\n\nThe surface is dense and quiet. It is built for long sessions next to a dark IDE: an eleven-step olive-tinted ramp supplies every grey, one 13px size carries all text, and rank comes from weight, case, condensed width and 1px rules. Colour is reserved. Four muted family hues identify what an entity is made of, and one marker yellow points at what is selected or live. The Unity layout is kept intact: hierarchy left, scene centre, inspector right.\n\nEdit and Play share one `SceneFrame`, so pressing Play swaps the game in place at the same fit scale without moving the board.",
+    "keyCharacteristics": [
+      "Olive-tinted map-board neutrals (`Z.z0`–`Z.z10`) are the only greys.",
+      "One text size (13px). Hierarchy comes from weight, case, condensed width and rules.",
+      "Behaviors render as counters with a family field, an uppercase name and a factor strip.",
+      "Marker yellow (`Z.mark`) marks selection and live state. It is never decoration.",
+      "Square 2–3px corners, 1px rules, flat surfaces, and no authored shadows.",
+      "A dotted map board frames the scene at fit scale in both Edit and Play."
+    ],
+    "rules": [
+      {
+        "name": "The Map-Board Rule",
+        "body": "Every grey comes from `Z`. No `Colors.grey`, no Material neutrals, no ad-hoc hex.",
+        "section": "colors"
+      },
+      {
+        "name": "The Marker Rule",
+        "body": "`Z.mark` means \"this one\" or \"live now\": selection, Play, focus, unsaved and the codes that address the selected item. It is never used for decoration, headers or section accents.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-Per-Family Rule",
+        "body": "A family hue appears only as a counter field, a hierarchy stripe or an add-menu stripe. It does not tint text or backgrounds.",
+        "section": "colors"
+      },
+      {
+        "name": "The One-Size Rule",
+        "body": "All text inside the editor is `T.size` (13px). Rank is made with weight, case, tracking, condensed width and a 1px rule. Never with a larger size.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two-Hands Rule",
+        "body": "Condensed type is for what the editor prints: labels, codes and names. Barlow is for what the user writes, meaning values and names they edit.",
+        "section": "typography"
+      },
+      {
+        "name": "The Rule-Not-Shadow Rule",
+        "body": "Separation is a 1px line or a ramp step. Do not add `BoxShadow` for depth.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do take every neutral from `Z` and every behavior hue from `Family.of(type)`.",
+      "Do set all text at 13px using `T.head`, `T.label`, `T.code`, `T.body` or `T.value`, and rank it with weight, case and rules.",
+      "Do use `T.value` or `T.code` (tabular figures) wherever numbers line up.",
+      "Do give every new behavior type a `Family` and a `factorOf()` line so its counter has a printed face.",
+      "Do address items by their shared code (`SC`, `E1`…, `4.1`) in every place the item appears.",
+      "Do keep corners at 2px (controls, overlays) or 3px (counters, add frames), with 1px rules in `z3`–`z5`.",
+      "Do put a `Tooltip` on every icon button and toolbar command."
+    ],
+    "donts": [
+      "Don't add a second text size, a larger heading or a display face inside the editor.",
+      "Don't use `Z.mark` for decoration, panel accents or headers. It points at the selected or live thing only.",
+      "Don't introduce pills, large radii, gradients or `BoxShadow` depth.",
+      "Don't tint text or panel backgrounds with family colours.",
+      "Don't move the hierarchy, scene and inspector out of their left, centre and right order, and don't let Play resize or re-centre the board."
+    ]
+  }
+}

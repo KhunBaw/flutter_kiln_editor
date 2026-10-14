@@ -1,0 +1,187 @@
+{
+  "kiln": 1,
+  "name": "level1",
+  "size": [
+    400.0,
+    700.0
+  ],
+  "variables": {
+    "score": 0,
+    "time": 30
+  },
+  "entities": [
+    {
+      "id": "hud",
+      "name": "hud",
+      "position": [
+        200.0,
+        40.0
+      ],
+      "size": [
+        380.0,
+        50.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "Score: {score}/10   Time: {time}",
+            "fontSize": 24,
+            "color": "#FFFFFF"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "balloon",
+      "name": "Balloon",
+      "position": [
+        200.0,
+        350.0
+      ],
+      "size": [
+        70.0,
+        90.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Prefab",
+          "props": {}
+        },
+        {
+          "type": "Sprite",
+          "props": {
+            "image": "balloon.png"
+          }
+        },
+        {
+          "type": "Tween",
+          "props": {
+            "kind": "moveBy",
+            "x": 0,
+            "y": -850,
+            "duration": 5,
+            "loop": "once"
+          }
+        },
+        {
+          "type": "Timer",
+          "props": {
+            "interval": 5,
+            "repeat": false,
+            "actions": [
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "PlaySound",
+                "file": "pop.wav"
+              },
+              {
+                "type": "AddVariable",
+                "name": "score",
+                "value": 1
+              },
+              {
+                "type": "Destroy"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "spawner",
+      "name": "spawner",
+      "position": [
+        200.0,
+        760.0
+      ],
+      "size": [
+        340.0,
+        20.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Spawner",
+          "props": {
+            "prefab": "Balloon",
+            "interval": 0.8,
+            "max": 0
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "rules",
+      "name": "rules",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "size": [
+        1.0,
+        1.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Timer",
+          "props": {
+            "interval": 1,
+            "repeat": true,
+            "actions": [
+              {
+                "type": "AddVariable",
+                "name": "time",
+                "value": -1
+              }
+            ]
+          }
+        },
+        {
+          "type": "Condition",
+          "props": {
+            "variable": "score",
+            "op": ">=",
+            "value": 10,
+            "actions": [
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/win.kiln.json"
+              }
+            ]
+          }
+        },
+        {
+          "type": "Condition",
+          "props": {
+            "variable": "time",
+            "op": "<=",
+            "value": 0,
+            "actions": [
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/lose.kiln.json"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

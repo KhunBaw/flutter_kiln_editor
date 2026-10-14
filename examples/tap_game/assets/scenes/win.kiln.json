@@ -1,0 +1,53 @@
+{
+  "kiln": 1,
+  "name": "win",
+  "size": [
+    400,
+    700
+  ],
+  "variables": {},
+  "entities": [
+    {
+      "id": "msg",
+      "name": "msg",
+      "position": [
+        200,
+        350
+      ],
+      "size": [
+        400,
+        700
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#2E7D32"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "You win! Tap to retry",
+            "fontSize": 28,
+            "color": "#FFFFFF"
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/level1.kiln.json"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

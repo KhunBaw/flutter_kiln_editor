@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--b0:#0a0a09;--b1:#0e0e0c;--b2:#161614;--b3:#24241f;--b5:#5a5a54;--w:#efece4;--acid:#b6ff00}
+body{width:1440px;height:900px;overflow:hidden;background:var(--b1);color:var(--w);font:13px/18px 'Work Sans',sans-serif}
+.px{font-family:'Silkscreen',monospace;-webkit-font-smoothing:none}
+.top{height:48px;display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--b0);border-bottom:2px solid var(--b3)}
+.logo{font:700 16px 'Silkscreen';margin-right:16px}
+.btn{height:28px;padding:0 10px;display:flex;align-items:center;border:2px solid var(--b3);color:var(--b5);font:400 10px 'Silkscreen'}
+.play{background:var(--acid);border-color:var(--acid);color:#0a0a09}
+.crumb{margin-left:14px;font:500 13px 'Work Sans'}
+.main{display:grid;grid-template-columns:248px 1fr 340px;height:852px}
+.panel{background:var(--b2);border-right:2px solid var(--b3)}
+.ph{height:34px;display:flex;align-items:center;padding:0 12px;border-bottom:2px solid var(--b3);font:400 12px 'Silkscreen';color:var(--b5)}
+.row{height:30px;display:flex;align-items:center;padding:0 12px;gap:8px}
+.row.sel{background:var(--b3);color:var(--acid)}
+.dot{width:6px;height:6px;background:var(--b5)}.sel .dot{background:var(--acid)}
+.stage{background:var(--b0);display:flex;align-items:center;justify-content:center;position:relative;
+background-image:linear-gradient(var(--b2) 2px,transparent 2px),linear-gradient(90deg,var(--b2) 2px,transparent 2px);background-size:32px 32px}
+.board{width:440px;height:770px;background:#060606;position:relative;border:2px solid var(--b3)}
+.hud{position:absolute;top:28px;width:100%;text-align:center;font:500 22px 'Work Sans'}
+.balloon{position:absolute;left:182px;top:330px;width:77px;height:99px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7a09a,#d9464a 45%,#9f2c31)}
+.sel-b{position:absolute;left:176px;top:324px;width:89px;height:111px;border:2px dashed var(--acid)}
+.big{position:absolute;left:24px;bottom:18px;font:700 32px 'Silkscreen';color:var(--b3)}
+.insp{background:var(--b2)}
+.fld{display:grid;grid-template-columns:52px 1fr 52px 1fr;gap:6px 8px;padding:10px 12px;align-items:center}
+.lab{font:400 9px 'Silkscreen';color:var(--b5)}
+.in{height:26px;background:var(--b1);border:2px solid var(--b3);padding:0 8px;display:flex;align-items:center}
+.beh{margin:8px 12px 0;border:2px solid var(--b3)}
+.bh{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:var(--b3);font:400 11px 'Silkscreen'}
+.bb{padding:8px 10px;display:grid;grid-template-columns:70px 1fr;gap:6px;align-items:center}
+.v{color:#c8c5bc}
+</style></head><body>
+<div class="top"><span class="logo">KILN</span><div class="btn">NEW</div><div class="btn">PROJECT</div><div class="btn">OPEN</div><div class="btn">SAVE</div>
+<div class="btn" style="margin-left:8px">UNDO</div><div class="btn">REDO</div><div class="btn play" style="margin-left:8px">PLAY</div>
+<span class="crumb">tap_game / level1.kiln.json</span></div>
+<div class="main">
+<div class="panel"><div class="ph">HIERARCHY</div>
+<div class="row"><b>level1</b></div><div class="row"><i class="dot"></i>hud</div>
+<div class="row sel"><i class="dot"></i>Balloon</div><div class="row"><i class="dot"></i>spawner</div><div class="row"><i class="dot"></i>rules</div></div>
+<div class="stage"><div class="board"><div class="hud">Score: 0/10 &nbsp; Time: 30</div><div class="balloon"></div><div class="sel-b"></div></div>
+<div class="big">LEVEL1</div></div>
+<div class="insp"><div class="ph">INSPECTOR</div>
+<div class="fld"><span class="lab">NAME</span><div class="in" style="grid-column:span 3">Balloon</div>
+<span class="lab">X</span><div class="in">200</div><span class="lab">Y</span><div class="in">350</div>
+<span class="lab">W</span><div class="in">70</div><span class="lab">H</span><div class="in">90</div></div>
+<div class="beh"><div class="bh">SPRITE<span>×</span></div><div class="bb"><span class="lab">IMAGE</span><span class="v">balloon.png</span></div></div>
+<div class="beh"><div class="bh">TWEEN<span>×</span></div><div class="bb"><span class="lab">KIND</span><span class="v">moveBy</span><span class="lab">BY</span><span class="v">0, −850 · 5s · once</span></div></div>
+<div class="beh"><div class="bh">TIMER<span>×</span></div><div class="bb"><span class="lab">EVERY</span><span class="v">5s once → Destroy</span></div></div>
+<div class="beh"><div class="bh">ONTAP<span>×</span></div><div class="bb"><span class="lab">1</span><span class="v">PlaySound pop.wav</span><span class="lab">2</span><span class="v">AddVariable score +1</span><span class="lab">3</span><span class="v">Destroy</span></div></div>
+</div></div></body></html>

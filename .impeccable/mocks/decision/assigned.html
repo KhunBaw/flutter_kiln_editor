@@ -1,0 +1,91 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--z0:#121411;--z1:#1b1d19;--z2:#22251f;--z3:#2a2d27;--z4:#353931;--z6:#5d6257;--z8:#9a9e91;--z10:#e8e6dc;
+--render:#c9b57a;--input:#7c93a8;--logic:#b4583a;--phys:#7e8b4e;--mark:#e9c548}
+body{width:1440px;height:900px;overflow:hidden;background:var(--z1);color:var(--z10);font:13px/18px 'Barlow',sans-serif}
+.cond{font-family:'Barlow Semi Condensed',sans-serif}
+.top{height:44px;display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--z0);border-bottom:1px solid var(--z3)}
+.btn{height:28px;padding:0 10px;display:flex;align-items:center;border:1px solid var(--z4);border-radius:3px;color:var(--z8);font:600 12px 'Barlow Semi Condensed';letter-spacing:.06em;text-transform:uppercase}
+.play{background:var(--mark);color:#1b1d19;border-color:var(--mark)}
+.crumb{margin-left:16px;font:600 13px 'Barlow Semi Condensed';letter-spacing:.04em}
+.crumb span{color:var(--z6)}
+.dirty{width:7px;height:7px;border-radius:50%;background:var(--mark);margin-left:6px}
+.main{display:grid;grid-template-columns:248px 1fr 340px;height:856px}
+.panel{background:var(--z2);border-right:1px solid var(--z3);overflow:hidden}
+.ph{height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid var(--z3);font:700 12px 'Barlow Semi Condensed';letter-spacing:.12em;text-transform:uppercase;color:var(--z8)}
+.row{height:30px;display:flex;align-items:center;gap:8px;padding:0 12px}
+.row.sel{background:var(--z4);box-shadow:inset 3px 0 var(--mark)}
+.code{font:600 11px 'Barlow Semi Condensed';color:var(--z6);width:26px;font-variant-numeric:tabular-nums}
+.chips{margin-left:auto;display:flex;gap:2px}
+.chip{width:6px;height:14px;border-radius:1px}
+.scene{background:var(--z0);display:flex;align-items:center;justify-content:center;position:relative;
+background-image:radial-gradient(var(--z3) 1px,transparent 1px);background-size:24px 24px}
+.board{width:440px;height:770px;background:#0b0c0a;position:relative;border:1px solid var(--z4)}
+.hud{position:absolute;top:28px;width:100%;text-align:center;font:500 22px 'Barlow'}
+.balloon{position:absolute;left:182px;top:330px;width:77px;height:99px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7a09a,#d9464a 45%,#9f2c31)}
+.selbox{position:absolute;left:176px;top:324px;width:89px;height:111px;border:1px solid var(--mark)}
+.selbox:before,.selbox:after{content:'';position:absolute;width:8px;height:8px;background:var(--mark)}
+.selbox:before{left:-4px;top:-4px}.selbox:after{right:-4px;bottom:-4px}
+.tag{position:absolute;left:176px;top:300px;background:var(--mark);color:#1b1d19;font:700 11px 'Barlow Semi Condensed';padding:2px 6px;letter-spacing:.06em}
+.scale{position:absolute;bottom:14px;left:16px;font:600 11px 'Barlow Semi Condensed';color:var(--z6);letter-spacing:.08em}
+.insp{background:var(--z2);overflow:hidden}
+.fld{display:grid;grid-template-columns:56px 1fr 56px 1fr;gap:6px 8px;padding:10px 12px;align-items:center}
+.lab{font:600 11px 'Barlow Semi Condensed';letter-spacing:.08em;text-transform:uppercase;color:var(--z8)}
+.in{height:26px;background:var(--z1);border:1px solid var(--z4);border-radius:2px;padding:0 8px;display:flex;align-items:center;font-variant-numeric:tabular-nums}
+.ctr{margin:8px 12px 0;border:1px solid var(--z4);border-radius:3px;background:var(--z1);overflow:hidden}
+.ctr .hd{display:flex;align-items:stretch;height:34px}
+.fam{width:34px;display:flex;align-items:center;justify-content:center;font:700 11px 'Barlow Semi Condensed';color:#1b1d19}
+.nm{flex:1;display:flex;align-items:center;padding:0 10px;font:700 13px 'Barlow Semi Condensed';letter-spacing:.06em;text-transform:uppercase}
+.fac{display:flex;align-items:center;padding:0 10px;font:700 15px 'Barlow Semi Condensed';font-variant-numeric:tabular-nums;border-left:1px solid var(--z4)}
+.body{padding:8px 10px;display:grid;grid-template-columns:64px 1fr;gap:6px 8px;align-items:center;border-top:1px solid var(--z3)}
+.case{display:flex;gap:8px;align-items:center;padding:5px 0;border-top:1px solid var(--z3)}
+.case:first-child{border-top:0}
+.cn{font:700 11px 'Barlow Semi Condensed';color:var(--input);width:28px}
+.add{margin:10px 12px;height:30px;border:1px dashed var(--z4);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--z8);font:600 12px 'Barlow Semi Condensed';letter-spacing:.08em;text-transform:uppercase}
+</style></head><body>
+<div class="top">
+<div class="btn">New</div><div class="btn">Project</div><div class="btn">Open</div><div class="btn">Save</div>
+<div class="btn" style="margin-left:8px">Undo</div><div class="btn">Redo</div>
+<div class="btn play" style="margin-left:8px">▶ Play</div>
+<div class="crumb">tap_game <span>/</span> level1.kiln.json</div><div class="dirty"></div>
+</div>
+<div class="main">
+<div class="panel">
+<div class="ph">Hierarchy <span>+ &nbsp; ⌫</span></div>
+<div class="row"><span class="code">SC</span><b class="cond">level1</b><span class="cond" style="color:var(--z6);margin-left:auto">400×700</span></div>
+<div class="row"><span class="code">E1</span>hud<span class="chips"><i class="chip" style="background:var(--render)"></i></span></div>
+<div class="row sel"><span class="code">E2</span>Balloon<span class="chips"><i class="chip" style="background:var(--logic)"></i><i class="chip" style="background:var(--render)"></i><i class="chip" style="background:var(--render)"></i><i class="chip" style="background:var(--logic)"></i><i class="chip" style="background:var(--input)"></i></span></div>
+<div class="row"><span class="code">E3</span>spawner<span class="chips"><i class="chip" style="background:var(--logic)"></i></span></div>
+<div class="row"><span class="code">E4</span>rules<span class="chips"><i class="chip" style="background:var(--logic)"></i><i class="chip" style="background:var(--logic)"></i><i class="chip" style="background:var(--logic)"></i></span></div>
+</div>
+<div class="scene">
+<div class="board">
+<div class="hud">Score: 0/10 &nbsp; Time: 30</div>
+<div class="balloon"></div><div class="selbox"></div><div class="tag">E2 · BALLOON</div>
+</div>
+<div class="scale">SCENE 400 × 700 · 110%</div>
+</div>
+<div class="insp">
+<div class="ph">Inspector <span style="color:var(--mark)">E2</span></div>
+<div class="fld">
+<span class="lab">Name</span><div class="in" style="grid-column:span 3">Balloon</div>
+<span class="lab">X</span><div class="in">200</div><span class="lab">Y</span><div class="in">350</div>
+<span class="lab">W</span><div class="in">70</div><span class="lab">H</span><div class="in">90</div>
+</div>
+<div class="ctr"><div class="hd"><div class="fam" style="background:var(--render)">R</div><div class="nm">Sprite</div><div class="fac">balloon.png</div></div></div>
+<div class="ctr"><div class="hd"><div class="fam" style="background:var(--render)">R</div><div class="nm">Tween</div><div class="fac">0·−850 / 5s</div></div>
+<div class="body"><span class="lab">Kind</span><div class="in">moveBy</div><span class="lab">Loop</span><div class="in">once</div></div></div>
+<div class="ctr"><div class="hd"><div class="fam" style="background:var(--logic)">L</div><div class="nm">Timer</div><div class="fac">5s ×1</div></div></div>
+<div class="ctr"><div class="hd"><div class="fam" style="background:var(--input)">I</div><div class="nm">OnTap</div><div class="fac">3 cases</div></div>
+<div class="body" style="display:block">
+<div class="case"><span class="cn">4.1</span>PlaySound<span style="margin-left:auto;color:var(--z8)">pop.wav</span></div>
+<div class="case"><span class="cn">4.2</span>AddVariable<span style="margin-left:auto;color:var(--z8)">score +1</span></div>
+<div class="case"><span class="cn">4.3</span>Destroy</div>
+</div></div>
+<div class="add">+ Add behavior</div>
+</div>
+</div>
+</body></html>

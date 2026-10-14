@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "tap_game (macOS)",
+            "request": "launch",
+            "type": "dart",
+            "cwd": "examples/tap_game",
+            "program": "lib/main.dart",
+            "deviceId": "macos"
+        },
+        {
+            "name": "kiln_editor (macOS)",
+            "request": "launch",
+            "type": "dart",
+            "cwd": "apps/kiln_editor",
+            "program": "lib/main.dart",
+            "deviceId": "macos"
+        },
+        {
+            "name": "kiln tests",
+            "request": "launch",
+            "type": "dart",
+            "cwd": "packages/kiln",
+            "program": "test/"
+        }
+    ]
+}

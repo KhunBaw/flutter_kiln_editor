@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;background:#1e1e1e;color:#d4d4d4;font:13px/18px 'Roboto',sans-serif}
+.top{height:40px;display:flex;align-items:center;gap:4px;padding:0 10px;background:#2b2b2b;border-bottom:1px solid #191919}
+.ic{width:28px;height:28px;border-radius:3px;background:#3c3c3c}
+.play{margin:0 auto;display:flex;gap:4px}.play .ic{background:#3c3c3c}.play .ic:first-child{background:#2f80ed}
+.main{display:grid;grid-template-columns:250px 1fr 330px;height:860px}
+.panel{background:#252526;border-right:1px solid #191919}
+.ph{height:28px;display:flex;align-items:center;padding:0 10px;background:#2d2d2d;font-weight:500;font-size:12px}
+.row{height:24px;display:flex;align-items:center;padding:0 10px 0 22px}
+.row.sel{background:#2f80ed;color:#fff}
+.scene{background:#3a3a3a;display:flex;align-items:center;justify-content:center}
+.board{width:440px;height:770px;background:#000;position:relative}
+.hud{position:absolute;top:28px;width:100%;text-align:center;font-size:22px;color:#fff}
+.balloon{position:absolute;left:182px;top:330px;width:77px;height:99px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7a09a,#d9464a 45%,#9f2c31)}
+.selb{position:absolute;left:178px;top:326px;width:85px;height:107px;border:2px solid #f5a623}
+.insp{background:#252526}
+.comp{border-bottom:1px solid #191919}
+.ch{height:26px;display:flex;align-items:center;padding:0 10px;background:#2d2d2d;font-weight:500;font-size:12px}
+.fld{display:grid;grid-template-columns:70px 1fr;gap:4px 8px;padding:6px 10px;align-items:center}
+.in{height:22px;background:#1e1e1e;border:1px solid #3c3c3c;border-radius:2px;padding:0 6px;display:flex;align-items:center}
+.add{margin:10px;height:26px;background:#3c3c3c;border-radius:3px;display:flex;align-items:center;justify-content:center}
+</style></head><body>
+<div class="top"><i class="ic"></i><i class="ic"></i><i class="ic"></i><i class="ic"></i><span style="margin-left:10px">tap_game — level1.kiln.json</span>
+<div class="play"><i class="ic"></i><i class="ic"></i></div></div>
+<div class="main">
+<div class="panel"><div class="ph">Hierarchy</div><div class="row">▾ level1</div><div class="row">hud</div><div class="row sel">Balloon</div><div class="row">spawner</div><div class="row">rules</div></div>
+<div class="scene"><div class="board"><div class="hud">Score: 0/10 &nbsp; Time: 30</div><div class="balloon"></div><div class="selb"></div></div></div>
+<div class="insp"><div class="ph">Inspector</div>
+<div class="comp"><div class="ch">Transform</div><div class="fld"><span>Position</span><div class="in">200 &nbsp; 350</div><span>Size</span><div class="in">70 &nbsp; 90</div><span>Angle</span><div class="in">0</div></div></div>
+<div class="comp"><div class="ch">Sprite</div><div class="fld"><span>Image</span><div class="in">balloon.png</div></div></div>
+<div class="comp"><div class="ch">Tween</div><div class="fld"><span>Kind</span><div class="in">moveBy</div><span>By</span><div class="in">0 &nbsp; −850</div><span>Duration</span><div class="in">5</div></div></div>
+<div class="comp"><div class="ch">On Tap</div><div class="fld"><span>Action 1</span><div class="in">PlaySound pop.wav</div><span>Action 2</span><div class="in">AddVariable score +1</div><span>Action 3</span><div class="in">Destroy</div></div></div>
+<div class="add">Add Component</div></div>
+</div></body></html>

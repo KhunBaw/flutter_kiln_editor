@@ -1,0 +1,53 @@
+{
+  "kiln": 1,
+  "name": "lose",
+  "size": [
+    400,
+    700
+  ],
+  "variables": {},
+  "entities": [
+    {
+      "id": "msg",
+      "name": "msg",
+      "position": [
+        200,
+        350
+      ],
+      "size": [
+        400,
+        700
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#B71C1C"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Time up! Tap to retry",
+            "fontSize": 28,
+            "color": "#FFFFFF"
+          }
+        },
+        {
+          "type": "OnTap",
+          "props": {
+            "actions": [
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/level1.kiln.json"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

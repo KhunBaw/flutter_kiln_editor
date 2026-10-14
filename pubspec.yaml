@@ -1,0 +1,8 @@
+name: kiln_workspace
+publish_to: none
+environment:
+  sdk: ^3.13.1
+workspace:
+  - packages/kiln
+  - apps/kiln_editor
+  - examples/tap_game
