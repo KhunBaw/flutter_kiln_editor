@@ -146,4 +146,44 @@ void main() {
     await tester.tap(find.byTooltip('Stop (⌘P)'));
     await tester.pump(const Duration(seconds: 1));
   });
+
+  testWidgets('Tilemap: PAINT in the inspector, pick a tile, click and drag the scene', (tester) async {
+    final s = await boot(tester);
+    s.addEntity(
+      size: Vector2(128, 64),
+      behaviors: [
+        BehaviorData('Tilemap', {'tile': 32}),
+      ],
+    );
+    await tester.pump();
+    await tester.tap(find.text('PAINT'));
+    await tester.pump();
+    expect(s.paintId, s.selectedId);
+
+    await tester.tap(find.text('FILL')); // fill the empty grid with tile 1
+    await tester.pump();
+    final view = find.byWidgetPredicate((w) => w is GameWidget);
+    final tl = tester.getTopLeft(view);
+    final k = (tester.getBottomRight(view) - tl).dx / s.doc.size.x; // getSize ignores the FittedBox scale
+    final e = s.selected!;
+    final cell0 = e.position - e.size / 2;
+    Offset at(double c, double r) => tl + Offset(cell0.x + c * 32 + 6, cell0.y + r * 32 + 6) * k;
+
+    await tester.tapAt(at(0, 0));
+    await tester.pump();
+    List<Object?> tiles() => Props(EditorState.tilemapOf(e)!.props).list('tiles');
+    expect(tiles(), everyElement(1)); // 4 × 2 cells all filled
+    expect(tiles(), hasLength(8));
+
+    s.setPaint(brush: 0, tool: 'brush');
+    await tester.dragFrom(at(0, 0), Offset(40 * k, 0));
+    await tester.pump();
+    expect(tiles().take(2), everyElement(0));
+    s.undo(); // the whole drag is one step
+    expect(Props(EditorState.tilemapOf(s.selected!)!.props).list('tiles'), everyElement(1));
+
+    await tester.tap(find.text('DONE'));
+    await tester.pump();
+    expect(s.paintId, isNull);
+  });
 }

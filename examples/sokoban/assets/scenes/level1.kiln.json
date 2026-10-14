@@ -1,0 +1,420 @@
+{
+  "kiln": 1,
+  "name": "level1",
+  "size": [
+    320,
+    288
+  ],
+  "variables": {
+    "moves": 0,
+    "placed": 0
+  },
+  "entities": [
+    {
+      "id": "map",
+      "name": "Map",
+      "position": [
+        160,
+        128
+      ],
+      "size": [
+        320,
+        256
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Tilemap",
+          "props": {
+            "image": "",
+            "tile": 32,
+            "cols": 10,
+            "tiles": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              1,
+              1,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              1,
+              1,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              1,
+              1,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              1,
+              1,
+              2,
+              2,
+              2,
+              2,
+              1,
+              2,
+              2,
+              2,
+              1,
+              1,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "solid": "1"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "goal0",
+      "name": "Goal",
+      "position": [
+        240,
+        80
+      ],
+      "size": [
+        8,
+        8
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#E9C548"
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "rect"
+          }
+        }
+      ],
+      "children": [],
+      "tags": [
+        "goal"
+      ]
+    },
+    {
+      "id": "goal1",
+      "name": "Goal",
+      "position": [
+        80,
+        208
+      ],
+      "size": [
+        8,
+        8
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#E9C548"
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "rect"
+          }
+        }
+      ],
+      "children": [],
+      "tags": [
+        "goal"
+      ]
+    },
+    {
+      "id": "box0",
+      "name": "Box",
+      "position": [
+        80,
+        80
+      ],
+      "size": [
+        28,
+        28
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#C9824A"
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "rect"
+          }
+        },
+        {
+          "type": "OnCollide",
+          "props": {
+            "with": "#goal",
+            "actions": [
+              {
+                "type": "AddVariable",
+                "name": "placed",
+                "value": 1
+              }
+            ],
+            "exit": [
+              {
+                "type": "AddVariable",
+                "name": "placed",
+                "value": -1
+              }
+            ]
+          }
+        }
+      ],
+      "children": [],
+      "tags": [
+        "box"
+      ]
+    },
+    {
+      "id": "box1",
+      "name": "Box",
+      "position": [
+        176,
+        144
+      ],
+      "size": [
+        28,
+        28
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#C9824A"
+          }
+        },
+        {
+          "type": "Collider",
+          "props": {
+            "shape": "rect"
+          }
+        },
+        {
+          "type": "OnCollide",
+          "props": {
+            "with": "#goal",
+            "actions": [
+              {
+                "type": "AddVariable",
+                "name": "placed",
+                "value": 1
+              }
+            ],
+            "exit": [
+              {
+                "type": "AddVariable",
+                "name": "placed",
+                "value": -1
+              }
+            ]
+          }
+        }
+      ],
+      "children": [],
+      "tags": [
+        "box"
+      ]
+    },
+    {
+      "id": "player",
+      "name": "Player",
+      "position": [
+        112,
+        144
+      ],
+      "size": [
+        26,
+        26
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#4488FF"
+          }
+        },
+        {
+          "type": "GridMove",
+          "props": {
+            "cell": 32,
+            "time": 0.1,
+            "keys": "both",
+            "push": "#box",
+            "block": "",
+            "onStep": [
+              {
+                "type": "AddVariable",
+                "name": "moves",
+                "value": 1
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "hud",
+      "name": "HUD",
+      "position": [
+        160,
+        272
+      ],
+      "size": [
+        320,
+        32
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "Moves {moves}   Boxes {placed}/2   R restart",
+            "fontSize": 14,
+            "color": "#E8E6DC"
+          }
+        },
+        {
+          "type": "Condition",
+          "props": {
+            "variable": "placed",
+            "op": ">=",
+            "value": 2,
+            "actions": [
+              {
+                "type": "Emit",
+                "event": "solved"
+              }
+            ]
+          }
+        },
+        {
+          "type": "OnKey",
+          "props": {
+            "key": "R",
+            "on": "down",
+            "actions": [
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/level1.kiln.json"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "win",
+      "name": "Win",
+      "position": [
+        160,
+        128
+      ],
+      "size": [
+        240,
+        110
+      ],
+      "angle": 0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "rect",
+            "color": "#161814"
+          }
+        },
+        {
+          "type": "Dialogue",
+          "props": {
+            "lines": "Solved in {moves} moves!",
+            "choices": "Play again",
+            "variable": "answer",
+            "open": "solved",
+            "fontSize": 18,
+            "color": "#E9C548",
+            "actions": [
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/level1.kiln.json"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

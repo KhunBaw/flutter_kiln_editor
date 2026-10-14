@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui show Image;
 import 'dart:ui' show ImageDescriptor, ImmutableBuffer;
 
 import 'package:file_selector/file_selector.dart';
@@ -422,6 +423,10 @@ class _SceneViewState extends State<SceneView> {
 
   EditorState get s => widget.s;
 
+  bool get _painting => s.paintId != null && s.paintId == s.selectedId;
+
+  void _paint(Offset p) => s.paintAt(Vector2(p.dx, p.dy), stroke: _drag);
+
   /// Scales about [focal] (board pixels) so the scene point under it stays put.
   void _zoomAt(Offset focal, double zoom) {
     final world = s.doc.worldSize;
@@ -508,9 +513,14 @@ class _SceneViewState extends State<SceneView> {
               builder: (context, hover, _) => GestureDetector(
                 key: _sceneKey,
                 behavior: HitTestBehavior.opaque,
-                onTapDown: (d) => s.select(_hit(s.doc.entities, d.localPosition, Offset.zero)),
+                onTapDown: (d) =>
+                    _painting ? _paint(d.localPosition) : s.select(_hit(s.doc.entities, d.localPosition, Offset.zero)),
                 onPanStart: (d) {
                   if (_panning) return;
+                  if (_painting) {
+                    _drag = 'paint${_dragCount++}';
+                    return _paint(d.localPosition);
+                  }
                   final id = _hit(s.doc.entities, d.localPosition, Offset.zero);
                   s.select(id);
                   _drag = id == null ? null : '$id.drag${_dragCount++}';
@@ -520,6 +530,7 @@ class _SceneViewState extends State<SceneView> {
                 onPanUpdate: (d) {
                   final e = s.selected;
                   if (_panning || _drag == null || e == null) return;
+                  if (_painting) return _paint(d.localPosition);
                   // One undo step per drag gesture; the top-left corner snaps to the grid.
                   final o = d.localPosition - _dragStart;
                   final half = e.size / 2;
@@ -973,8 +984,14 @@ class _CounterState extends State<_Counter> {
               child: Text(fam.letter, style: T.head.copyWith(color: Z.z1, letterSpacing: 0)),
             ),
             const SizedBox(width: 10),
-            Center(
-              child: Text(widget.type.toUpperCase(), style: T.head.copyWith(color: Z.z10)),
+            Flexible(
+              child: Center(
+                child: Text(
+                  widget.type.toUpperCase(),
+                  style: T.head.copyWith(color: Z.z10),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ),
             const Spacer(),
             // Factor strip: the counter's printed stats, a compact ruled chit sized to its content.
@@ -1122,6 +1139,7 @@ Widget propEditor(EditorState s, KilnRegistry reg, PropDef d, Map<String, Object
       ),
     ),
     PropKind.actions => _actions(s, reg, d, v is List ? v : const [], (x) => set(x, merge: false), id, caseNo),
+    PropKind.tiles => _TilesEditor(s, map),
   };
 }
 
@@ -1455,3 +1473,151 @@ class _Header extends StatelessWidget {
 }
 
 String _n(double v) => v == v.roundToDouble() ? v.toInt().toString() : v.toStringAsFixed(1);
+
+/// Tile painter controls for a Tilemap: grid size, brush/fill and the tileset palette.
+class _TilesEditor extends StatelessWidget {
+  const _TilesEditor(this.s, this.props);
+
+  final EditorState s;
+  final Map<String, Object?> props;
+
+  @override
+  Widget build(BuildContext context) {
+    final e = s.selected, b = e == null ? null : EditorState.tilemapOf(e);
+    if (e == null || b == null || b.props != props) return const SizedBox.shrink();
+    final (tile, cols, tiles) = EditorState.gridOf(e, b);
+    final rows = tiles.length ~/ cols, on = s.paintId == e.id;
+    Widget tool(String label, bool active, VoidCallback onTap) => TextButton(
+      onPressed: onTap,
+      child: Text(label, style: T.label.copyWith(color: active ? Z.mark : Z.z9)),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Pair(
+          Field('cols', cols, (v) => s.resizeTiles((v as double).round(), rows), parse: parseNumber),
+          Field('rows', rows, (v) => s.resizeTiles(cols, (v as double).round()), parse: parseNumber),
+        ),
+        Row(
+          children: [
+            tool(on ? 'DONE' : 'PAINT', on, () => on ? s.setPaint(stop: true) : s.setPaint(id: e.id)),
+            if (on) ...[
+              tool('BRUSH', s.tool == 'brush', () => s.setPaint(tool: 'brush')),
+              tool('FILL', s.tool == 'fill', () => s.setPaint(tool: 'fill')),
+            ],
+          ],
+        ),
+        if (on)
+          _Palette(
+            image: Props(props).string('image'),
+            dir: s.projectDir,
+            tile: tile,
+            solid: parseIds(Props(props).string('solid')),
+            brush: s.brush,
+            onPick: (n) => s.setPaint(brush: n),
+          ),
+        const SizedBox(height: 6),
+      ],
+    );
+  }
+}
+
+/// Swatches for tile 0 (erase) and every tile of the tileset image (or 8 flat colours without one).
+class _Palette extends StatefulWidget {
+  const _Palette({
+    required this.image,
+    required this.dir,
+    required this.tile,
+    required this.solid,
+    required this.brush,
+    required this.onPick,
+  });
+
+  final String image;
+  final String? dir;
+  final double tile;
+  final Set<int> solid;
+  final int brush;
+  final ValueChanged<int> onPick;
+
+  @override
+  State<_Palette> createState() => _PaletteState();
+}
+
+class _PaletteState extends State<_Palette> {
+  ui.Image? _img;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(_Palette old) {
+    super.didUpdateWidget(old);
+    if (old.image != widget.image || old.dir != widget.dir) _load();
+  }
+
+  Future<void> _load() async {
+    final dir = widget.dir;
+    ui.Image? img;
+    if (dir != null && widget.image.isNotEmpty) {
+      try {
+        img = await decodeImageFromList(await File('$dir/assets/images/${widget.image}').readAsBytes());
+      } catch (_) {
+        // Missing or unreadable tileset: fall back to flat colours.
+      }
+    }
+    if (mounted) setState(() => _img = img);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final img = _img, t = widget.tile;
+    final per = img == null ? 0 : math.max(1, img.width ~/ t);
+    final count = img == null ? 8 : math.min(256, per * math.max(1, img.height ~/ t));
+    Widget swatch(int n) => GestureDetector(
+      onTap: () => widget.onPick(n),
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          border: Border.all(color: widget.brush == n ? Z.mark : Z.z5, width: widget.brush == n ? 2 : 1),
+        ),
+        child: CustomPaint(painter: _SwatchPainter(img, t, n, widget.solid.contains(n), per)),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Wrap(spacing: 4, runSpacing: 4, children: [for (var n = 0; n <= count; n++) swatch(n)]),
+    );
+  }
+}
+
+class _SwatchPainter extends CustomPainter {
+  const _SwatchPainter(this.img, this.tile, this.n, this.solid, this.per);
+
+  final ui.Image? img;
+  final double tile;
+  final int n, per;
+  final bool solid;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final dst = Offset.zero & size;
+    if (n == 0) {
+      canvas.drawLine(dst.topLeft, dst.bottomRight, Paint()..color = Z.z7);
+      canvas.drawLine(dst.topRight, dst.bottomLeft, Paint()..color = Z.z7);
+    } else if (img == null) {
+      canvas.drawRect(dst, Paint()..color = tileColor(n, solid: solid));
+    } else {
+      final k = n - 1;
+      canvas.drawImageRect(img!, Rect.fromLTWH((k % per) * tile, (k ~/ per) * tile, tile, tile), dst, Paint());
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SwatchPainter old) =>
+      old.img != img || old.n != n || old.solid != solid || old.tile != tile || old.per != per;
+}

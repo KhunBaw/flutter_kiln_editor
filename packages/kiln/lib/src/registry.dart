@@ -8,7 +8,7 @@ import 'builtins.dart';
 import 'game.dart';
 
 /// `image`/`audio` are file names under the app's `assets/images/` and `assets/audio/`.
-enum PropKind { number, string, bool, color, choice, actions, image, audio }
+enum PropKind { number, string, bool, color, choice, actions, image, audio, tiles }
 
 /// Describes one editable property; the editor builds its inspector from these.
 class PropDef {

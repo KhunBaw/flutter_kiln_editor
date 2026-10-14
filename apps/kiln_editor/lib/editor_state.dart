@@ -84,7 +84,93 @@ class EditorState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Tile painting: editor-only state, never saved or undone.
+  /// The Tilemap entity being painted, if any.
+  String? paintId;
+
+  /// Tile number the brush lays (0 erases) and the tool: `brush` or `fill`.
+  int brush = 1;
+  String tool = 'brush';
+
+  void setPaint({String? id, bool stop = false, int? brush, String? tool}) {
+    paintId = stop ? null : (id ?? paintId);
+    this.brush = brush ?? this.brush;
+    this.tool = tool ?? this.tool;
+    notifyListeners();
+  }
+
+  static BehaviorData? tilemapOf(EntityNode e) => e.behaviors.where((b) => b.type == 'Tilemap').firstOrNull;
+
+  /// (tile px, columns, cells) of a Tilemap behavior; an empty one starts as the entity's size in cells.
+  static (double, int, List<int>) gridOf(EntityNode e, BehaviorData b) {
+    final p = Props(b.props), tile = p.number('tile') < 1 ? 1.0 : p.number('tile');
+    final tiles = [for (final t in p.list('tiles')) t is num ? t.toInt() : 0];
+    var cols = p.number('cols').round();
+    if (tiles.isEmpty || cols < 1) {
+      cols = (e.size.x / tile).round().clamp(1, 1 << 12);
+      final rows = (e.size.y / tile).round().clamp(1, 1 << 12);
+      return (tile, cols, List.filled(cols * rows, 0));
+    }
+    return (tile, cols, [...tiles, ...List.filled((cols - tiles.length % cols) % cols, 0)]);
+  }
+
+  /// Stores [tiles] and resizes the entity to the grid, keeping its top-left corner.
+  void _setGrid(EntityNode e, BehaviorData b, double tile, int cols, List<int> tiles) {
+    b.props['cols'] = cols;
+    b.props['tiles'] = tiles;
+    final topLeft = e.position - e.size / 2;
+    e.size = Vector2(cols * tile, tiles.length ~/ cols * tile);
+    e.position = topLeft + e.size / 2;
+  }
+
+  /// Paints the brush (or flood-fills) at scene point [p]; false when it hits no cell or changes nothing.
+  /// A [stroke] key merges a drag into one undo step.
+  bool paintAt(Vector2 p, {String? stroke}) {
+    final e = paintId == null ? null : _find(doc.entities, paintId!);
+    final b = e == null ? null : tilemapOf(e);
+    if (e == null || b == null) return false;
+    final (tile, cols, tiles) = gridOf(e, b);
+    final rows = tiles.length ~/ cols, tl = e.position - e.size / 2;
+    final c = ((p.x - tl.x) / tile).floor(), r = ((p.y - tl.y) / tile).floor();
+    if (c < 0 || r < 0 || c >= cols || r >= rows) return false;
+    final from = tiles[r * cols + c];
+    if (from == brush && Props(b.props).list('tiles').length == tiles.length) return false;
+    if (tool == 'fill') {
+      final todo = [r * cols + c];
+      while (todo.isNotEmpty) {
+        final i = todo.removeLast();
+        if (tiles[i] != from || tiles[i] == brush) continue;
+        tiles[i] = brush;
+        final x = i % cols;
+        if (x > 0) todo.add(i - 1);
+        if (x < cols - 1) todo.add(i + 1);
+        if (i >= cols) todo.add(i - cols);
+        if (i + cols < tiles.length) todo.add(i + cols);
+      }
+    } else {
+      tiles[r * cols + c] = brush;
+    }
+    edit((_) => _setGrid(e, b, tile, cols, tiles), mergeKey: stroke);
+    return true;
+  }
+
+  /// Resizes the selected entity's Tilemap grid to [cols] × [rows], keeping the cells that still fit.
+  void resizeTiles(int cols, int rows) {
+    final e = selected, b = e == null ? null : tilemapOf(e);
+    if (e == null || b == null) return;
+    cols = cols.clamp(1, 1 << 12);
+    rows = rows.clamp(1, 1 << 12);
+    final (tile, oldCols, old) = gridOf(e, b);
+    final oldRows = old.length ~/ oldCols;
+    final tiles = [
+      for (var r = 0; r < rows; r++)
+        for (var c = 0; c < cols; c++) c < oldCols && r < oldRows ? old[r * oldCols + c] : 0,
+    ];
+    edit((_) => _setGrid(e, b, tile, cols, tiles), mergeKey: '${e.id}.grid');
+  }
+
   void select(String? id) {
+    if (id != paintId) paintId = null;
     selectedId = id;
     _mergeKey = null;
     notifyListeners();

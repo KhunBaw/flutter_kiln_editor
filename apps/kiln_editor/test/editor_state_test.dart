@@ -160,4 +160,61 @@ void main() {
     );
     expect([f(0), f(1), f(2)], ['0 cases', '1 case', '2 cases']);
   });
+
+  group('tile painting', () {
+    EditorState mapState() => EditorState()
+      ..addEntity(
+        name: 'map',
+        at: Vector2(64, 64),
+        size: Vector2(128, 96),
+        behaviors: [
+          BehaviorData('Tilemap', {'tile': 32}),
+        ],
+      );
+    List<Object?> tilesOf(EditorState s) => Props(EditorState.tilemapOf(s.selected!)!.props).list('tiles');
+
+    test('first stroke starts the grid from the entity size; strokes merge into one undo', () {
+      final s = mapState();
+      s.setPaint(id: s.selectedId, brush: 3);
+      expect(s.paintAt(Vector2(10, 26), stroke: 'a'), isTrue);
+      expect(s.paintAt(Vector2(40, 26), stroke: 'a'), isTrue);
+      expect(s.paintAt(Vector2(40, 26), stroke: 'a'), isFalse); // already 3
+      expect(s.paintAt(Vector2(500, 26)), isFalse); // outside the grid
+      expect(tilesOf(s), [3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); // 4 × 3 cells
+      expect(Props(EditorState.tilemapOf(s.selected!)!.props).number('cols'), 4);
+      s.undo();
+      expect(tilesOf(s), isEmpty);
+    });
+
+    test('fill replaces a connected region; erase brush is 0', () {
+      final s = mapState();
+      s.setPaint(id: s.selectedId, brush: 2);
+      s.paintAt(Vector2(10, 26));
+      s.setPaint(brush: 5, tool: 'fill');
+      s.paintAt(Vector2(100, 106)); // empty region around the single 2
+      expect(tilesOf(s), [2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]);
+      s.setPaint(brush: 0, tool: 'brush');
+      s.paintAt(Vector2(10, 26));
+      expect(tilesOf(s).first, 0);
+    });
+
+    test('resize keeps cells that still fit and the entity top-left', () {
+      final s = mapState();
+      s.setPaint(id: s.selectedId, brush: 4);
+      s.paintAt(Vector2(100, 26)); // cell (3, 0)
+      final tl = s.selected!.position - s.selected!.size / 2;
+      s.resizeTiles(2, 4);
+      expect(tilesOf(s), [0, 0, 0, 0, 0, 0, 0, 0]);
+      s.resizeTiles(5, 4);
+      expect(s.selected!.size, Vector2(160, 128));
+      expect(s.selected!.position - s.selected!.size / 2, tl);
+    });
+
+    test('selecting another entity ends painting', () {
+      final s = mapState();
+      s.setPaint(id: s.selectedId);
+      s.addEntity();
+      expect(s.paintId, isNull);
+    });
+  });
 }

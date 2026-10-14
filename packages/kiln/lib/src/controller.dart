@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'game.dart';
 import 'registry.dart';
 import 'scene.dart';
+import 'tilemap.dart' show KilnStorage;
 
 /// Something a scene's Emit action sent out to the app.
 class KilnEvent {
@@ -22,9 +23,13 @@ class KilnEvent {
 class KilnController extends ChangeNotifier {
   /// [variables] override the scene's starting values. With [keepVariables] one set of variables
   /// lives across LoadScene (each new scene only adds its missing defaults; use ResetVariables to restart).
-  KilnController({Map<String, Object?> variables = const {}, this.keepVariables = false}) : _overrides = {...variables};
+  KilnController({Map<String, Object?> variables = const {}, this.keepVariables = false, this.storage})
+    : _overrides = {...variables};
 
   final bool keepVariables;
+
+  /// Where SaveGame/LoadGame keep data; null uses JSON files in the app support directory.
+  final KilnStorage? storage;
   final Map<String, Object?> _overrides;
   final _events = StreamController<KilnEvent>.broadcast();
   GameVariables? _shared;
@@ -64,6 +69,7 @@ class KilnController extends ChangeNotifier {
       doc,
       registry: registry,
       vars: vars,
+      storage: storage,
       onLoadScene: loadScene,
       onEmit: (name, value) => _events.add(KilnEvent(name, value)),
     );

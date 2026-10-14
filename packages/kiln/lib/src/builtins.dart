@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 
 import 'game.dart';
 import 'registry.dart';
+import 'tilemap.dart';
 
 final builtinBehaviors = <BehaviorDef>[
   BehaviorDef('Shape', const [
@@ -145,21 +146,97 @@ final builtinBehaviors = <BehaviorDef>[
   ], (e, p) => _Condition(e, p)),
   BehaviorDef('Collider', const [
     PropDef('shape', PropKind.choice, 'rect', options: ['rect', 'circle']),
-  ], (e, p) => p.string('shape') == 'circle' ? CircleHitbox() : RectangleHitbox()),
-  BehaviorDef('OnCollide', const [PropDef('with', PropKind.string, ''), PropDef('actions', PropKind.actions, [])], (
-    e,
-    p,
-  ) {
-    final only = p.string('with');
-    e.collideHandlers.add((other) {
-      if (only.isEmpty ||
+    // Solid hitboxes also collide when one box lies fully inside the other (a small marker under a crate).
+  ], (e, p) => p.string('shape') == 'circle' ? CircleHitbox(isSolid: true) : RectangleHitbox(isSolid: true)),
+  BehaviorDef(
+    'OnCollide',
+    const [
+      PropDef('with', PropKind.string, ''),
+      PropDef('actions', PropKind.actions, []),
+      // Runs when the contact ends (or the partner is destroyed).
+      PropDef('exit', PropKind.actions, []),
+    ],
+    (e, p) {
+      final only = p.string('with');
+      bool match(KilnEntity other) =>
+          only.isEmpty ||
           other.node.name == only ||
-          (only.startsWith('#') && other.node.tags.contains(only.substring(1)))) {
-        e.runActions(p.list('actions'), other: other);
-      }
-    });
-    return null;
-  }),
+          (only.startsWith('#') && other.node.tags.contains(only.substring(1)));
+      e.collideHandlers.add((other) {
+        if (match(other)) e.runActions(p.list('actions'), other: other);
+      });
+      e.separateHandlers.add((other) {
+        if (match(other)) e.runActions(p.list('exit'), other: other);
+      });
+      return null;
+    },
+  ),
+  BehaviorDef(
+    'Tilemap',
+    const [
+      // Tileset image: square tiles of `tile` px laid out left-to-right, top-to-bottom. Empty draws flat colours.
+      PropDef('image', PropKind.image, ''),
+      PropDef('tile', PropKind.number, 32),
+      PropDef('cols', PropKind.number, 10),
+      // Row-major tile numbers: 0 empty, n = tileset tile n (1-based). Painted in the editor.
+      PropDef('tiles', PropKind.tiles, []),
+      // Tile numbers that block Body, GridMove and pathfinding, e.g. "1, 2".
+      PropDef('solid', PropKind.string, '1'),
+    ],
+    (e, p) async => Tilemap(
+      tile: max(1, p.number('tile')),
+      cols: max(1, p.number('cols').round()),
+      tiles: [for (final t in p.list('tiles')) t is num ? t.toInt() : 0],
+      solid: parseIds(p.string('solid')),
+      image: await _image(e, 'Tilemap', p.string('image')),
+    ),
+  ),
+  BehaviorDef(
+    'GridMove',
+    const [
+      PropDef('cell', PropKind.number, 32),
+      // Seconds per step; 0 jumps instantly.
+      PropDef('time', PropKind.number, 0.12),
+      PropDef('keys', PropKind.choice, 'both', options: ['both', 'arrows', 'wasd']),
+      // Name or #tag of entities this one pushes one cell; blocked pushes stop the walker.
+      PropDef('push', PropKind.string, ''),
+      // Name or #tag of entities that can't be entered.
+      PropDef('block', PropKind.string, ''),
+      PropDef('onStep', PropKind.actions, []),
+    ],
+    (e, p) => GridMove(
+      cell: max(1, p.number('cell')),
+      time: max(0, p.number('time')),
+      keys: p.string('keys'),
+      push: p.string('push'),
+      block: p.string('block'),
+      actions: p.list('onStep'),
+    ),
+  ),
+  BehaviorDef(
+    'Dialogue',
+    const [
+      // Lines separated by "|"; "{name}" slots read variables.
+      PropDef('lines', PropKind.string, 'Hello!|How are you?'),
+      // Shown with the last line, picked by tap or number key: "Fine|Tired".
+      PropDef('choices', PropKind.string, ''),
+      // Receives the picked choice's 1-based number.
+      PropDef('variable', PropKind.string, 'answer'),
+      // Event that opens it; empty opens at start.
+      PropDef('open', PropKind.string, ''),
+      PropDef('fontSize', PropKind.number, 18),
+      PropDef('color', PropKind.color, '#FFFFFF'),
+      PropDef('actions', PropKind.actions, []),
+    ],
+    (e, p) => Dialogue(
+      lines: _split(p.string('lines')),
+      choices: _split(p.string('choices')),
+      variable: p.string('variable'),
+      open: p.string('open'),
+      style: TextStyle(fontSize: p.number('fontSize'), color: p.color('color')),
+      actions: p.list('actions'),
+    ),
+  ),
   BehaviorDef('OnEvent', const [
     PropDef('event', PropKind.string, 'event'),
     // Variable that receives the event's value (e.g. sent by the app) before the actions run.
@@ -246,7 +323,9 @@ final builtinBehaviors = <BehaviorDef>[
     PropDef('target', PropKind.string, 'Player'),
     PropDef('speed', PropKind.number, 100),
     PropDef('stop', PropKind.number, 0),
-  ], (e, p) => _Follow(p.string('target'), p.number('speed'), p.number('stop'))),
+    // Route around solid Tilemap tiles instead of heading straight for the target.
+    PropDef('pathfind', PropKind.bool, false),
+  ], (e, p) => _Follow(e, p.string('target'), p.number('speed'), p.number('stop'), pathfind: p.flag('pathfind'))),
   BehaviorDef('Patrol', const [
     // World points "x,y; x,y; …" visited in order.
     PropDef('points', PropKind.string, ''),
@@ -328,6 +407,11 @@ Future<Image?> _image(KilnEntity e, String type, String src) async {
     return null;
   }
 }
+
+List<String> _split(String s) => [
+  for (final x in s.split('|'))
+    if (x.trim().isNotEmpty) x.trim(),
+];
 
 // Zero/negative periods would make repeating timers spin.
 double _minPeriod(double v) => v < 0.01 ? 0.01 : v;
@@ -502,6 +586,44 @@ final builtinActions = <ActionDef>[
     if (a.string('file').isNotEmpty) self.game.music(a.string('file'));
   }, targeted: false),
   ActionDef('StopMusic', const [], (self, a) => self.game.music(null), targeted: false),
+  ActionDef(
+    'SaveGame',
+    // names: comma list of variables; empty saves them all.
+    const [PropDef('slot', PropKind.string, 'save'), PropDef('names', PropKind.string, '')],
+    (self, a) {
+      final g = self.game, slot = a.string('slot');
+      g.storage
+          .write(slot, g.vars.snapshot(_names(a.string('names'))))
+          .then((_) => g.emit('saved', value: slot))
+          .catchError((Object err) => debugPrint('kiln: SaveGame "$slot": $err'));
+    },
+    targeted: false,
+  ),
+  ActionDef(
+    'LoadGame',
+    // Emits "loaded" (slot) when variables are back, or "loadfailed" when the slot is empty or unreadable.
+    const [PropDef('slot', PropKind.string, 'save'), PropDef('names', PropKind.string, '')],
+    (self, a) {
+      final g = self.game, slot = a.string('slot'), names = _names(a.string('names'));
+      g.storage
+          .read(slot)
+          .then((data) {
+            if (data == null || data['variables'] is! Map) return g.emit('loadfailed', value: slot);
+            g.vars.restore((data['variables'] as Map).cast<String, Object?>(), names);
+            g.emit('loaded', value: slot);
+          })
+          .catchError((Object err) {
+            debugPrint('kiln: LoadGame "$slot": $err');
+            g.emit('loadfailed', value: slot);
+          });
+    },
+    targeted: false,
+  ),
+];
+
+List<String> _names(String s) => [
+  for (final n in s.split(','))
+    if (n.trim().isNotEmpty) n.trim(),
 ];
 
 void _setProp(KilnEntity e, String prop, double v, {required bool add}) {
@@ -578,21 +700,23 @@ class Body extends Motion {
     axis == 0 ? parent.x += delta : parent.y += delta;
     for (final s in parent.game.solids) {
       if (s.parent == parent) continue;
-      final me = parent.toAbsoluteRect(), r = s.parent.toAbsoluteRect();
-      if (!me.overlaps(r)) continue;
-      if (axis == 0) {
-        if (s.oneWay) continue;
-        parent.x += delta > 0 ? r.left - me.right : r.right - me.left;
-        v.x = 0;
-      } else if (delta > 0) {
-        // One-way platforms only stop bodies that were above them before this step.
-        if (s.oneWay && before.bottom > r.top + 0.01) continue;
-        parent.y += r.top - me.bottom;
-        v.y = 0;
-        onGround = true;
-      } else if (!s.oneWay) {
-        parent.y += r.bottom - me.top;
-        v.y = 0;
+      for (final r in s.hits(parent.toAbsoluteRect())) {
+        final me = parent.toAbsoluteRect();
+        if (!me.overlaps(r)) continue;
+        if (axis == 0) {
+          if (s.oneWay) continue;
+          parent.x += delta > 0 ? r.left - me.right : r.right - me.left;
+          v.x = 0;
+        } else if (delta > 0) {
+          // One-way platforms only stop bodies that were above them before this step.
+          if (s.oneWay && before.bottom > r.top + 0.01) continue;
+          parent.y += r.top - me.bottom;
+          v.y = 0;
+          onGround = true;
+        } else if (!s.oneWay) {
+          parent.y += r.bottom - me.top;
+          v.y = 0;
+        }
       }
     }
   }
@@ -602,6 +726,9 @@ class Solid extends Component with ParentIsA<KilnEntity> {
   Solid({required this.oneWay});
 
   final bool oneWay;
+
+  /// Boxes (world space) that block bodies near [area]; a tilemap returns its solid cells.
+  Iterable<Rect> hits(Rect area) => [parent.toAbsoluteRect()];
 
   @override
   void onMount() {
@@ -761,16 +888,25 @@ class _Move8 extends Component with ParentIsA<KilnEntity> {
 
 /// Steers toward the nearest [target] (name or #tag) until within [stop] pixels.
 class _Follow extends Component with ParentIsA<KilnEntity> {
-  _Follow(this.target, this.speed, this.stop);
+  _Follow(KilnEntity e, this.target, this.speed, this.stop, {required this.pathfind}) : _walker = PathWalker(e);
 
   final String target;
   final double speed, stop;
+  final bool pathfind;
+  final PathWalker _walker;
 
   @override
   void update(double dt) {
     final g = parent.game;
     if (g.editing) return;
     final t = g.nearest(parent, target);
+    final m = g.tilemaps.firstOrNull;
+    if (pathfind && m != null && t != null) {
+      final reach = max(stop, 0.5);
+      final near = t.absoluteCenter.distanceTo(parent.absoluteCenter) <= reach;
+      motionOf(parent).v.setFrom(near ? Vector2.zero() : _walker.steer(m, t.absoluteCenter, 0.5, dt, speed) * speed);
+      return;
+    }
     final d = t == null ? Vector2.zero() : t.absoluteCenter - parent.absoluteCenter;
     motionOf(parent).v.setFrom(d.length > max(stop, 0.5) ? (d..normalize()) * speed : Vector2.zero());
   }

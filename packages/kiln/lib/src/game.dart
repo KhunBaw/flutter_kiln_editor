@@ -14,6 +14,7 @@ import 'builtins.dart';
 import 'controller.dart';
 import 'registry.dart';
 import 'scene.dart';
+import 'tilemap.dart';
 
 class GameVariables extends ChangeNotifier {
   GameVariables(Map<String, Object?> initial) : _values = {...initial};
@@ -50,6 +51,21 @@ class GameVariables extends ChangeNotifier {
     if (changed) notifyListeners();
   }
 
+  /// JSON-safe copy for SaveGame under `variables` ([names] empty = all).
+  Map<String, Object?> snapshot([Iterable<String> names = const []]) => {
+    'variables': {
+      for (final MapEntry(:key, :value) in _values.entries)
+        if ((names.isEmpty || names.contains(key)) && (value is num || value is String || value is bool)) key: value,
+    },
+  };
+
+  /// Sets saved [data] values ([names] empty = all of them).
+  void restore(Map<String, Object?> data, [Iterable<String> names = const []]) {
+    for (final MapEntry(:key, :value) in data.entries) {
+      if (names.isEmpty || names.contains(key)) this[key] = value;
+    }
+  }
+
   /// Puts [names] (all of [defaults] when empty) back to their [defaults].
   void reset(Map<String, Object?> defaults, [Iterable<String> names = const []]) {
     for (final k in names.isEmpty ? defaults.keys : names) {
@@ -81,9 +97,11 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
     this.playSound,
     this.playMusic,
     this.onEmit,
+    KilnStorage? storage,
     GameVariables? vars,
     AssetBundle? bundle,
   }) : registry = registry ?? KilnRegistry(),
+       storage = storage ?? FileKilnStorage(),
        // Shared vars (kept across scenes) only gain this scene's missing defaults.
        vars = vars == null ? GameVariables(scene.variables) : (vars..seed(scene.variables)),
        super(
@@ -95,6 +113,9 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
   final SceneDoc scene;
   final KilnRegistry registry;
   final GameVariables vars;
+
+  /// Where SaveGame/LoadGame keep data; defaults to JSON files in the app support directory.
+  final KilnStorage storage;
 
   /// Editor preview: time is frozen (no timers/tweens/spawns) and prefabs stay visible.
   final bool editing;
@@ -125,6 +146,9 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
 
   /// Static colliders that Body behaviors move against.
   final Set<Solid> solids = {};
+
+  /// Tilemaps in play; GridMove, pathfinding and Follow read their cells.
+  final Set<Tilemap> tilemaps = {};
   int _spawned = 0;
 
   /// Top-level entities with a Prefab behavior, by name; hidden at play time and cloned by Spawner.
@@ -247,6 +271,7 @@ class KilnEntity extends PositionComponent
   final List<VoidCallback> tapHandlers = [];
   final List<void Function(KilnEntity other)> collideHandlers = [];
   final List<VoidCallback> landHandlers = [];
+  final List<void Function(KilnEntity other)> separateHandlers = [];
 
   /// The entity's one mover (Velocity, Body, or one added by an action), set before it mounts.
   Motion? motion;
@@ -285,6 +310,15 @@ class KilnEntity extends PositionComponent
     }
     for (final h in [...tapHandlers]) {
       h();
+    }
+  }
+
+  @override
+  void onCollisionEnd(PositionComponent other) {
+    super.onCollisionEnd(other);
+    if (other is! KilnEntity) return;
+    for (final h in [...separateHandlers]) {
+      h(other);
     }
   }
 

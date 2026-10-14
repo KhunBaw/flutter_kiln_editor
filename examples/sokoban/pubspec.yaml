@@ -1,0 +1,23 @@
+name: sokoban
+description: "Kiln example: Sokoban with a painted tilemap, grid movement, pushable boxes and a dialogue. Scene files only."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.1
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  kiln:
+    path: ../../packages/kiln
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/scenes/

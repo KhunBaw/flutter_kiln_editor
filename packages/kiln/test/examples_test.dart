@@ -11,6 +11,7 @@ const _examples = [
   '../../examples/tap_game/assets/scenes',
   '../../examples/platformer/assets/scenes',
   '../../examples/shooter/assets/scenes',
+  '../../examples/sokoban/assets/scenes',
 ];
 const _scenes = '../../examples/tap_game/assets/scenes';
 
@@ -137,6 +138,39 @@ void main() {
       // The bot never dodges, so it gets hit; dying sends it to the lose scene.
       expect((g.vars['hp'] as num) < 3 || shooterLoads.isNotEmpty, isTrue);
       if (shooterLoads.isNotEmpty) expect(shooterLoads, ['assets/scenes/lose.kiln.json']);
+    },
+  );
+
+  final sokobanLoads = <String>[];
+  testWithGame(
+    'sokoban: a bot pushes both boxes onto the goals and the dialogue opens',
+    () => KilnGame(_load('level1.kiln.json', _examples[3]), onLoadScene: sokobanLoads.add),
+    (g) async {
+      Future<void> walk(String moves) async {
+        const keys = {
+          'U': LogicalKeyboardKey.arrowUp,
+          'D': LogicalKeyboardKey.arrowDown,
+          'L': LogicalKeyboardKey.arrowLeft,
+          'R': LogicalKeyboardKey.arrowRight,
+        };
+        for (final m in moves.split('')) {
+          g.onKeyEvent(_key(keys[m]!), {keys[m]!});
+          g.update(0); // starts the step
+          g.onKeyEvent(_key(keys[m]!, down: false), {}); // released before it ends, so no repeat
+          g.update(0.11);
+          await g.ready();
+        }
+      }
+
+      final win = g.world.children.whereType<KilnEntity>().firstWhere((e) => e.node.name == 'Win');
+      expect(win.isVisible, isFalse);
+      await walk('URRRD LLL UL DD LUUU RRRRR'.replaceAll(' ', ''));
+      expect(g.vars['moves'], 21);
+      expect(g.vars['placed'], 2);
+      expect(win.isVisible, isTrue);
+
+      g.onKeyEvent(_key(LogicalKeyboardKey.digit1), {});
+      expect(sokobanLoads, ['assets/scenes/level1.kiln.json']);
     },
   );
 }
