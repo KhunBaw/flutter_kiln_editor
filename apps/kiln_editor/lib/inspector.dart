@@ -91,7 +91,6 @@ class InspectorPanel extends StatelessWidget {
 
   List<Widget> _scene() {
     final d = s.doc;
-    final vars = d.variables.entries.toList();
     return [
       const SectionTitle('Scene'),
       Field('Name', d.name, (v) => s.edit((d) => d.name = v as String, mergeKey: 'scene.name')),
@@ -133,22 +132,30 @@ class InspectorPanel extends StatelessWidget {
           compact: true,
         ),
       ),
+      ..._variables(d.variables, 'scene', 'No variables. Text can show one as {name}.'),
+    ];
+  }
+
+  /// Name/value rows editing [vars] in place (scene variables, or an entity's own).
+  List<Widget> _variables(Map<String, Object?> vars, String id, String empty) {
+    final rows = vars.entries.toList();
+    return [
       SectionTitle(
         'Variables',
         trailing: IconBtn(
           Icons.add,
           'Add variable',
-          () => s.edit((d) {
-            var n = d.variables.length + 1;
-            while (d.variables.containsKey('var$n')) {
+          () => s.edit((_) {
+            var n = vars.length + 1;
+            while (vars.containsKey('var$n')) {
               n++;
             }
-            d.variables['var$n'] = 0;
+            vars['var$n'] = 0;
           }),
           size: 24,
         ),
       ),
-      for (final (i, kv) in vars.indexed)
+      for (final (i, kv) in rows.indexed)
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
           child: Row(
@@ -156,11 +163,13 @@ class InspectorPanel extends StatelessWidget {
               Expanded(
                 child: Field('Name', kv.key, (v) {
                   final name = v as String;
-                  if (name.isEmpty || d.variables.containsKey(name)) return;
-                  s.edit(
-                    (d) => d.variables = {for (final x in d.variables.entries) x.key == kv.key ? name : x.key: x.value},
-                    mergeKey: 'var$i.name',
-                  );
+                  if (name.isEmpty || vars.containsKey(name)) return;
+                  s.edit((_) {
+                    final next = {for (final x in vars.entries) x.key == kv.key ? name : x.key: x.value};
+                    vars
+                      ..clear()
+                      ..addAll(next);
+                  }, mergeKey: '$id.var$i.name');
                 }, compact: true),
               ),
               const SizedBox(width: 6),
@@ -168,16 +177,16 @@ class InspectorPanel extends StatelessWidget {
                 child: Field(
                   'Value',
                   kv.value,
-                  (v) => s.edit((d) => d.variables[kv.key] = v, mergeKey: 'var$i.value'),
-                  parse: (t) => num.tryParse(t) ?? t,
+                  (v) => s.edit((_) => vars[kv.key] = v, mergeKey: '$id.var$i.value'),
+                  parse: parseVar,
                   compact: true,
                 ),
               ),
-              IconBtn(Icons.close, 'Remove variable', () => s.edit((d) => d.variables.remove(kv.key)), size: 24),
+              IconBtn(Icons.close, 'Remove variable', () => s.edit((_) => vars.remove(kv.key)), size: 24),
             ],
           ),
         ),
-      if (vars.isEmpty) const Text('No variables. Text can show one as {name}.', style: T.small),
+      if (rows.isEmpty) Text(empty, style: T.small),
     ];
   }
 
@@ -190,6 +199,7 @@ class InspectorPanel extends StatelessWidget {
           padding: const EdgeInsets.only(top: 10),
           child: _BehaviorCard(key: ValueKey('${e.id}.b$i.${b.type}'), s: s, registry: registry, entity: e, index: i),
         ),
+      ..._variables(e.variables, e.id, 'No variables. Formulas read them as self.name.'),
       const SizedBox(height: 12),
       AddMenu('Add behavior', registry.behaviors.keys, (type) {
         final def = registry.behaviors[type]!;
@@ -512,7 +522,8 @@ Widget propEditor(EditorState s, KilnRegistry reg, PropDef d, Map<String, Object
       !_same(v, d.defaultValue) &&
       d.kind != PropKind.actions &&
       d.kind != PropKind.tiles &&
-      d.kind != PropKind.keyframes;
+      d.kind != PropKind.keyframes &&
+      d.kind != PropKind.json;
   final VoidCallback? reset = modified ? () => set(d.defaultValue, merge: false) : null;
   return switch (d.kind) {
     PropKind.number => Field(
@@ -546,6 +557,19 @@ Widget propEditor(EditorState s, KilnRegistry reg, PropDef d, Map<String, Object
     ),
     PropKind.actions => _actions(s, reg, d, v is List ? v : const [], (x) => set(x, merge: false), id),
     PropKind.tiles => _TilesEditor(s, map),
+    PropKind.json => Field(
+      title,
+      v,
+      set,
+      parse: (t) {
+        try {
+          return jsonDecode(t);
+        } on FormatException {
+          return null;
+        }
+      },
+      onReset: reset,
+    ),
     PropKind.keyframes => _KeyframeSummary(s, v is List ? v : const []),
   };
 }

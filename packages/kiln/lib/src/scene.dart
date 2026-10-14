@@ -63,11 +63,13 @@ class EntityNode {
     List<String>? tags,
     List<BehaviorData>? behaviors,
     List<EntityNode>? children,
+    Map<String, Object?>? variables,
   }) : position = position ?? Vector2.zero(),
        size = size ?? Vector2.all(64),
        tags = tags ?? [],
        behaviors = behaviors ?? [],
-       children = children ?? [];
+       children = children ?? [],
+       variables = variables ?? {};
 
   String id;
   String name;
@@ -84,6 +86,9 @@ class EntityNode {
   List<BehaviorData> behaviors;
   List<EntityNode> children;
 
+  /// This entity's own variables (start values); formulas read them as `self.name`.
+  Map<String, Object?> variables;
+
   factory EntityNode.fromJson(Object? json) {
     final m = json is Map<String, Object?> ? json : const <String, Object?>{};
     return EntityNode(
@@ -98,6 +103,7 @@ class EntityNode {
       ],
       behaviors: _list(m['behaviors']).map(BehaviorData.fromJson).toList(),
       children: _list(m['children']).map(EntityNode.fromJson).toList(),
+      variables: m['variables'] is Map<String, Object?> ? {...m['variables'] as Map<String, Object?>} : null,
     );
   }
 
@@ -108,6 +114,7 @@ class EntityNode {
     'size': [size.x, size.y],
     'angle': angle,
     if (tags.isNotEmpty) 'tags': tags,
+    if (variables.isNotEmpty) 'variables': variables,
     'behaviors': [for (final b in behaviors) b.toJson()],
     'children': [for (final c in children) c.toJson()],
   };

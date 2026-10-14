@@ -167,6 +167,13 @@ final builtinBehaviors = <BehaviorDef>[
     PropDef('check', PropKind.choice, 'change', options: ['change', 'frame']),
     PropDef('actions', PropKind.actions, []),
   ], (e, p) => _Condition(e, p)),
+  BehaviorDef('StateMachine', const [
+    PropDef('initial', PropKind.string, ''),
+    // [{name, enter: [actions], update: [actions], exit: [actions]}]
+    PropDef('states', PropKind.json, []),
+    // [{from: "state" or "*", to: "state", when: "formula"}]
+    PropDef('transitions', PropKind.json, []),
+  ], (e, p) => StateMachine(p)),
   BehaviorDef('Collider', const [
     PropDef('shape', PropKind.choice, 'rect', options: ['rect', 'circle']),
     // Solid hitboxes also collide when one box lies fully inside the other (a small marker under a crate).
@@ -550,18 +557,16 @@ List<String> _split(String s) => [
 double _minPeriod(double v) => v < 0.01 ? 0.01 : v;
 
 final builtinActions = <ActionDef>[
-  ActionDef('AddVariable', const [PropDef('name', PropKind.string, 'score'), PropDef('value', PropKind.number, 1)], (
-    self,
-    a,
-  ) {
-    final vars = self.game.vars;
-    final cur = vars[a.string('name')];
-    vars[a.string('name')] = (cur is num ? cur : 0) + a.number('value');
-  }, targeted: false),
+  ActionDef(
+    'AddVariable',
+    const [PropDef('name', PropKind.string, 'score'), PropDef('value', PropKind.number, 1), ..._scopeProps],
+    (self, a) => _writeVar(self, a, (cur) => (cur is num ? cur : 0) + a.number('value')),
+    targeted: false,
+  ),
   ActionDef(
     'SetVariable',
-    const [PropDef('name', PropKind.string, 'score'), PropDef('value', PropKind.string, '')],
-    (self, a) => self.game.vars[a.string('name')] = a['value'],
+    const [PropDef('name', PropKind.string, 'score'), PropDef('value', PropKind.string, ''), ..._scopeProps],
+    (self, a) => _writeVar(self, a, (_) => a['value']),
     targeted: false,
   ),
   ActionDef(
@@ -585,6 +590,10 @@ final builtinActions = <ActionDef>[
     (self, a) => debugPrint('kiln: ${a['value']}'),
     targeted: false,
   ),
+  ActionDef('SetState', const [PropDef('state', PropKind.string, '')], (self, a) {
+    final m = self.children.whereType<StateMachine>().firstOrNull;
+    m == null ? debugPrint('kiln: SetState on ${self.node.name}: no StateMachine') : m.go(a.string('state'));
+  }),
   ..._dataActions,
   ActionDef(
     'Animate',
@@ -1469,3 +1478,73 @@ final _dataActions = <ActionDef>[
     targeted: false,
   ),
 ];
+
+// global = game variable; self / target = entity variables (`entity` names the target: name, #tag or other).
+const _scopeProps = [
+  PropDef('scope', PropKind.choice, 'global', options: ['global', 'self', 'target']),
+  PropDef('entity', PropKind.string, ''),
+];
+
+void _writeVar(KilnEntity self, Props a, Object? Function(Object? cur) next) {
+  final name = a.string('name');
+  switch (a.string('scope')) {
+    case 'self':
+      self.vars[name] = next(self.vars[name]);
+    case 'target':
+      for (final t in self.game.targets(self, a.string('entity'), other: self.game.registry.other)) {
+        t.vars[name] = next(t.vars[name]);
+      }
+    default:
+      self.game.vars[name] = next(self.game.vars[name]);
+  }
+}
+
+/// States with enter/update/exit action lists and `when`-guarded transitions; the current state is `self.state`
+/// (and `self.stateTime` seconds) in formulas. Only one transition fires per frame.
+class StateMachine extends Component with ParentIsA<KilnEntity> {
+  StateMachine(Props p)
+    : _states = {
+        for (final s in p.list('states'))
+          if (s is Map<String, Object?>) '${s['name']}': Props(s),
+      },
+      _transitions = p.list('transitions'),
+      _initial = p.string('initial');
+
+  final Map<String, Props> _states;
+  final List<Object?> _transitions;
+  final String _initial;
+  String state = '';
+
+  @override
+  void onMount() {
+    super.onMount();
+    if (parent.game.editing) return;
+    go(_initial.isNotEmpty ? _initial : (_states.keys.firstOrNull ?? ''));
+  }
+
+  void go(String to) {
+    if (!_states.containsKey(to)) return debugPrint('kiln: StateMachine on ${parent.node.name}: no state "$to"');
+    if (_states[state] case final s?) parent.runActions(s.list('exit'));
+    state = to;
+    parent.vars
+      ..['state'] = to
+      ..['stateTime'] = 0.0;
+    parent.runActions(_states[to]!.list('enter'));
+  }
+
+  @override
+  void update(double dt) {
+    if (parent.game.editing || state.isEmpty) return;
+    parent.vars['stateTime'] = (parent.vars['stateTime'] as num? ?? 0) + dt;
+    parent.runActions(_states[state]?.list('update') ?? const []);
+    for (final raw in _transitions) {
+      final t = Props(raw is Map<String, Object?> ? raw : const {});
+      final from = t.string('from');
+      if (from.isNotEmpty && from != '*' && from != state) continue;
+      final src = t.string('when').replaceFirst(RegExp(r'^\s*='), '');
+      if (src.isNotEmpty && truthy(evalExpr(src, ExprScope(parent.game, parent)))) {
+        return go(t.string('to'));
+      }
+    }
+  }
+}

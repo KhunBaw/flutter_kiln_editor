@@ -326,6 +326,10 @@ class KilnEntity extends PositionComponent
     : super(position: node.position.clone(), size: node.size.clone(), angle: node.angle, anchor: Anchor.center);
 
   final EntityNode node;
+
+  /// Per-entity variables, copied from the node so spawned clones do not share state.
+  late final Map<String, Object?> vars = {...node.variables};
+
   /// Set by the Animator behavior; the Animate action drives it.
   AnimatorComponent? animator;
   final List<VoidCallback> tapHandlers = [];

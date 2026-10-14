@@ -1,3 +1,4 @@
+import 'package:flame/components.dart' show Vector2;
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiln/kiln.dart';
@@ -184,6 +185,109 @@ void main() {
       expect(saved['xs'], [3, 4, 5]);
       g.vars['bad'] = Object();
       expect((g.vars.snapshot()['variables']! as Map).containsKey('bad'), false);
+    },
+  );
+
+  test('EntityNode.variables round-trips and old nodes have none', () {
+    final n = EntityNode.fromJson({
+      'id': 'a',
+      'variables': {
+        'hp': 5,
+        'xs': [1],
+      },
+    });
+    expect(EntityNode.fromJson(n.toJson()).variables, {
+      'hp': 5,
+      'xs': [1],
+    });
+    expect(EntityNode.fromJson({'id': 'b'}).toJson().containsKey('variables'), false);
+  });
+
+  testWithGame(
+    'entity variables: scopes, spawned clones are independent, formulas read self.hp/other.hp',
+    () => KilnGame(
+      scene([
+        ent('a', []),
+        {
+          ...ent('E', [b('Prefab')]),
+          'variables': {'hp': 3},
+        },
+      ]),
+    ),
+    (g) async {
+      final a = named(g, 'a');
+      final e1 = g.spawn('E', Vector2.zero())!, e2 = g.spawn('E', Vector2.zero())!;
+      await g.ready();
+      a.runActions([
+        act('SetVariable', {'name': 'mine', 'value': 7, 'scope': 'self'}),
+        act('AddVariable', {'name': 'hp', 'value': -1, 'scope': 'target', 'entity': '#t'}),
+        act('SetVariable', {'name': 'score', 'value': '=other.hp * 10'}),
+      ], other: e1);
+      expect(a.vars['mine'], 7);
+      expect(g.vars['score'], 20); // e1.hp after the Add
+      e1.vars['hp'] = 99;
+      expect(e2.vars['hp'], 2);
+      expect(g.vars['hp'], isNull); // scope target never touches globals
+      expect(evalExpr('self.hp + self.mine', ExprScope(g, e1)), 99);
+    },
+  );
+
+  testWithGame(
+    'StateMachine: initial enter, update actions, guarded transition, SetState, exit',
+    () => KilnGame(
+      scene([
+        ent('a', [
+          b('StateMachine', {
+            'initial': 'idle',
+            'states': [
+              {
+                'name': 'idle',
+                'enter': [
+                  act('AddVariable', {'name': 'enters'}),
+                ],
+                'exit': [
+                  act('AddVariable', {'name': 'exits'}),
+                ],
+              },
+              {
+                'name': 'run',
+                'update': [
+                  act('AddVariable', {'name': 'ticks'}),
+                ],
+              },
+            ],
+            'transitions': [
+              {'from': 'idle', 'to': 'run', 'when': '=score >= 5'},
+              {'from': 'run', 'to': 'idle', 'when': 'self.stateTime > 0.5'},
+            ],
+          }),
+        ]),
+      ]),
+    ),
+    (g) async {
+      final a = named(g, 'a');
+      await g.ready();
+      expect(a.vars['state'], 'idle');
+      expect(g.vars['enters'], 1);
+      g.update(0.1);
+      expect(a.vars['state'], 'idle');
+      g.vars['score'] = 5;
+      g.update(0.1); // transition fires
+      expect(a.vars['state'], 'run');
+      expect(g.vars['exits'], 1);
+      g.update(0.1);
+      expect(g.vars['ticks'], 1);
+      expect(a.vars['stateTime'], closeTo(0.1, 1e-9));
+      g.vars['score'] = 0; // keep idle->run from firing again
+      for (var i = 0; i < 6; i++) {
+        g.update(0.1);
+      }
+      expect(a.vars['state'], 'idle'); // stateTime passed 0.5
+      a.runActions([
+        act('SetState', {'state': 'run'}),
+        act('SetState', {'state': 'nope'}),
+      ]);
+      expect(a.vars['state'], 'run');
     },
   );
 }

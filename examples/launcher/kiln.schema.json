@@ -290,6 +290,29 @@
       ]
     },
     {
+      "type": "StateMachine",
+      "props": [
+        {
+          "key": "initial",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "states",
+          "kind": "json",
+          "default": [],
+          "options": []
+        },
+        {
+          "key": "transitions",
+          "kind": "json",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
       "type": "Collider",
       "props": [
         {
@@ -1269,6 +1292,22 @@
           "kind": "number",
           "default": 1,
           "options": []
+        },
+        {
+          "key": "scope",
+          "kind": "choice",
+          "default": "global",
+          "options": [
+            "global",
+            "self",
+            "target"
+          ]
+        },
+        {
+          "key": "entity",
+          "kind": "string",
+          "default": "",
+          "options": []
         }
       ],
       "targeted": false
@@ -1284,6 +1323,22 @@
         },
         {
           "key": "value",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "scope",
+          "kind": "choice",
+          "default": "global",
+          "options": [
+            "global",
+            "self",
+            "target"
+          ]
+        },
+        {
+          "key": "entity",
           "kind": "string",
           "default": "",
           "options": []
@@ -1326,6 +1381,17 @@
         }
       ],
       "targeted": false
+    },
+    {
+      "type": "SetState",
+      "props": [
+        {
+          "key": "state",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ]
     },
     {
       "type": "ListAdd",

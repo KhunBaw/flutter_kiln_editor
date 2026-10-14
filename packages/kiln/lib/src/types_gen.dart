@@ -25,6 +25,8 @@ String generateTypes(Map<String, Object?> scenes) {
           case 'Emit' || 'OnEvent':
             if (s('event').isNotEmpty) events.add(s('event'));
             if (m['type'] == 'OnEvent') addVar(s('store'), 'Object?');
+          case 'AddVariable' || 'SetVariable' when s('scope') == 'self' || s('scope') == 'target':
+            break; // entity variables are not game variables
           case 'AddVariable':
             addVar(s('name'), 'double');
           case 'SetVariable':

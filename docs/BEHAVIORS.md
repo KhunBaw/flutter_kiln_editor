@@ -93,6 +93,14 @@ No properties.
 | `check` | choice (change, frame) | `change` |
 | `actions` | actions | `[]` |
 
+### StateMachine
+
+| Property | Kind | Default |
+|---|---|---|
+| `initial` | string | `` |
+| `states` | json | `[]` |
+| `transitions` | json | `[]` |
+
 ### Collider
 
 | Property | Kind | Default |
@@ -341,6 +349,8 @@ No properties.
 |---|---|---|
 | `name` | string | `score` |
 | `value` | number | `1` |
+| `scope` | choice (global, self, target) | `global` |
+| `entity` | string | `` |
 
 ### SetVariable
 
@@ -348,6 +358,8 @@ No properties.
 |---|---|---|
 | `name` | string | `score` |
 | `value` | string | `` |
+| `scope` | choice (global, self, target) | `global` |
+| `entity` | string | `` |
 
 ### If
 
@@ -362,6 +374,12 @@ No properties.
 | Property | Kind | Default |
 |---|---|---|
 | `value` | string | `` |
+
+### SetState
+
+| Property | Kind | Default |
+|---|---|---|
+| `state` | string | `` |
 
 ### ListAdd
 

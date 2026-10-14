@@ -190,6 +190,7 @@ void main() {
                 b('OnTap', {
                   'actions': [
                     act('SetVariable', {'name': 'calc', 'value': '=1 + 2'}),
+                    act('AddVariable', {'name': 'mine', 'scope': 'self'}),
                   ],
                 }),
               ],
@@ -200,6 +201,7 @@ void main() {
       expect(src, contains("List<Object?> get inv => list('inv');"));
       expect(src, contains("Map<String, Object?> get table => map('table');"));
       expect(src, contains('Object? get calc'));
+      expect(src, isNot(contains('get mine')));
     });
     test('scenes, events (incl. nested hurt/death), variables with inferred types', () {
       final src = generateTypes({

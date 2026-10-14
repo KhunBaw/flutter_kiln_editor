@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -231,6 +232,7 @@ String fmtNum(Object? v) => switch (v) {
   null => '',
   double d when d.isFinite && d == d.roundToDouble() => d.toInt().toString(),
   double d when d.isFinite => double.parse(d.toStringAsFixed(3)).toString(),
+  List() || Map() => jsonEncode(v),
   _ => '$v',
 };
 
@@ -339,7 +341,10 @@ class _FieldState extends State<Field> {
   @override
   void didUpdateWidget(Field old) {
     super.didUpdateWidget(old);
-    if (fmtNum(_parse(_c.text)) != fmtNum(widget.value)) _c.text = fmtNum(widget.value);
+    final typed = _parse(_c.text);
+    // Collections reformat as compact JSON; don't fight the cursor while the user is typing one.
+    if (_focus.hasFocus && (typed is List || typed is Map)) return;
+    if (fmtNum(typed) != fmtNum(widget.value)) _c.text = fmtNum(widget.value);
   }
 
   @override
@@ -427,6 +432,20 @@ class _FieldState extends State<Field> {
     if (widget.compact) return field;
     return Row2(widget.label, field, onReset: widget.onReset);
   }
+}
+
+/// Variable text: number, bool, JSON list/map, "=formula" or plain text.
+Object? parseVar(String t) {
+  final x = t.trim();
+  if (x == 'true' || x == 'false') return x == 'true';
+  if (x.startsWith('[') || x.startsWith('{')) {
+    try {
+      return jsonDecode(x);
+    } on FormatException {
+      return t;
+    }
+  }
+  return num.tryParse(t) ?? t;
 }
 
 /// A number, or a "=formula" string evaluated at play time.

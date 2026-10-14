@@ -92,7 +92,7 @@ Object? _field(Object? o, String k) => switch (o) {
     'spin' => e.motion?.spin ?? 0.0,
     'visible' => e.isVisible,
     'name' => e.node.name,
-    _ => null,
+    _ => e.vars[k],
   },
   Map m => m[k],
   _ => null,
