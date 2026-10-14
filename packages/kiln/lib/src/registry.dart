@@ -113,6 +113,19 @@ class KilnRegistry {
   /// Collision partner of the action list now running; nested lists (If) read it to keep `other`.
   KilnEntity? other;
 
+  /// Loop variables (`i`, `item`) visible to formulas in the nested lists now running.
+  Map<String, Object?> locals = const {};
+
+  void withLocals(Map<String, Object?> add, void Function() body) {
+    final outer = locals;
+    locals = {...outer, ...add};
+    try {
+      body();
+    } finally {
+      locals = outer;
+    }
+  }
+
   void runActions(KilnEntity self, List<Object?> list, {KilnEntity? other}) {
     for (final raw in list) {
       final args = Props(raw is Map<String, Object?> ? raw : const {});
@@ -121,7 +134,7 @@ class KilnRegistry {
         debugPrint('kiln: unknown action "${args.string('type')}"');
         continue;
       }
-      final scope = ExprScope(self.game, self, other: other);
+      final scope = ExprScope(self.game, self, other: other, locals: locals);
       final full = Props({
         for (final MapEntry(:key, :value) in args.withDefaults(def.props).map.entries)
           // "=..." string props are formulas; the result replaces the string before the action sees it.

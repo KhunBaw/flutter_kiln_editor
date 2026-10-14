@@ -180,6 +180,27 @@ void main() {
   });
 
   group('generateTypes', () {
+    test('list and map variables get typed accessors; a formula SetVariable is Object?', () {
+      final src = generateTypes({
+        'assets/scenes/a.kiln.json': {
+          'variables': {'inv': <Object?>[], 'table': <String, Object?>{}},
+          'entities': [
+            {
+              'behaviors': [
+                b('OnTap', {
+                  'actions': [
+                    act('SetVariable', {'name': 'calc', 'value': '=1 + 2'}),
+                  ],
+                }),
+              ],
+            },
+          ],
+        },
+      });
+      expect(src, contains("List<Object?> get inv => list('inv');"));
+      expect(src, contains("Map<String, Object?> get table => map('table');"));
+      expect(src, contains('Object? get calc'));
+    });
     test('scenes, events (incl. nested hurt/death), variables with inferred types', () {
       final src = generateTypes({
         'assets/scenes/level-1.kiln.json': {

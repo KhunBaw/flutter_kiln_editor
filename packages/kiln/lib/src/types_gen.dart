@@ -28,7 +28,7 @@ String generateTypes(Map<String, Object?> scenes) {
           case 'AddVariable':
             addVar(s('name'), 'double');
           case 'SetVariable':
-            addVar(s('name'), 'String');
+            addVar(s('name'), s('value').startsWith('=') ? 'Object?' : 'String');
           case 'Health':
             addVar(s('variable'), 'double');
         }
@@ -45,6 +45,8 @@ String generateTypes(Map<String, Object?> scenes) {
           num _ => 'double',
           String _ => 'String',
           bool _ => 'bool',
+          List _ => 'List',
+          Map _ => 'Map',
           _ => 'Object?',
         });
       }
@@ -85,6 +87,8 @@ String generateTypes(Map<String, Object?> scenes) {
       'double' => ('double', 'number($k)'),
       'String' => ('String', 'string($k)'),
       'bool' => ('bool', 'flag($k)'),
+      'List' => ('List<Object?>', 'list($k)'),
+      'Map' => ('Map<String, Object?>', 'map($k)'),
       _ => ('Object?', 'this[$k]'),
     };
     b
@@ -116,7 +120,7 @@ String _lit(String s) => "'${s.replaceAll(r'\', r'\\').replaceAll("'", r"\'").re
 
 // Names GameVariables already has: an extension member with one of these would be silently ignored.
 const _varsReserved = {
-  'number', 'string', 'flag', 'seed', 'reset', 'addListener', 'removeListener', 'notifyListeners', //
+  'number', 'string', 'flag', 'list', 'map', 'seed', 'reset', 'addListener', 'removeListener', 'notifyListeners', //
   'hasListeners', 'dispose', 'hashCode', 'runtimeType', 'toString', 'noSuchMethod',
 };
 

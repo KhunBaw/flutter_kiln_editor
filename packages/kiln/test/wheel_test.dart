@@ -40,6 +40,19 @@ Future<void> run(KilnGame g) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('sliceList: maps with defaults, entries without a label skipped', () {
+    final s = sliceList([
+      {'label': 'A', 'weight': 3, 'color': '#112233'},
+      {'image': 'x'},
+      'junk',
+      {'label': 'B'},
+    ]);
+    expect(s.map((x) => x.label), ['A', 'B']);
+    expect(s[0].weight, 3);
+    expect(s[0].color, const Color(0xFF112233));
+    expect(s[1].weight, 1);
+  });
+
   test('parseSlices: optional fields, bad weight/colour fall back, blanks skipped', () {
     final s = parseSlices('A|a.png|3|#112233; B ;;C|x|oops|nope\nD');
     expect(s.map((x) => x.label), ['A', 'B', 'C', 'D']);

@@ -363,6 +363,57 @@ No properties.
 |---|---|---|
 | `value` | string | `` |
 
+### ListAdd
+
+| Property | Kind | Default |
+|---|---|---|
+| `name` | string | `items` |
+| `value` | string | `` |
+| `index` | number | `-1` |
+
+### ListRemove
+
+| Property | Kind | Default |
+|---|---|---|
+| `name` | string | `items` |
+| `index` | number | `0` |
+
+### ListSet
+
+| Property | Kind | Default |
+|---|---|---|
+| `name` | string | `items` |
+| `index` | number | `0` |
+| `value` | string | `` |
+
+### ListClear
+
+| Property | Kind | Default |
+|---|---|---|
+| `name` | string | `items` |
+
+### MapSet
+
+| Property | Kind | Default |
+|---|---|---|
+| `name` | string | `table` |
+| `key` | string | `` |
+| `value` | string | `` |
+
+### Repeat
+
+| Property | Kind | Default |
+|---|---|---|
+| `count` | number | `3` |
+| `actions` | actions | `[]` |
+
+### ForEach
+
+| Property | Kind | Default |
+|---|---|---|
+| `list` | string | `items` |
+| `actions` | actions | `[]` |
+
 ### Animate
 
 | Property | Kind | Default |

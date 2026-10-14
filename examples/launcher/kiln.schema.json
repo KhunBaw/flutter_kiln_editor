@@ -1328,6 +1328,144 @@
       "targeted": false
     },
     {
+      "type": "ListAdd",
+      "props": [
+        {
+          "key": "name",
+          "kind": "string",
+          "default": "items",
+          "options": []
+        },
+        {
+          "key": "value",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "index",
+          "kind": "number",
+          "default": -1,
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "ListRemove",
+      "props": [
+        {
+          "key": "name",
+          "kind": "string",
+          "default": "items",
+          "options": []
+        },
+        {
+          "key": "index",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "ListSet",
+      "props": [
+        {
+          "key": "name",
+          "kind": "string",
+          "default": "items",
+          "options": []
+        },
+        {
+          "key": "index",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "value",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "ListClear",
+      "props": [
+        {
+          "key": "name",
+          "kind": "string",
+          "default": "items",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "MapSet",
+      "props": [
+        {
+          "key": "name",
+          "kind": "string",
+          "default": "table",
+          "options": []
+        },
+        {
+          "key": "key",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "value",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "Repeat",
+      "props": [
+        {
+          "key": "count",
+          "kind": "number",
+          "default": 3,
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "ForEach",
+      "props": [
+        {
+          "key": "list",
+          "kind": "string",
+          "default": "items",
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
       "type": "Animate",
       "props": [
         {

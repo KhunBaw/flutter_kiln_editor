@@ -351,7 +351,7 @@ final builtinBehaviors = <BehaviorDef>[
       PropDef('spinEvent', PropKind.string, 'spin'),
     ],
     (e, p) => Wheel(
-      spec: p.string('slices'),
+      spec: p['slices'],
       variable: p.string('variable'),
       resultVar: p.string('resultVar'),
       limit: p.number('limit'),
@@ -585,6 +585,7 @@ final builtinActions = <ActionDef>[
     (self, a) => debugPrint('kiln: ${a['value']}'),
     targeted: false,
   ),
+  ..._dataActions,
   ActionDef(
     'Animate',
     const [
@@ -1373,3 +1374,98 @@ class _VarText extends TextComponent with HasGameReference<KilnGame> {
   @override
   void onRemove() => game.vars.removeListener(_refresh);
 }
+
+/// Cap on loop passes per Repeat/ForEach call so a bad count cannot freeze the game.
+const _maxLoop = 10000;
+
+void _loop(KilnEntity self, Props a, int n, Map<String, Object?> Function(int i) locals) {
+  if (n > _maxLoop) debugPrint('kiln: loop of $n passes cut to $_maxLoop');
+  final reg = self.game.registry, body = a.list('actions');
+  for (var i = 0; i < min(n, _maxLoop); i++) {
+    reg.withLocals(locals(i), () => self.runActions(body, other: reg.other));
+  }
+}
+
+/// Edits the list variable [name] by assigning a new list.
+void _editList(KilnEntity self, Props a, void Function(List<Object?> l) edit) {
+  final name = a.string('name');
+  final l = [...self.game.vars.list(name)];
+  edit(l);
+  self.game.vars[name] = l;
+}
+
+int? _at(Props a, int length) {
+  final i = a.number('index').floor();
+  return i >= 0 && i < length ? i : null;
+}
+
+final _dataActions = <ActionDef>[
+  ActionDef(
+    'ListAdd',
+    const [
+      PropDef('name', PropKind.string, 'items'),
+      PropDef('value', PropKind.string, ''),
+      // -1 appends.
+      PropDef('index', PropKind.number, -1),
+    ],
+    (self, a) => _editList(self, a, (l) {
+      final i = a.number('index').floor();
+      l.insert(i >= 0 && i <= l.length ? i : l.length, a['value']);
+    }),
+    targeted: false,
+  ),
+  ActionDef(
+    'ListRemove',
+    const [PropDef('name', PropKind.string, 'items'), PropDef('index', PropKind.number, 0)],
+    (self, a) => _editList(self, a, (l) {
+      if (_at(a, l.length) case final i?) l.removeAt(i);
+    }),
+    targeted: false,
+  ),
+  ActionDef(
+    'ListSet',
+    const [
+      PropDef('name', PropKind.string, 'items'),
+      PropDef('index', PropKind.number, 0),
+      PropDef('value', PropKind.string, ''),
+    ],
+    (self, a) => _editList(self, a, (l) {
+      if (_at(a, l.length) case final i?) l[i] = a['value'];
+    }),
+    targeted: false,
+  ),
+  ActionDef(
+    'ListClear',
+    const [PropDef('name', PropKind.string, 'items')],
+    (self, a) => _editList(self, a, (l) => l.clear()),
+    targeted: false,
+  ),
+  ActionDef(
+    'MapSet',
+    const [
+      PropDef('name', PropKind.string, 'table'),
+      PropDef('key', PropKind.string, ''),
+      PropDef('value', PropKind.string, ''),
+    ],
+    (self, a) =>
+        self.game.vars[a.string('name')] = {...self.game.vars.map(a.string('name')), a.string('key'): a['value']},
+    targeted: false,
+  ),
+  ActionDef(
+    'Repeat',
+    const [PropDef('count', PropKind.number, 3), PropDef('actions', PropKind.actions, [])],
+    (self, a) => _loop(self, a, a.number('count').floor(), (i) => {'i': i.toDouble()}),
+    targeted: false,
+  ),
+  ActionDef(
+    'ForEach',
+    // list: name of a list variable (or a "=formula" giving a list); runs once per item with `item` and `i`.
+    const [PropDef('list', PropKind.string, 'items'), PropDef('actions', PropKind.actions, [])],
+    (self, a) {
+      final src = a['list'];
+      final l = src is List ? src : self.game.vars.list('$src');
+      _loop(self, a, l.length, (i) => {'item': l[i], 'i': i.toDouble()});
+    },
+    targeted: false,
+  ),
+];

@@ -42,6 +42,16 @@ class GameVariables extends ChangeNotifier {
   };
   bool flag(String key) => _values[key] == true;
 
+  /// Lists and maps are replaced, never mutated in place, so listeners (identity check in `[]=`) see the change.
+  List<Object?> list(String key) => switch (_values[key]) {
+    List v => v,
+    _ => const [],
+  };
+  Map<String, Object?> map(String key) => switch (_values[key]) {
+    Map<String, Object?> v => v,
+    _ => const {},
+  };
+
   /// Adds [defaults] for keys not set yet (a new scene's variables on shared state).
   void seed(Map<String, Object?> defaults) {
     var changed = false;
@@ -57,7 +67,7 @@ class GameVariables extends ChangeNotifier {
   Map<String, Object?> snapshot([Iterable<String> names = const []]) => {
     'variables': {
       for (final MapEntry(:key, :value) in _values.entries)
-        if ((names.isEmpty || names.contains(key)) && (value is num || value is String || value is bool)) key: value,
+        if ((names.isEmpty || names.contains(key)) && _jsonSafe(value)) key: value,
     },
   };
 
@@ -76,6 +86,13 @@ class GameVariables extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+bool _jsonSafe(Object? v) => switch (v) {
+  num() || String() || bool() => true,
+  List l => l.every(_jsonSafe),
+  Map m => m.keys.every((k) => k is String) && m.values.every(_jsonSafe),
+  _ => false,
+};
 
 final _slot = RegExp(r'\{(\w+)\}');
 

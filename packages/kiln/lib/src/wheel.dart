@@ -6,6 +6,7 @@ import 'package:flutter/painting.dart';
 
 import 'builtins.dart' show loadKilnImage;
 import 'game.dart';
+import 'registry.dart' show Props;
 
 class WheelSlice {
   const WheelSlice(this.label, {this.image = '', this.weight = 1, this.color = const Color(0xFFE8B04A)});
@@ -34,6 +35,26 @@ List<WheelSlice> parseSlices(String spec) {
         f.first,
         image: f.length > 1 ? f[1] : '',
         weight: f.length > 2 ? double.tryParse(f[2]) ?? 1 : 1,
+        color: c == null || hex.length != 6 ? _palette[out.length % _palette.length] : Color(0xFF000000 | c),
+      ),
+    );
+  }
+  return out;
+}
+
+/// Slices from a JSON list of `{label, image, weight, color}` maps; bad entries are skipped.
+List<WheelSlice> sliceList(List<Object?> items) {
+  final out = <WheelSlice>[];
+  for (final raw in items) {
+    final m = Props(raw is Map<String, Object?> ? raw : const {});
+    if (m.string('label').isEmpty) continue;
+    final hex = m.string('color').replaceFirst('#', '');
+    final c = int.tryParse(hex, radix: 16);
+    out.add(
+      WheelSlice(
+        m.string('label'),
+        image: m.string('image'),
+        weight: m['weight'] is num ? m.number('weight') : 1,
         color: c == null || hex.length != 6 ? _palette[out.length % _palette.length] : Color(0xFF000000 | c),
       ),
     );
@@ -79,13 +100,14 @@ class Wheel extends Component with ParentIsA<KilnEntity> {
     Random? random,
   }) : _rng = random ?? Random();
 
-  final String spec, variable, resultVar, spinsVar, leftVar, limitVar, spinEvent;
+  final Object? spec;
+  final String variable, resultVar, spinsVar, leftVar, limitVar, spinEvent;
   final double limit, revealTime, spinTime, minTurns;
   final Random _rng;
   final _images = <String, ui.Image?>{};
   final _loading = <String>{};
   ui.VoidCallback? _off;
-  String _parsedFrom = '\u0000';
+  Object? _parsedFrom = '\u0000';
   List<WheelSlice> _slices = const [];
   bool spinning = false;
   double _t = 0, _from = 0, _to = 0;
@@ -94,11 +116,15 @@ class Wheel extends Component with ParentIsA<KilnEntity> {
   double _reveal = double.infinity; // seconds since the spin ended
 
   List<WheelSlice> get slices {
-    final v = variable.isEmpty ? '' : parent.game.vars.string(variable);
-    final src = v.isEmpty ? spec : v;
-    if (src != _parsedFrom) {
+    final v = variable.isEmpty ? null : parent.game.vars[variable];
+    final src = v is List || (v is String && v.isNotEmpty) ? v : spec;
+    if (!identical(src, _parsedFrom) && src != _parsedFrom) {
       _parsedFrom = src;
-      _slices = parseSlices(src);
+      _slices = switch (src) {
+        List l => sliceList(l),
+        String s => parseSlices(s),
+        _ => const [],
+      };
     }
     return _slices;
   }

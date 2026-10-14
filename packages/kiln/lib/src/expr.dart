@@ -337,6 +337,18 @@ class _Parser {
       i = end + 1;
       return (s) => text;
     }
+    if (_eat('[')) {
+      final items = _list(']', _ternary);
+      return (s) => [for (final n in items) n(s)];
+    }
+    if (_eat('{')) {
+      final pairs = _list('}', () {
+        final k = _ternary();
+        if (!_eat(':')) _fail('expected ":"');
+        return (k, _ternary());
+      });
+      return (s) => {for (final (k, v) in pairs) _str(k(s)): v(s)};
+    }
     final num = RegExp(r'\d+(\.\d+)?').matchAsPrefix(src, i);
     if (num != null) {
       i = num.end;
@@ -354,6 +366,17 @@ class _Parser {
       'time' => (s) => s.game.time,
       _ => (s) => s.locals.containsKey(name) ? s.locals[name] : s.game.vars[name],
     };
+  }
+
+  /// Comma separated items up to [close] (the opening bracket is already consumed).
+  List<T> _list<T>(String close, T Function() item) {
+    final out = <T>[];
+    if (_eat(close)) return out;
+    do {
+      out.add(item());
+    } while (_eat(','));
+    if (!_eat(close)) _fail('expected "$close"');
+    return out;
   }
 
   _Node _call(String name) {

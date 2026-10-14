@@ -121,4 +121,69 @@ void main() {
       expect(g.vars['fired'], 1);
     },
   );
+
+  testWithGame(
+    'data: list/map literals, list actions, Repeat, ForEach, loop cap, snapshot',
+    () => KilnGame(scene([ent('a', [])])),
+    (g) async {
+      final a = named(g, 'a');
+      Object? ev(String s) => evalExpr(s, ExprScope(g, a));
+      expect(ev('[1, 2, 3][1]'), 2);
+      expect(ev("{'k': 5}.k + len([1,2])"), 7);
+      expect(ev("{'k': 5}['k']"), 5);
+      expect(ev('[]'), isEmpty);
+
+      a.runActions([
+        act('SetVariable', {'name': 'xs', 'value': '=[10, 20]'}),
+        act('ListAdd', {'name': 'xs', 'value': '=30'}),
+        act('ListAdd', {'name': 'xs', 'value': 5, 'index': 0}),
+        act('ListSet', {'name': 'xs', 'index': 1, 'value': 11}),
+        act('ListRemove', {'name': 'xs', 'index': 2}),
+        act('ListRemove', {'name': 'xs', 'index': 99}), // out of range: ignored
+        act('MapSet', {'name': 'tbl', 'key': 'hp', 'value': '=len(xs)'}),
+      ]);
+      expect(g.vars.list('xs'), [5, 11, 30]);
+      expect(g.vars.map('tbl'), {'hp': 3.0});
+
+      var seen = 0;
+      g.vars.addListener(() => seen++);
+      a.runActions([
+        act('ListClear', {'name': 'xs'}),
+      ]);
+      expect(seen, 1); // a new list object notifies listeners
+
+      a.runActions([
+        act('SetVariable', {'name': 'sum', 'value': 0}),
+        act('Repeat', {
+          'count': 4,
+          'actions': [
+            act('SetVariable', {'name': 'sum', 'value': '=sum + i'}),
+          ],
+        }),
+        act('SetVariable', {'name': 'xs', 'value': '=[3, 4, 5]'}),
+        act('SetVariable', {'name': 'tot', 'value': 0}),
+        act('ForEach', {
+          'list': 'xs',
+          'actions': [
+            act('SetVariable', {'name': 'tot', 'value': '=tot + item * 10 + i'}),
+          ],
+        }),
+        act('SetVariable', {'name': 'runs', 'value': 0}),
+        act('Repeat', {
+          'count': 1000000,
+          'actions': [
+            act('SetVariable', {'name': 'runs', 'value': '=runs + 1'}),
+          ],
+        }),
+      ]);
+      expect(g.vars['sum'], 6); // 0+1+2+3
+      expect(g.vars['tot'], 123); // (30+0)+(40+1)+(50+2)
+      expect(g.vars['runs'], 10000);
+
+      final saved = g.vars.snapshot()['variables']! as Map;
+      expect(saved['xs'], [3, 4, 5]);
+      g.vars['bad'] = Object();
+      expect((g.vars.snapshot()['variables']! as Map).containsKey('bad'), false);
+    },
+  );
 }
