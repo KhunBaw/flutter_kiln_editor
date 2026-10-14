@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' as ui show Image;
+
 import 'dart:ui' show ImageDescriptor, ImmutableBuffer;
 
-import 'package:file_selector/file_selector.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -12,21 +11,9 @@ import 'package:kiln/kiln.dart';
 
 import 'editor_state.dart';
 import 'project.dart';
+import 'inspector.dart';
 import 'theme.dart';
-
-/// Short codes (E1, E2…) in hierarchy order, shared by hierarchy rows and scene markers.
-Map<String, String> entityCodes(SceneDoc doc) {
-  final out = <String, String>{};
-  void walk(List<EntityNode> list) {
-    for (final e in list) {
-      out[e.id] = 'E${out.length + 1}';
-      walk(e.children);
-    }
-  }
-
-  walk(doc.entities);
-  return out;
-}
+import 'widgets.dart';
 
 class HierarchyPanel extends StatelessWidget {
   const HierarchyPanel(this.s, {super.key});
@@ -35,21 +22,30 @@ class HierarchyPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final codes = entityCodes(s.doc);
     Iterable<Widget> rows(List<EntityNode> list, int depth) sync* {
       for (final e in list) {
+        final fams = <Family>[
+          for (final f in {for (final b in e.behaviors) Family.of(b.type)}) f,
+        ];
         yield _Row(
-          code: codes[e.id]!,
           selected: e.id == s.selectedId,
           indent: depth * 14,
           onTap: () => s.select(e.id),
+          leading: fams.isEmpty
+              ? const SizedBox(width: 20, height: 20, child: Icon(Icons.crop_square, size: 14, color: Z.z6))
+              : FamilyChip(fams.first, size: 20),
           trailing: [
-            for (final b in e.behaviors)
+            for (final f in fams.skip(1))
               Container(
                 width: 6,
-                height: 14,
-                margin: const EdgeInsets.only(left: 2),
-                decoration: BoxDecoration(color: Family.of(b.type).color, borderRadius: BorderRadius.circular(1)),
+                height: 6,
+                margin: const EdgeInsets.only(left: 4),
+                decoration: BoxDecoration(color: f.color, shape: BoxShape.circle),
+              ),
+            if (EditorState.animatorOf(e) != null)
+              const Padding(
+                padding: EdgeInsets.only(left: 6),
+                child: Icon(Icons.animation, size: 12, color: Z.z7),
               ),
           ],
           child: Text(e.name, overflow: TextOverflow.ellipsis),
@@ -60,30 +56,34 @@ class HierarchyPanel extends StatelessWidget {
 
     return Column(
       children: [
-        _Header('Hierarchy', [
-          IconButton(tooltip: 'Add entity', icon: const Icon(Icons.add), onPressed: s.addEntity),
-          IconButton(
-            tooltip: 'Delete entity',
-            icon: const Icon(Icons.delete_outline),
-            onPressed: s.selectedId == null ? null : () => s.removeEntity(s.selectedId!),
+        PanelHeader('Hierarchy', [
+          IconBtn(Icons.add, 'Add entity', s.addEntity),
+          IconBtn(
+            Icons.delete_outline,
+            'Delete entity',
+            s.selectedId == null ? null : () => s.removeEntity(s.selectedId!),
           ),
         ]),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
             children: [
               _Row(
-                code: 'SC',
                 selected: s.selectedId == null,
                 onTap: () => s.select(null),
-                trailing: [Text('${_n(s.doc.size.x)}×${_n(s.doc.size.y)}', style: T.code)],
+                leading: const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: Icon(Icons.crop_landscape, size: 15, color: Z.z8),
+                ),
+                trailing: [Text('${_n(s.doc.size.x)} × ${_n(s.doc.size.y)}', style: T.code)],
                 child: Text(s.doc.name, style: T.body.copyWith(fontWeight: FontWeight.w600)),
               ),
-              ...rows(s.doc.entities, 0),
+              ...rows(s.doc.entities, 1),
               if (s.doc.entities.isEmpty)
                 const Padding(
-                  padding: EdgeInsets.fromLTRB(12, 10, 12, 0),
-                  child: Text('No entities yet. Add one with +.', style: TextStyle(color: Z.z8)),
+                  padding: EdgeInsets.fromLTRB(8, 12, 8, 0),
+                  child: Text('Nothing here yet. Add an entity with +.', style: T.small),
                 ),
             ],
           ),
@@ -116,40 +116,30 @@ class _AssetsPanelState extends State<AssetsPanel> {
       _key = '$dir#${s.assetsRevision}';
       _files = Future.wait([s.assetFiles('images'), s.assetFiles('audio')]);
     }
+    Widget note(String text, {Color color = Z.z7}) => Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+      child: Text(text, style: T.small.copyWith(color: color)),
+    );
     return Column(
       children: [
-        const _Header('Assets', []),
+        const PanelHeader('Assets', []),
         Expanded(
           child: dir == null
-              ? const Padding(
-                  padding: EdgeInsets.fromLTRB(12, 10, 12, 0),
-                  child: Text('Open a project to see its images and audio.', style: TextStyle(color: Z.z8)),
-                )
+              ? ListView(children: [note('Open a project folder to see its images and audio.')])
               : FutureBuilder(
                   future: _files,
                   builder: (context, snap) {
                     final [images, audio] = snap.data ?? const [<String>[], <String>[]];
                     return ListView(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.all(8),
                       children: [
-                        for (final f in images) _imageRow(dir, f),
-                        for (final f in audio) _assetRow(const Icon(Icons.graphic_eq, size: 14, color: Z.z8), f),
+                        if (images.isNotEmpty)
+                          Wrap(spacing: 6, runSpacing: 6, children: [for (final f in images) _imageTile(dir, f)]),
+                        for (final f in audio) _audioRow(f),
                         if (snap.hasError)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-                            child: Text(
-                              'Could not list assets: ${snap.error}',
-                              style: const TextStyle(color: Z.danger),
-                            ),
-                          )
+                          note('Could not list assets: ${snap.error}', color: Z.danger)
                         else if (snap.hasData && images.isEmpty && audio.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(12, 10, 12, 0),
-                            child: Text(
-                              'No files in assets/images or assets/audio yet.',
-                              style: TextStyle(color: Z.z8),
-                            ),
-                          ),
+                          note('No files in assets/images or assets/audio yet.'),
                       ],
                     );
                   },
@@ -159,32 +149,44 @@ class _AssetsPanelState extends State<AssetsPanel> {
     );
   }
 
-  Widget _imageRow(String dir, String file) {
-    final thumb = SizedBox.square(
-      dimension: 18,
-      child: Image.file(
-        File('$dir/assets/images/$file'),
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.medium,
-        errorBuilder: (_, _, _) => const Icon(Icons.broken_image_outlined, size: 14, color: Z.z7),
-      ),
-    );
+  Widget _thumb(String dir, String file, double size) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: Z.z1,
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: Z.z4),
+    ),
+    clipBehavior: Clip.antiAlias,
+    padding: const EdgeInsets.all(4),
+    child: Image.file(
+      File('$dir/assets/images/$file'),
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.medium,
+      errorBuilder: (_, _, _) => const Icon(Icons.broken_image_outlined, size: 16, color: Z.z7),
+    ),
+  );
+
+  Widget _imageTile(String dir, String file) {
+    const w = 72.0;
     return Draggable<AssetDrop>(
       data: AssetDrop(file),
       dragAnchorStrategy: pointerDragAnchorStrategy,
       feedback: Material(
-        color: Z.z4,
-        shape: const RoundedRectangleBorder(
-          side: BorderSide(color: Z.mark),
-          borderRadius: BorderRadius.all(Radius.circular(2)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Z.z3,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: Z.accent),
+            boxShadow: Z.shadow,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              thumb,
-              const SizedBox(width: 6),
+              _thumb(dir, file, 28),
+              const SizedBox(width: 8),
               Text(file, style: T.body),
             ],
           ),
@@ -192,24 +194,32 @@ class _AssetsPanelState extends State<AssetsPanel> {
       ),
       child: MouseRegion(
         cursor: SystemMouseCursors.grab,
-        child: Tooltip(message: 'Drag onto the scene', child: _assetRow(thumb, file)),
+        child: Tooltip(
+          message: 'Drag onto the scene',
+          child: SizedBox(
+            width: w,
+            child: Column(
+              children: [
+                _thumb(dir, file, w),
+                const SizedBox(height: 3),
+                Text(file, style: T.small, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _assetRow(Widget icon, String file) => SizedBox(
+  Widget _audioRow(String file) => SizedBox(
     height: 28,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 30,
-            child: Align(alignment: Alignment.centerLeft, child: icon),
-          ),
-          Expanded(child: Text(file, overflow: TextOverflow.ellipsis)),
-        ],
-      ),
+    child: Row(
+      children: [
+        const SizedBox(width: 4),
+        const Icon(Icons.graphic_eq, size: 14, color: Z.z8),
+        const SizedBox(width: 8),
+        Expanded(child: Text(file, overflow: TextOverflow.ellipsis)),
+      ],
     ),
   );
 }
@@ -221,53 +231,59 @@ class AssetDrop {
   final String image;
 }
 
-class _Row extends StatelessWidget {
+class _Row extends StatefulWidget {
   const _Row({
-    required this.code,
     required this.selected,
     required this.onTap,
     required this.child,
+    required this.leading,
     this.indent = 0,
     this.trailing = const [],
   });
 
-  final String code;
   final bool selected;
   final VoidCallback onTap;
   final Widget child;
+  final Widget leading;
   final double indent;
   final List<Widget> trailing;
 
   @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      Material(
-        color: selected ? Z.z4 : Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          hoverColor: Z.z3,
-          focusColor: Z.z4,
-          child: SizedBox(
-            height: 30,
-            child: Padding(
-              padding: EdgeInsets.only(left: 12 + indent, right: 12),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 30,
-                    child: Text(code, style: T.code.copyWith(color: selected ? Z.mark : Z.z8)),
-                  ),
-                  Expanded(child: child),
-                  ...trailing,
-                ],
-              ),
-            ),
+  State<_Row> createState() => _RowState();
+}
+
+class _RowState extends State<_Row> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+    onEnter: (_) => setState(() => _hover = true),
+    onExit: (_) => setState(() => _hover = false),
+    cursor: SystemMouseCursors.click,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: Container(
+        height: 30,
+        margin: const EdgeInsets.only(bottom: 1),
+        padding: EdgeInsets.only(left: 6 + widget.indent, right: 8),
+        decoration: BoxDecoration(
+          color: widget.selected ? Z.accentDim : (_hover ? Z.z3 : Colors.transparent),
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: DefaultTextStyle.merge(
+          style: T.body.copyWith(color: widget.selected ? Z.z10 : Z.z9),
+          child: Row(
+            children: [
+              widget.leading,
+              const SizedBox(width: 8),
+              Expanded(child: widget.child),
+              ...widget.trailing,
+            ],
           ),
         ),
       ),
-      // Marker inset bar: the contract's selection mark, readable at a glance.
-      if (selected) const Positioned(left: 0, top: 0, bottom: 0, width: 3, child: ColoredBox(color: Z.mark)),
-    ],
+    ),
   );
 }
 
@@ -325,7 +341,10 @@ class SceneFrame extends StatelessWidget {
               width: size.x * scale + 2,
               height: size.y * scale + 2,
               child: DecoratedBox(
-                decoration: BoxDecoration(border: Border.all(color: Z.z5)),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Z.z5),
+                  boxShadow: const [BoxShadow(color: Color(0x80000000), blurRadius: 32, offset: Offset(0, 12))],
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(1),
                   child: FittedBox(
@@ -338,10 +357,7 @@ class SceneFrame extends StatelessWidget {
             Positioned(
               left: 16,
               bottom: 12,
-              child: Text(
-                '${caption.toUpperCase()} · ${_n(size.x)} × ${_n(size.y)} · ${(scale * 100).round()}%',
-                style: T.label,
-              ),
+              child: Text('$caption · ${_n(size.x)} × ${_n(size.y)} · ${(scale * 100).round()}%', style: T.small),
             ),
             if (footer.isNotEmpty) Positioned(right: 8, bottom: 6, child: Row(children: footer)),
           ],
@@ -351,7 +367,7 @@ class SceneFrame extends StatelessWidget {
   );
 }
 
-/// Matte map board: a dot every 24px.
+/// Workspace backdrop: a quiet dot lattice.
 class _BoardPainter extends CustomPainter {
   const _BoardPainter();
 
@@ -359,9 +375,9 @@ class _BoardPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.drawRect(Offset.zero & size, Paint()..color = Z.z0);
     final dot = Paint()..color = Z.z3;
-    for (var y = 12.0; y < size.height; y += 24) {
-      for (var x = 12.0; x < size.width; x += 24) {
-        canvas.drawRect(Rect.fromLTWH(x, y, 1.5, 1.5), dot);
+    for (var y = 12.0; y < size.height; y += 20) {
+      for (var x = 12.0; x < size.width; x += 20) {
+        canvas.drawCircle(Offset(x, y), 0.8, dot);
       }
     }
   }
@@ -423,6 +439,36 @@ class _SceneViewState extends State<SceneView> {
 
   EditorState get s => widget.s;
 
+  @override
+  void initState() {
+    super.initState();
+    s.playhead.addListener(_onHead);
+  }
+
+  @override
+  void dispose() {
+    s.playhead.removeListener(_onHead);
+    super.dispose();
+  }
+
+  /// Timeline scrub: re-pose live Animators in place instead of rebuilding the preview game.
+  void _onHead() {
+    final t = s.playhead.value;
+    _game.poseTime = t;
+    for (final e in _game.world.descendants().whereType<KilnEntity>()) {
+      e.animator?.seek(t);
+    }
+    if (mounted) setState(() {});
+  }
+
+  /// Centre of [e] as the timeline poses it (stored position when it has no x/y track).
+  Offset _center(EntityNode e) {
+    final a = EditorState.animatorOf(e);
+    if (a == null) return Offset(e.position.x, e.position.y);
+    final p = samplePose(a.props['tracks'], s.playhead.value);
+    return Offset(p['x'] ?? e.position.x, p['y'] ?? e.position.y);
+  }
+
   bool get _painting => s.paintId != null && s.paintId == s.selectedId;
 
   void _paint(Offset p) => s.paintAt(Vector2(p.dx, p.dy), stroke: _drag);
@@ -449,11 +495,10 @@ class _SceneViewState extends State<SceneView> {
         registry: widget.registry,
         editing: true,
         bundle: s.projectDir == null ? null : DirBundle(s.projectDir!),
-      );
+      )..poseTime = s.playhead.value;
     }
     final world = s.doc.worldSize;
     final sel = s.selectedId == null ? null : _rectOf(s.doc.entities, s.selectedId!, Offset.zero);
-    final code = s.selectedId == null ? null : entityCodes(s.doc)[s.selectedId];
     return LayoutBuilder(
       builder: (context, box) {
         _box = box.biggest;
@@ -502,11 +547,7 @@ class _SceneViewState extends State<SceneView> {
                 ),
               if (world != s.doc.size) ..._view(s.doc.size, k, o),
               if (sel != null)
-                ..._selection(
-                  Rect.fromLTRB(sel.left * k, sel.top * k, sel.right * k, sel.bottom * k).shift(o),
-                  code,
-                  k,
-                ),
+                ..._selection(Rect.fromLTRB(sel.left * k, sel.top * k, sel.right * k, sel.bottom * k).shift(o), k),
             ],
             child: DragTarget<AssetDrop>(
               onAcceptWithDetails: (d) => _place(d.data.image, d.offset),
@@ -525,7 +566,8 @@ class _SceneViewState extends State<SceneView> {
                   s.select(id);
                   _drag = id == null ? null : '$id.drag${_dragCount++}';
                   _dragStart = d.localPosition;
-                  _dragFrom = s.selected?.position.clone() ?? Vector2.zero();
+                  final cur = s.selected;
+                  _dragFrom = cur == null ? Vector2.zero() : Vector2(s.valueOf(cur, 'x'), s.valueOf(cur, 'y'));
                 },
                 onPanUpdate: (d) {
                   final e = s.selected;
@@ -538,7 +580,13 @@ class _SceneViewState extends State<SceneView> {
                     s.snap(_dragFrom.x + o.dx - half.x) + half.x,
                     s.snap(_dragFrom.y + o.dy - half.y) + half.y,
                   );
-                  if (p != e.position) s.edit((_) => e.position = p, mergeKey: _drag);
+                  if (p.x == s.valueOf(e, 'x') && p.y == s.valueOf(e, 'y')) return;
+                  if (s.isAnimated(e, 'x') || s.isAnimated(e, 'y')) {
+                    s.setProp(e, 'x', p.x, mergeKey: _drag);
+                    s.setProp(e, 'y', p.y, mergeKey: _drag);
+                  } else {
+                    s.edit((_) => e.position = p, mergeKey: _drag);
+                  }
                 },
                 onPanEnd: (_) => _drag = null,
                 child: IgnorePointer(
@@ -580,31 +628,37 @@ class _SceneViewState extends State<SceneView> {
     );
   }
 
-  List<Widget> _footer() {
-    Widget btn(String label, String tip, VoidCallback onPressed) => Tooltip(
-      message: tip,
-      child: TextButton(onPressed: onPressed, child: Text(label)),
-    );
-    return [
-      PopupMenuButton<double>(
-        tooltip: 'Snap grid',
-        position: PopupMenuPosition.over,
-        initialValue: s.grid,
-        onSelected: (g) => s.setView(grid: g),
-        itemBuilder: (_) => [
-          for (final g in const [0.0, 4.0, 8.0, 16.0, 32.0, 64.0])
-            PopupMenuItem(value: g, height: 30, child: Text(g == 0 ? 'Off' : '${g.toInt()} px')),
-        ],
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Text(s.grid == 0 ? 'GRID OFF' : 'GRID ${s.grid.toInt()}', style: T.label.copyWith(color: Z.z9)),
+  List<Widget> _footer() => [
+    PopupMenuButton<double>(
+      tooltip: 'Snap grid',
+      position: PopupMenuPosition.over,
+      initialValue: s.grid,
+      onSelected: (g) => s.setView(grid: g),
+      itemBuilder: (_) => [
+        for (final g in const [0.0, 4.0, 8.0, 16.0, 32.0, 64.0])
+          PopupMenuItem(value: g, height: 30, child: Text(g == 0 ? 'Grid off' : 'Grid ${g.toInt()} px')),
+      ],
+      child: Container(
+        height: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.grid_4x4, size: 15, color: s.grid == 0 ? Z.z8 : Z.accent),
+            const SizedBox(width: 6),
+            Text(
+              s.grid == 0 ? 'Grid' : '${s.grid.toInt()} px',
+              style: T.label.copyWith(color: s.grid == 0 ? Z.z8 : Z.accent),
+            ),
+          ],
         ),
       ),
-      btn('−', 'Zoom out (⌘ scroll)', () => _zoomAt(_box.center(Offset.zero), s.zoom / 1.25)),
-      btn('+', 'Zoom in (⌘ scroll)', () => _zoomAt(_box.center(Offset.zero), s.zoom * 1.25)),
-      btn('FIT', 'Fit the world (pan: space or middle drag, two-finger scroll)', _fit),
-    ];
-  }
+    ),
+    IconBtn(Icons.remove, 'Zoom out (⌘ scroll)', () => _zoomAt(_box.center(Offset.zero), s.zoom / 1.25)),
+    IconBtn(Icons.add, 'Zoom in (⌘ scroll)', () => _zoomAt(_box.center(Offset.zero), s.zoom * 1.25)),
+    IconBtn(Icons.fit_screen, 'Fit the world (pan: space or middle drag, two-finger scroll)', _fit),
+  ];
 
   /// The camera's starting view inside a larger world.
   List<Widget> _view(Vector2 view, double k, Offset o) => [
@@ -620,7 +674,7 @@ class _SceneViewState extends State<SceneView> {
             alignment: Alignment.bottomLeft,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(6, 0, 0, 4),
-              child: Text('VIEW', style: T.label.copyWith(color: Z.z7)),
+              child: Text('VIEW', style: T.small),
             ),
           ),
         ),
@@ -628,25 +682,18 @@ class _SceneViewState extends State<SceneView> {
     ),
   ];
 
-  /// Marker chit: a 1px rule, a code tag, a resize tab (bottom right) and a rotate tab on a stalk above.
-  List<Widget> _selection(Rect r, String? code, double k) {
+  /// Selection: a 1.5px accent frame, a name tag, a resize handle (bottom right) and a rotate handle on a stalk.
+  List<Widget> _selection(Rect r, double k) {
     final e = s.selected;
-    const stalk = 18.0;
+    const stalk = 20.0;
     final rot = Offset(r.center.dx, r.top - stalk);
     return [
       Positioned.fromRect(
         rect: r.inflate(1),
         child: IgnorePointer(
           child: DecoratedBox(
-            decoration: BoxDecoration(border: Border.all(color: Z.mark)),
+            decoration: BoxDecoration(border: Border.all(color: Z.accent, width: 1.5)),
           ),
-        ),
-      ),
-      Positioned(
-        left: r.left - 4,
-        top: r.top - 4,
-        child: const IgnorePointer(
-          child: SizedBox.square(dimension: 8, child: ColoredBox(color: Z.mark)),
         ),
       ),
       Positioned(
@@ -654,7 +701,7 @@ class _SceneViewState extends State<SceneView> {
         top: rot.dy,
         width: 1,
         height: stalk,
-        child: const IgnorePointer(child: ColoredBox(color: Z.mark)),
+        child: const IgnorePointer(child: ColoredBox(color: Z.accent)),
       ),
       if (e != null) ...[
         _handle(
@@ -683,7 +730,7 @@ class _SceneViewState extends State<SceneView> {
           SystemMouseCursors.grab,
           circle: true,
           onStart: () {
-            _angleFrom = e.angle;
+            _angleFrom = s.valueOf(e, 'angle');
             _handleAt = rot - r.center;
           },
           onMove: (o) {
@@ -691,22 +738,22 @@ class _SceneViewState extends State<SceneView> {
             var a = _angleFrom + math.atan2(v.dx, -v.dy);
             if (HardwareKeyboard.instance.isShiftPressed) a = (a / (math.pi / 12)).roundToDouble() * (math.pi / 12);
             a = double.parse(a.toStringAsFixed(4));
-            if (a != e.angle) s.edit((_) => e.angle = a, mergeKey: _drag);
+            if (a != s.valueOf(e, 'angle')) s.setProp(e, 'angle', a, mergeKey: _drag);
           },
         ),
       ],
       Positioned(
         left: r.left - 1,
-        top: r.top - 24 - stalk,
+        top: r.bottom + 8,
         child: IgnorePointer(
           child: Container(
             height: 20,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 7),
             alignment: Alignment.center,
-            color: Z.mark,
+            decoration: BoxDecoration(color: Z.accent, borderRadius: BorderRadius.circular(4)),
             child: Text(
-              '${code ?? ''} · ${widget.s.selected?.name.toUpperCase() ?? ''}',
-              style: T.head.copyWith(color: Z.z1, letterSpacing: 0.8),
+              '${widget.s.selected?.name ?? ''}  ${(r.width / k).round()} × ${(r.height / k).round()}',
+              style: T.head.copyWith(color: Z.z0, fontFeatures: const [FontFeature.tabularFigures()]),
             ),
           ),
         ),
@@ -714,7 +761,7 @@ class _SceneViewState extends State<SceneView> {
     ];
   }
 
-  /// A draggable 8px tab centred on [at]; [onMove] gets the total pointer offset in screen pixels.
+  /// A draggable handle centred on [at]; [onMove] gets the total pointer offset in screen pixels.
   Widget _handle(
     Offset at,
     String tip,
@@ -724,10 +771,10 @@ class _SceneViewState extends State<SceneView> {
     bool circle = false,
   }) {
     var total = Offset.zero;
-    // 16px hit area around an 8px mark, so the tab is easy to grab at any zoom.
+    // 20px hit area around a 10px mark, so the handle is easy to grab at any zoom.
     return Positioned(
-      left: at.dx - 8,
-      top: at.dy - 8,
+      left: at.dx - 10,
+      top: at.dy - 10,
       child: Tooltip(
         message: tip,
         child: MouseRegion(
@@ -742,12 +789,17 @@ class _SceneViewState extends State<SceneView> {
             onPanUpdate: (d) => onMove(total += d.delta),
             onPanEnd: (_) => _drag = null,
             child: SizedBox.square(
-              dimension: 16,
+              dimension: 20,
               child: Center(
                 child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(color: Z.mark, shape: circle ? BoxShape.circle : BoxShape.rectangle),
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: Z.z10,
+                    border: Border.all(color: Z.accent, width: 1.5),
+                    shape: circle ? BoxShape.circle : BoxShape.rectangle,
+                    borderRadius: circle ? null : BorderRadius.circular(2),
+                  ),
                 ),
               ),
             ),
@@ -758,9 +810,9 @@ class _SceneViewState extends State<SceneView> {
   }
 
   /// Topmost entity under [p]: later siblings and children draw on top, so search them first. Ignores angle.
-  static String? _hit(List<EntityNode> list, Offset p, Offset origin) {
+  String? _hit(List<EntityNode> list, Offset p, Offset origin) {
     for (final e in list.reversed) {
-      final r = Rect.fromCenter(center: origin + Offset(e.position.x, e.position.y), width: e.size.x, height: e.size.y);
+      final r = Rect.fromCenter(center: origin + _center(e), width: e.size.x, height: e.size.y);
       final c = _hit(e.children, p, r.topLeft);
       if (c != null) return c;
       if (r.contains(p)) return e.id;
@@ -769,9 +821,9 @@ class _SceneViewState extends State<SceneView> {
   }
 
   // Children are positioned relative to the parent's top-left (Flame local space). Ignores angle.
-  static Rect? _rectOf(List<EntityNode> list, String id, Offset origin) {
+  Rect? _rectOf(List<EntityNode> list, String id, Offset origin) {
     for (final e in list) {
-      final r = Rect.fromCenter(center: origin + Offset(e.position.x, e.position.y), width: e.size.x, height: e.size.y);
+      final r = Rect.fromCenter(center: origin + _center(e), width: e.size.x, height: e.size.y);
       if (e.id == id) return r;
       final c = _rectOf(e.children, id, r.topLeft);
       if (c != null) return c;
@@ -780,844 +832,4 @@ class _SceneViewState extends State<SceneView> {
   }
 }
 
-class InspectorPanel extends StatelessWidget {
-  const InspectorPanel(this.s, this.registry, {super.key});
-
-  final EditorState s;
-  final KilnRegistry registry;
-
-  @override
-  Widget build(BuildContext context) {
-    final e = s.selected;
-    return Column(
-      children: [
-        _Header(e == null ? 'Scene' : 'Inspector', [
-          if (e != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Text(entityCodes(s.doc)[e.id] ?? '', style: T.code.copyWith(color: Z.mark)),
-            ),
-        ]),
-        Expanded(
-          child: CustomScrollView(
-            slivers: e == null
-                ? [
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 24),
-                      sliver: SliverList.list(children: _scene()),
-                    ),
-                  ]
-                : _entity(e),
-          ),
-        ),
-      ],
-    );
-  }
-
-  List<Widget> _scene() {
-    final d = s.doc;
-    final vars = d.variables.entries.toList();
-    return [
-      Field('name', d.name, (v) => s.edit((d) => d.name = v as String, mergeKey: 'scene.name')),
-      _Pair(
-        Field('w', d.size.x, (v) => s.edit((d) => d.size.x = v as double, mergeKey: 'scene.w'), parse: parseNumber),
-        Field('h', d.size.y, (v) => s.edit((d) => d.size.y = v as double, mergeKey: 'scene.h'), parse: parseNumber),
-      ),
-      // World defaults to the view; a larger world scrolls under a Camera behavior.
-      _Pair(
-        Field(
-          'world w',
-          d.worldSize.x,
-          (v) => s.edit((d) => d.world = Vector2(v as double, d.worldSize.y), mergeKey: 'scene.ww'),
-          parse: parseNumber,
-        ),
-        Field(
-          'world h',
-          d.worldSize.y,
-          (v) => s.edit((d) => d.world = Vector2(d.worldSize.x, v as double), mergeKey: 'scene.wh'),
-          parse: parseNumber,
-        ),
-      ),
-      _Rule('Variables'),
-      for (final (i, kv) in vars.indexed)
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Field('name', kv.key, (v) {
-                final name = v as String;
-                if (name.isEmpty || d.variables.containsKey(name)) return;
-                s.edit(
-                  (d) => d.variables = {for (final x in d.variables.entries) x.key == kv.key ? name : x.key: x.value},
-                  mergeKey: 'var$i.name',
-                );
-              }),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Field(
-                'value',
-                kv.value,
-                (v) => s.edit((d) => d.variables[kv.key] = v, mergeKey: 'var$i.value'),
-                parse: (t) => num.tryParse(t) ?? t,
-              ),
-            ),
-            IconButton(
-              tooltip: 'Remove variable',
-              icon: const Icon(Icons.close),
-              onPressed: () => s.edit((d) => d.variables.remove(kv.key)),
-            ),
-          ],
-        ),
-      if (vars.isEmpty) const Text('No variables. Text can show one as {name}.', style: TextStyle(color: Z.z8)),
-      const SizedBox(height: 8),
-      _AddButton(
-        'Add variable',
-        onPressed: () => s.edit((d) {
-          var n = d.variables.length + 1;
-          while (d.variables.containsKey('var$n')) {
-            n++;
-          }
-          d.variables['var$n'] = 0;
-        }),
-      ),
-    ];
-  }
-
-  List<Widget> _entity(EntityNode e) {
-    Field n(String label, double value, void Function(double v) set) =>
-        Field(label, value, (v) => s.edit((_) => set(v as double), mergeKey: '${e.id}.$label'), parse: parseNumber);
-    return [
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-        sliver: SliverList.list(
-          children: [
-            Field('name', e.name, (v) => s.edit((_) => e.name = v as String, mergeKey: '${e.id}.name')),
-            _Pair(n('x', e.position.x, (v) => e.position.x = v), n('y', e.position.y, (v) => e.position.y = v)),
-            _Pair(n('w', e.size.x, (v) => e.size.x = v), n('h', e.size.y, (v) => e.size.y = v)),
-            _Pair(n('angle', e.angle, (v) => e.angle = v), const SizedBox()),
-            Field(
-              'tags',
-              e.tags.join(', '),
-              (v) => s.edit(
-                (_) => e.tags = [
-                  for (final t in (v as String).split(','))
-                    if (t.trim().isNotEmpty) t.trim(),
-                ],
-                mergeKey: '${e.id}.tags',
-              ),
-              // Commit only when the parsed list differs, so typing ", " doesn't fight the field.
-              parse: (t) => [
-                for (final x in t.split(','))
-                  if (x.trim().isNotEmpty) x.trim(),
-              ].join(', '),
-            ),
-          ],
-        ),
-      ),
-      for (final (i, b) in e.behaviors.indexed)
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-          sliver: _Counter(
-            key: ValueKey('${e.id}.b$i.${b.type}'),
-            type: b.type,
-            factor: factorOf(b),
-            onRemove: () => s.edit((_) => e.behaviors.removeAt(i)),
-            children: [
-              if (registry.behaviors[b.type] case final def?)
-                for (final p in def.props) propEditor(s, registry, p, b.props, '${e.id}.b$i', caseNo: i + 1)
-              else
-                Text('No schema for "${b.type}". Kept as-is in the file.', style: const TextStyle(color: Z.z8)),
-            ],
-          ),
-        ),
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 24),
-        sliver: SliverToBoxAdapter(
-          child: _AddMenu('Add behavior', registry.behaviors.keys, (type) {
-            final def = registry.behaviors[type]!;
-            s.edit((_) => e.behaviors.add(BehaviorData(type, {for (final p in def.props) p.key: p.defaultValue})));
-          }),
-        ),
-      ),
-    ];
-  }
-}
-
-/// A behavior as a die-cut counter: family field, name, and its key factors on the face.
-class _Counter extends StatefulWidget {
-  const _Counter({super.key, required this.type, required this.factor, required this.onRemove, required this.children});
-
-  final String type;
-  final String factor;
-  final VoidCallback onRemove;
-  final List<Widget> children;
-
-  @override
-  State<_Counter> createState() => _CounterState();
-}
-
-class _CounterState extends State<_Counter> {
-  bool _open = true;
-
-  @override
-  Widget build(BuildContext context) {
-    final fam = Family.of(widget.type);
-    final body = _open && widget.children.isNotEmpty;
-    final head = Material(
-      color: Z.z1,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        side: const BorderSide(color: Z.z4),
-        borderRadius: body ? const BorderRadius.vertical(top: Radius.circular(3)) : BorderRadius.circular(3),
-      ),
-      child: InkWell(
-        onTap: () => setState(() => _open = !_open),
-        hoverColor: Z.z3,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 30,
-              color: fam.color,
-              alignment: Alignment.center,
-              child: Text(fam.letter, style: T.head.copyWith(color: Z.z1, letterSpacing: 0)),
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Center(
-                child: Text(
-                  widget.type.toUpperCase(),
-                  style: T.head.copyWith(color: Z.z10),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-            const Spacer(),
-            // Factor strip: the counter's printed stats, a compact ruled chit sized to its content.
-            if (widget.factor.isNotEmpty)
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 150),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      left: BorderSide(color: Z.z4),
-                      right: BorderSide(color: Z.z4),
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    widget.factor,
-                    style: T.code.copyWith(color: Z.z10, fontWeight: FontWeight.w700),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            Center(
-              child: IconButton(tooltip: 'Remove behavior', icon: const Icon(Icons.close), onPressed: widget.onRemove),
-            ),
-          ],
-        ),
-      ),
-    );
-    // The header pins while its body scrolls, so a counter never loses its family mid-scroll.
-    return SliverMainAxisGroup(
-      slivers: [
-        SliverPersistentHeader(pinned: true, delegate: _PinnedHead(head)),
-        if (body)
-          SliverToBoxAdapter(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Z.z1,
-                border: Border(
-                  left: BorderSide(color: Z.z4),
-                  right: BorderSide(color: Z.z4),
-                  bottom: BorderSide(color: Z.z4),
-                ),
-              ),
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 4),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: widget.children),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _PinnedHead extends SliverPersistentHeaderDelegate {
-  _PinnedHead(this.child);
-
-  final Widget child;
-
-  @override
-  double get minExtent => 34;
-
-  @override
-  double get maxExtent => 34;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => child;
-
-  @override
-  bool shouldRebuild(_PinnedHead old) => true;
-}
-
-/// `fontSize` → `FONT SIZE`.
-String _label(String key) => key.replaceAllMapped(RegExp(r'(?<=[a-z])([A-Z])'), (m) => ' ${m[1]}').toUpperCase();
-
-/// Builds an editor widget for one [PropDef]; [map] is mutated in place inside [EditorState.edit].
-Widget propEditor(EditorState s, KilnRegistry reg, PropDef d, Map<String, Object?> map, String id, {int caseNo = 0}) {
-  final v = map[d.key] ?? d.defaultValue;
-  void set(Object? x, {bool merge = true}) => s.edit((_) => map[d.key] = x, mergeKey: merge ? '$id.${d.key}' : null);
-  return switch (d.kind) {
-    PropKind.number => Field(d.key, v, set, parse: parseNumber),
-    PropKind.string => Field(d.key, v, set),
-    PropKind.image || PropKind.audio => Builder(
-      builder: (context) => Field(
-        d.key,
-        v,
-        set,
-        trailing: IconButton(
-          tooltip: 'Import ${d.kind.name}',
-          icon: const Icon(Icons.file_upload_outlined),
-          onPressed: () async {
-            final image = d.kind == PropKind.image;
-            try {
-              final f = await openFile(
-                acceptedTypeGroups: [
-                  XTypeGroup(
-                    label: d.kind.name,
-                    extensions: image ? ['png', 'jpg', 'jpeg', 'webp'] : ['wav', 'mp3', 'ogg', 'm4a'],
-                  ),
-                ],
-              );
-              if (f != null) set(await s.importAsset(f.path, image ? 'images' : 'audio'), merge: false);
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Import failed: $e')));
-              }
-            }
-          },
-        ),
-      ),
-    ),
-    PropKind.color => Field(
-      d.key,
-      v,
-      set,
-      leading: Container(
-        width: 18,
-        height: 18,
-        margin: const EdgeInsets.only(right: 6),
-        decoration: BoxDecoration(
-          color: Props({'c': v}).color('c'),
-          border: Border.all(color: Z.z6),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    ),
-    PropKind.bool => _Labeled(
-      d.key,
-      Align(
-        alignment: Alignment.centerLeft,
-        child: Checkbox(value: v == true, onChanged: (x) => set(x == true, merge: false)),
-      ),
-    ),
-    PropKind.choice => _Labeled(
-      d.key,
-      DropdownButtonFormField<String>(
-        key: ValueKey('$id.${d.key}=$v'),
-        initialValue: d.options.contains(v) ? v as String : null,
-        isDense: true,
-        decoration: const InputDecoration(contentPadding: EdgeInsets.fromLTRB(8, 4, 4, 4)),
-        dropdownColor: Z.z0,
-        style: T.value,
-        iconEnabledColor: Z.z8,
-        items: [for (final o in d.options) DropdownMenuItem(value: o, child: Text(o))],
-        onChanged: (x) => set(x, merge: false),
-      ),
-    ),
-    PropKind.actions => _actions(s, reg, d, v is List ? v : const [], (x) => set(x, merge: false), id, caseNo),
-    PropKind.tiles => _TilesEditor(s, map),
-  };
-}
-
-/// Action chains as numbered rule cases (4.1, 4.2) joined by one connector rule.
-Widget _actions(
-  EditorState s,
-  KilnRegistry reg,
-  PropDef d,
-  List<Object?> list,
-  void Function(List<Object?>) set,
-  String id,
-  int caseNo,
-) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      _Rule(_label(d.key)),
-      for (final (i, raw) in list.indexed)
-        if (raw is Map<String, Object?>)
-          Container(
-            margin: const EdgeInsets.only(left: 4, bottom: 2),
-            padding: const EdgeInsets.only(left: 10),
-            decoration: const BoxDecoration(
-              border: Border(left: BorderSide(color: Z.z5)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  height: 28,
-                  child: Row(
-                    children: [
-                      SizedBox(width: 34, child: Text('$caseNo.${i + 1}', style: T.code)),
-                      Expanded(
-                        child: Text('${raw['type']}', style: T.body.copyWith(fontWeight: FontWeight.w600)),
-                      ),
-                      IconButton(
-                        tooltip: 'Remove action',
-                        icon: const Icon(Icons.close),
-                        onPressed: () => set([...list]..removeAt(i)),
-                      ),
-                    ],
-                  ),
-                ),
-                if (reg.actions[raw['type']]?.targeted ?? true) _target(s, raw, '$id.${d.key}.$i'),
-                for (final p in reg.actions[raw['type']]?.props ?? const <PropDef>[])
-                  propEditor(s, reg, p, raw, '$id.${d.key}.$i'),
-              ],
-            ),
-          ),
-      const SizedBox(height: 6),
-      _AddMenu('Add action', reg.actions.keys, (type) {
-        final def = reg.actions[type]!;
-        set([
-          ...list,
-          {'type': type, for (final p in def.props) p.key: p.defaultValue},
-        ]);
-      }),
-      const SizedBox(height: 6),
-    ],
-  );
-}
-
-/// Who an action acts on: empty = self, an entity name, or `#tag`; the menu lists what the scene has.
-Widget _target(EditorState s, Map<String, Object?> raw, String id) {
-  final names = <String>{}, tags = <String>{};
-  void walk(List<EntityNode> list) {
-    for (final e in list) {
-      names.add(e.name);
-      tags.addAll(e.tags);
-      walk(e.children);
-    }
-  }
-
-  walk(s.doc.entities);
-  void set(Object? v, {bool merge = true}) => s.edit(
-    (_) => (v == '' ? raw.remove(KilnRegistry.targetKey) : raw[KilnRegistry.targetKey] = v),
-    mergeKey: merge ? '$id.target' : null,
-  );
-  return Field(
-    'target',
-    raw[KilnRegistry.targetKey] ?? '',
-    set,
-    hint: 'self',
-    trailing: PopupMenuButton<String>(
-      tooltip: 'Pick target',
-      icon: const Icon(Icons.arrow_drop_down),
-      position: PopupMenuPosition.under,
-      onSelected: (v) => set(v, merge: false),
-      itemBuilder: (_) => [
-        const PopupMenuItem(value: '', height: 30, child: Text('self')),
-        const PopupMenuItem(value: 'other', height: 30, child: Text('other (collision partner)')),
-        for (final n in names) PopupMenuItem(value: n, height: 30, child: Text(n)),
-        for (final t in tags) PopupMenuItem(value: '#$t', height: 30, child: Text('#$t')),
-      ],
-    ),
-  );
-}
-
-Object? parseNumber(String t) {
-  final d = double.tryParse(t);
-  return d != null && d.isFinite ? d : null;
-}
-
-class _Labeled extends StatelessWidget {
-  const _Labeled(this.label, this.child);
-
-  final String label;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 6),
-    child: Row(
-      children: [
-        SizedBox(
-          width: 74,
-          child: Text(_label(label), style: T.label, overflow: TextOverflow.ellipsis),
-        ),
-        Expanded(child: child),
-      ],
-    ),
-  );
-}
-
-/// Text field that commits on every valid keystroke and re-syncs when the doc changes underneath (undo).
-class Field extends StatefulWidget {
-  const Field(this.label, this.value, this.onChanged, {super.key, this.parse, this.leading, this.trailing, this.hint});
-
-  final String label;
-  final Object? value;
-  final ValueChanged<Object?> onChanged;
-
-  /// Returns null for invalid input (not committed). Defaults to the raw string.
-  final Object? Function(String text)? parse;
-  final Widget? leading;
-  final Widget? trailing;
-  final String? hint;
-
-  @override
-  State<Field> createState() => _FieldState();
-}
-
-class _FieldState extends State<Field> {
-  late final _c = TextEditingController(text: _fmt(widget.value));
-
-  Object? _parse(String t) => widget.parse == null ? t : widget.parse!(t);
-
-  static String _fmt(Object? v) => switch (v) {
-    null => '',
-    double d when d.isFinite && d == d.roundToDouble() => d.toInt().toString(),
-    _ => '$v',
-  };
-
-  @override
-  void didUpdateWidget(Field old) {
-    super.didUpdateWidget(old);
-    if (_parse(_c.text) != widget.value) _c.text = _fmt(widget.value);
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => _Labeled(
-    widget.label,
-    Row(
-      children: [
-        ?widget.leading,
-        Expanded(
-          child: TextField(
-            controller: _c,
-            style: T.value,
-            decoration: InputDecoration(hintText: widget.hint),
-            onChanged: (t) {
-              final v = _parse(t);
-              if (v != null && v != widget.value) widget.onChanged(v);
-            },
-          ),
-        ),
-        ?widget.trailing,
-      ],
-    ),
-  );
-}
-
-class _Pair extends StatelessWidget {
-  const _Pair(this.a, this.b);
-
-  final Widget a, b;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Expanded(child: a),
-      const SizedBox(width: 12),
-      Expanded(child: b),
-    ],
-  );
-}
-
-/// Section rule: uppercase title over a 1px line.
-class _Rule extends StatelessWidget {
-  const _Rule(this.title);
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 14, bottom: 8),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(title.toUpperCase(), style: T.head),
-        const SizedBox(height: 6),
-        const Divider(),
-      ],
-    ),
-  );
-}
-
-class _AddButton extends StatelessWidget {
-  const _AddButton(this.label, {required this.onPressed});
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => _AddFrame(
-    child: InkWell(onTap: onPressed, hoverColor: Z.z3, child: _AddLabel(label)),
-  );
-}
-
-class _AddMenu extends StatelessWidget {
-  const _AddMenu(this.label, this.types, this.onSelected);
-
-  final String label;
-  final Iterable<String> types;
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final sorted = [...types]..sort((a, b) => Family.of(a).index.compareTo(Family.of(b).index));
-    return _AddFrame(
-      child: PopupMenuButton<String>(
-        tooltip: label,
-        onSelected: onSelected,
-        position: PopupMenuPosition.under,
-        itemBuilder: (_) => [
-          for (final t in sorted)
-            PopupMenuItem(
-              value: t,
-              height: 30,
-              child: Row(
-                children: [
-                  Container(
-                    width: 6,
-                    height: 14,
-                    margin: const EdgeInsets.only(right: 10),
-                    decoration: BoxDecoration(color: Family.of(t).color, borderRadius: BorderRadius.circular(1)),
-                  ),
-                  Text(t),
-                ],
-              ),
-            ),
-        ],
-        child: _AddLabel(label),
-      ),
-    );
-  }
-}
-
-class _AddFrame extends StatelessWidget {
-  const _AddFrame({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    height: 30,
-    decoration: BoxDecoration(
-      border: Border.all(color: Z.z4),
-      borderRadius: BorderRadius.circular(3),
-    ),
-    clipBehavior: Clip.antiAlias,
-    child: Material(type: MaterialType.transparency, child: child),
-  );
-}
-
-class _AddLabel extends StatelessWidget {
-  const _AddLabel(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.add, size: 14, color: Z.z8),
-        const SizedBox(width: 6),
-        Text(label.toUpperCase(), style: T.label),
-      ],
-    ),
-  );
-}
-
-class _Header extends StatelessWidget {
-  const _Header(this.title, this.actions);
-
-  final String title;
-  final List<Widget> actions;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    height: 34,
-    padding: const EdgeInsets.only(left: 12, right: 6),
-    decoration: const BoxDecoration(
-      border: Border(bottom: BorderSide(color: Z.z3)),
-    ),
-    child: Row(
-      children: [
-        Expanded(child: Text(title.toUpperCase(), style: T.head)),
-        ...actions,
-      ],
-    ),
-  );
-}
-
 String _n(double v) => v == v.roundToDouble() ? v.toInt().toString() : v.toStringAsFixed(1);
-
-/// Tile painter controls for a Tilemap: grid size, brush/fill and the tileset palette.
-class _TilesEditor extends StatelessWidget {
-  const _TilesEditor(this.s, this.props);
-
-  final EditorState s;
-  final Map<String, Object?> props;
-
-  @override
-  Widget build(BuildContext context) {
-    final e = s.selected, b = e == null ? null : EditorState.tilemapOf(e);
-    if (e == null || b == null || b.props != props) return const SizedBox.shrink();
-    final (tile, cols, tiles) = EditorState.gridOf(e, b);
-    final rows = tiles.length ~/ cols, on = s.paintId == e.id;
-    Widget tool(String label, bool active, VoidCallback onTap) => TextButton(
-      onPressed: onTap,
-      child: Text(label, style: T.label.copyWith(color: active ? Z.mark : Z.z9)),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _Pair(
-          Field('cols', cols, (v) => s.resizeTiles((v as double).round(), rows), parse: parseNumber),
-          Field('rows', rows, (v) => s.resizeTiles(cols, (v as double).round()), parse: parseNumber),
-        ),
-        Row(
-          children: [
-            tool(on ? 'DONE' : 'PAINT', on, () => on ? s.setPaint(stop: true) : s.setPaint(id: e.id)),
-            if (on) ...[
-              tool('BRUSH', s.tool == 'brush', () => s.setPaint(tool: 'brush')),
-              tool('FILL', s.tool == 'fill', () => s.setPaint(tool: 'fill')),
-            ],
-          ],
-        ),
-        if (on)
-          _Palette(
-            image: Props(props).string('image'),
-            dir: s.projectDir,
-            tile: tile,
-            solid: parseIds(Props(props).string('solid')),
-            brush: s.brush,
-            onPick: (n) => s.setPaint(brush: n),
-          ),
-        const SizedBox(height: 6),
-      ],
-    );
-  }
-}
-
-/// Swatches for tile 0 (erase) and every tile of the tileset image (or 8 flat colours without one).
-class _Palette extends StatefulWidget {
-  const _Palette({
-    required this.image,
-    required this.dir,
-    required this.tile,
-    required this.solid,
-    required this.brush,
-    required this.onPick,
-  });
-
-  final String image;
-  final String? dir;
-  final double tile;
-  final Set<int> solid;
-  final int brush;
-  final ValueChanged<int> onPick;
-
-  @override
-  State<_Palette> createState() => _PaletteState();
-}
-
-class _PaletteState extends State<_Palette> {
-  ui.Image? _img;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  @override
-  void didUpdateWidget(_Palette old) {
-    super.didUpdateWidget(old);
-    if (old.image != widget.image || old.dir != widget.dir) _load();
-  }
-
-  Future<void> _load() async {
-    final dir = widget.dir;
-    ui.Image? img;
-    if (dir != null && widget.image.isNotEmpty) {
-      try {
-        img = await decodeImageFromList(await File('$dir/assets/images/${widget.image}').readAsBytes());
-      } catch (_) {
-        // Missing or unreadable tileset: fall back to flat colours.
-      }
-    }
-    if (mounted) setState(() => _img = img);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final img = _img, t = widget.tile;
-    final per = img == null ? 0 : math.max(1, img.width ~/ t);
-    final count = img == null ? 8 : math.min(256, per * math.max(1, img.height ~/ t));
-    Widget swatch(int n) => GestureDetector(
-      onTap: () => widget.onPick(n),
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          border: Border.all(color: widget.brush == n ? Z.mark : Z.z5, width: widget.brush == n ? 2 : 1),
-        ),
-        child: CustomPaint(painter: _SwatchPainter(img, t, n, widget.solid.contains(n), per)),
-      ),
-    );
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Wrap(spacing: 4, runSpacing: 4, children: [for (var n = 0; n <= count; n++) swatch(n)]),
-    );
-  }
-}
-
-class _SwatchPainter extends CustomPainter {
-  const _SwatchPainter(this.img, this.tile, this.n, this.solid, this.per);
-
-  final ui.Image? img;
-  final double tile;
-  final int n, per;
-  final bool solid;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final dst = Offset.zero & size;
-    if (n == 0) {
-      canvas.drawLine(dst.topLeft, dst.bottomRight, Paint()..color = Z.z7);
-      canvas.drawLine(dst.topRight, dst.bottomLeft, Paint()..color = Z.z7);
-    } else if (img == null) {
-      canvas.drawRect(dst, Paint()..color = tileColor(n, solid: solid));
-    } else {
-      final k = n - 1;
-      canvas.drawImageRect(img!, Rect.fromLTWH((k % per) * tile, (k ~/ per) * tile, tile, tile), dst, Paint());
-    }
-  }
-
-  @override
-  bool shouldRepaint(_SwatchPainter old) =>
-      old.img != img || old.n != n || old.solid != solid || old.tile != tile || old.per != per;
-}

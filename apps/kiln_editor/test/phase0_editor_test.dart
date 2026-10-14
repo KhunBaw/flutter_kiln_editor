@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kiln/kiln.dart';
 import 'package:kiln_editor/editor_state.dart';
 import 'package:kiln_editor/main.dart';
-import 'package:kiln_editor/panels.dart';
+import 'package:kiln_editor/widgets.dart';
 
 EditorState stateOf(WidgetTester t) => (t.state<State>(find.byType(EditorPage)) as dynamic).s as EditorState;
 
@@ -58,7 +58,7 @@ void main() {
     expect((s.zoom, s.pan), (1.0, Offset.zero));
 
     expect(find.text('VIEW'), findsNothing);
-    await tester.enterText(find.widgetWithText(Field, 'WORLD W'), '1200');
+    await tester.enterText(find.widgetWithText(Field, 'World W'), '1200');
     await tester.pump();
     expect(s.doc.worldSize, Vector2(1200, 700));
     expect(find.text('VIEW'), findsOneWidget);
@@ -102,14 +102,14 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.widgetWithText(Field, 'TARGET'), findsOneWidget);
+    expect(find.widgetWithText(Field, 'Target'), findsOneWidget);
 
-    await tester.enterText(find.widgetWithText(Field, 'TARGET'), '#enemy');
+    await tester.enterText(find.widgetWithText(Field, 'Target'), '#enemy');
     await tester.pump();
     final actions = s.selected!.behaviors.last.props['actions'] as List;
     expect((actions.first as Map)['target'], '#enemy');
 
-    await tester.enterText(find.widgetWithText(Field, 'TAGS'), 'enemy,  boss ,');
+    await tester.enterText(find.widgetWithText(Field, 'Tags'), 'enemy,  boss ,');
     await tester.pump();
     expect(s.selected!.tags, ['enemy', 'boss']);
   });
@@ -149,6 +149,7 @@ void main() {
 
   testWidgets('Tilemap: PAINT in the inspector, pick a tile, click and drag the scene', (tester) async {
     final s = await boot(tester);
+    s.setTimeline(open: false); // give the scene its full height
     s.addEntity(
       size: Vector2(128, 64),
       behaviors: [
@@ -156,11 +157,11 @@ void main() {
       ],
     );
     await tester.pump();
-    await tester.tap(find.text('PAINT'));
+    await tester.tap(find.text('Paint'));
     await tester.pump();
     expect(s.paintId, s.selectedId);
 
-    await tester.tap(find.text('FILL')); // fill the empty grid with tile 1
+    await tester.tap(find.text('Fill')); // fill the empty grid with tile 1
     await tester.pump();
     final view = find.byWidgetPredicate((w) => w is GameWidget);
     final tl = tester.getTopLeft(view);
@@ -182,7 +183,7 @@ void main() {
     s.undo(); // the whole drag is one step
     expect(Props(EditorState.tilemapOf(s.selected!)!.props).list('tiles'), everyElement(1));
 
-    await tester.tap(find.text('DONE'));
+    await tester.tap(find.text('Done'));
     await tester.pump();
     expect(s.paintId, isNull);
   });

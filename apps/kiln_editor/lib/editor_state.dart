@@ -169,9 +169,223 @@ class EditorState extends ChangeNotifier {
     edit((_) => _setGrid(e, b, tile, cols, tiles), mergeKey: '${e.id}.grid');
   }
 
+  // Timeline: editor-only view state, never saved or undone.
+  /// Clip time in seconds the scene is posed at; the scene view and timeline listen to it directly.
+  final playhead = ValueNotifier<double>(0);
+  bool timelineOpen = true;
+  double timelineHeight = 268;
+
+  /// The key being edited in the timeline: track property and index within its keys.
+  ({String prop, int index})? selKey;
+
+  void setTimeline({bool? open, double? height}) {
+    timelineOpen = open ?? timelineOpen;
+    timelineHeight = (height ?? timelineHeight).clamp(160, 640);
+    notifyListeners();
+  }
+
+  void selectKey(({String prop, int index})? k) {
+    selKey = k;
+    notifyListeners();
+  }
+
+  static BehaviorData? animatorOf(EntityNode? e) => e?.behaviors.where((b) => b.type == 'Animator').firstOrNull;
+
+  static double animDuration(BehaviorData a) {
+    final d = Props(a.props).number('duration');
+    return d < 0.05 ? 0.05 : d;
+  }
+
+  /// Fresh editable copy of an Animator's tracks: `[{prop, keys: [{t, v, ease?}]}]`.
+  static List<Map<String, Object?>> tracksOf(BehaviorData a) => [
+    for (final tr in Props(a.props).list('tracks'))
+      if (tr is Map && tr['prop'] is String)
+        {
+          'prop': tr['prop'],
+          'keys': [for (final k in parseKeys(tr['keys'])) k.toJson()],
+        },
+  ];
+
+  /// Value of [prop] on [e] at the playhead: sampled from its track, or null when it has none.
+  double? posed(EntityNode e, String prop) {
+    final a = animatorOf(e);
+    if (a == null) return null;
+    for (final tr in tracksOf(a)) {
+      if (tr['prop'] == prop) return sampleKeys(parseKeys(tr['keys']), playhead.value);
+    }
+    return null;
+  }
+
+  /// What [prop] reads on [e] right now: the animated value if it has a track, else the stored one.
+  double valueOf(EntityNode e, String prop) =>
+      posed(e, prop) ??
+      switch (prop) {
+        'x' => e.position.x,
+        'y' => e.position.y,
+        'angle' => e.angle,
+        _ => 1.0,
+      };
+
+  bool isAnimated(EntityNode e, String prop) => posed(e, prop) != null;
+
+  static const _snapT = 0.001;
+
+  /// Edits [prop]: an animated property gets a key at the playhead, anything else changes the stored value.
+  void setProp(EntityNode e, String prop, double v, {String? mergeKey}) {
+    final a = animatorOf(e);
+    final animated = a != null && isAnimated(e, prop);
+    final storable = prop == 'x' || prop == 'y' || prop == 'angle';
+    if (!animated && !storable && a == null) return;
+    edit((_) {
+      if (!animated && storable) {
+        switch (prop) {
+          case 'x':
+            e.position.x = v;
+          case 'y':
+            e.position.y = v;
+          default:
+            e.angle = v;
+        }
+        return;
+      }
+      _writeKey(a!, prop, playhead.value, v);
+    }, mergeKey: mergeKey);
+  }
+
+  /// Sets or adds the key of [prop] at time [t] (creating the track if needed).
+  void _writeKey(BehaviorData a, String prop, double t, double v, {String? ease}) {
+    final tracks = tracksOf(a);
+    final tr =
+        tracks.where((x) => x['prop'] == prop).firstOrNull ?? (tracks..add({'prop': prop, 'keys': <Object?>[]})).last;
+    final keys = [for (final k in tr['keys'] as List) Map<String, Object?>.of(k as Map<String, Object?>)];
+    final at = keys.indexWhere((k) => ((k['t'] as num) - t).abs() < _snapT);
+    t = t.clamp(0.0, animDuration(a));
+    if (at >= 0) {
+      keys[at]['v'] = v;
+    } else {
+      keys.add({'t': t, 'v': v, 'ease': ?ease});
+      keys.sort((x, y) => (x['t'] as num).compareTo(y['t'] as num));
+    }
+    tr['keys'] = keys;
+    a.props['tracks'] = tracks;
+  }
+
+  /// Diamond button: adds a key at the playhead holding the current value, or removes the one already there.
+  void toggleKey(EntityNode e, String prop) {
+    final a = animatorOf(e);
+    if (a == null) return;
+    final t = playhead.value;
+    edit((_) {
+      final tracks = tracksOf(a);
+      final tr = tracks.where((x) => x['prop'] == prop).firstOrNull;
+      final keys = tr == null ? <Map<String, Object?>>[] : (tr['keys'] as List).cast<Map<String, Object?>>();
+      final at = keys.indexWhere((k) => ((k['t'] as num) - t).abs() < _snapT);
+      if (tr != null && at >= 0) {
+        keys.removeAt(at);
+        if (keys.isEmpty) tracks.remove(tr);
+        a.props['tracks'] = tracks;
+        selKey = null;
+      } else {
+        _writeKey(a, prop, t, valueOf(e, prop));
+      }
+    });
+  }
+
+  /// True when [prop] has a key at the playhead.
+  bool keyedAtPlayhead(EntityNode e, String prop) {
+    final a = animatorOf(e);
+    if (a == null) return false;
+    for (final tr in tracksOf(a)) {
+      if (tr['prop'] != prop) continue;
+      return parseKeys(tr['keys']).any((k) => (k.t - playhead.value).abs() < _snapT);
+    }
+    return false;
+  }
+
+  void addAnimator(EntityNode e) {
+    if (animatorOf(e) != null) return;
+    edit(
+      (_) => e.behaviors.add(
+        BehaviorData('Animator', {'duration': 1.0, 'loop': 'loop', 'autoplay': true, 'tracks': <Object?>[]}),
+      ),
+    );
+  }
+
+  void addTrack(EntityNode e, String prop) {
+    final a = animatorOf(e);
+    if (a == null || isAnimated(e, prop)) return;
+    edit((_) => _writeKey(a, prop, 0, valueOf(e, prop)));
+    selectKey((prop: prop, index: 0));
+  }
+
+  void removeTrack(EntityNode e, String prop) {
+    final a = animatorOf(e);
+    if (a == null) return;
+    edit((_) => a.props['tracks'] = tracksOf(a)..removeWhere((t) => t['prop'] == prop));
+    if (selKey?.prop == prop) selectKey(null);
+  }
+
+  /// Moves a key to time [t] (re-sorting); returns its new index. Use one [mergeKey] per drag.
+  int moveKey(EntityNode e, String prop, int index, double t, {String? mergeKey}) {
+    final a = animatorOf(e);
+    if (a == null) return index;
+    var out = index;
+    edit((_) {
+      final tracks = tracksOf(a);
+      final tr = tracks.firstWhere((x) => x['prop'] == prop, orElse: () => {});
+      if (tr.isEmpty) return;
+      final keys = (tr['keys'] as List).cast<Map<String, Object?>>();
+      if (index >= keys.length) return;
+      final k = keys.removeAt(index);
+      // A key landing on another one replaces it (two keys at one time are meaningless).
+      keys.removeWhere((x) => ((x['t'] as num) - t).abs() < _snapT);
+      k['t'] = t.clamp(0.0, animDuration(a));
+      keys.add(k);
+      keys.sort((x, y) => (x['t'] as num).compareTo(y['t'] as num));
+      out = keys.indexOf(k);
+      a.props['tracks'] = tracks;
+    }, mergeKey: mergeKey);
+    return out;
+  }
+
+  /// Edits one field of a key: `t` is handled by [moveKey]; `v` and `ease` land here.
+  void editKey(EntityNode e, String prop, int index, {double? v, String? ease, String? mergeKey}) {
+    final a = animatorOf(e);
+    if (a == null) return;
+    edit((_) {
+      final tracks = tracksOf(a);
+      final tr = tracks.firstWhere((x) => x['prop'] == prop, orElse: () => {});
+      if (tr.isEmpty) return;
+      final keys = (tr['keys'] as List).cast<Map<String, Object?>>();
+      if (index >= keys.length) return;
+      if (v != null) keys[index]['v'] = v;
+      if (ease != null) {
+        ease == 'linear' ? keys[index].remove('ease') : keys[index]['ease'] = ease;
+      }
+      a.props['tracks'] = tracks;
+    }, mergeKey: mergeKey);
+  }
+
+  void deleteKey(EntityNode e, String prop, int index) {
+    final a = animatorOf(e);
+    if (a == null) return;
+    edit((_) {
+      final tracks = tracksOf(a);
+      final tr = tracks.firstWhere((x) => x['prop'] == prop, orElse: () => {});
+      if (tr.isEmpty) return;
+      final keys = (tr['keys'] as List).cast<Map<String, Object?>>();
+      if (index >= keys.length) return;
+      keys.removeAt(index);
+      if (keys.isEmpty) tracks.remove(tr);
+      a.props['tracks'] = tracks;
+    });
+    selectKey(null);
+  }
+
   void select(String? id) {
     if (id != paintId) paintId = null;
     selectedId = id;
+    selKey = null;
     _mergeKey = null;
     notifyListeners();
   }

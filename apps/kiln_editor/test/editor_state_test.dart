@@ -8,6 +8,7 @@ import 'package:kiln/kiln.dart';
 import 'package:kiln_editor/editor_state.dart';
 import 'package:kiln_editor/main.dart';
 import 'package:kiln_editor/panels.dart';
+import 'package:kiln_editor/widgets.dart';
 import 'package:kiln_editor/theme.dart';
 
 void main() {
@@ -119,7 +120,7 @@ void main() {
     await tester.pumpWidget(const KilnEditorApp());
     await tester.tap(find.byTooltip('Add entity'));
     await tester.pump();
-    expect(find.text('SHAPE'), findsWidgets);
+    expect(find.text('Shape'), findsWidgets);
 
     await tester.enterText(find.widgetWithText(Field, 'X'), '50');
     await tester.pump();

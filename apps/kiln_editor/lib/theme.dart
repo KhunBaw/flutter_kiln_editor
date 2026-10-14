@@ -1,37 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:kiln/kiln.dart';
 
-/// Map-board neutrals: one eleven-step ramp, the only greys the editor uses.
+/// Graphite neutrals: one cool ramp, the only greys the editor uses. Darker = further back.
 abstract final class Z {
-  static const z0 = Color(0xFF0F110E);
-  static const z1 = Color(0xFF161814);
-  static const z2 = Color(0xFF1D1F1A);
-  static const z3 = Color(0xFF252821);
-  static const z4 = Color(0xFF30332B);
-  static const z5 = Color(0xFF3D4137);
-  static const z6 = Color(0xFF50554A);
-  static const z7 = Color(0xFF6A6F62);
-  static const z8 = Color(0xFF8E9286);
-  static const z9 = Color(0xFFBDBFB4);
-  static const z10 = Color(0xFFE8E6DC);
+  static const z0 = Color(0xFF0D0E11);
+  static const z1 = Color(0xFF121317);
+  static const z2 = Color(0xFF181A1F);
+  static const z3 = Color(0xFF1F2227);
+  static const z4 = Color(0xFF292C33);
+  static const z5 = Color(0xFF353943);
+  static const z6 = Color(0xFF4A505C);
+  static const z7 = Color(0xFF69707E);
+  static const z8 = Color(0xFF8D94A3);
+  static const z9 = Color(0xFFB9BECA);
+  static const z10 = Color(0xFFE8EAF0);
 
-  /// Marker chit: selection and Play only.
-  static const mark = Color(0xFFE9C548);
+  /// Ember: selection, focus, Play and the playhead.
+  static const accent = Color(0xFFFF7A45);
 
-  /// Signal red: destructive and error only; kept clear of the logic rust hue.
-  static const danger = Color(0xFFE8606A);
+  /// Ember at rest, for fills behind accent text.
+  static const accentDim = Color(0x26FF7A45);
+
+  /// Destructive and error only.
+  static const danger = Color(0xFFF2555F);
+
+  /// Soft separation under floating surfaces.
+  static const shadow = [BoxShadow(color: Color(0x66000000), blurRadius: 24, offset: Offset(0, 8))];
 }
 
-/// Counter families: every behavior type belongs to one.
+/// Behavior families: every behavior type belongs to one and shows its hue as an icon chip.
 enum Family {
-  render('R', Color(0xFFC9B57A)),
-  input('I', Color(0xFF7C93A8)),
-  logic('L', Color(0xFFC96A42)),
-  physics('P', Color(0xFF8B9958)),
-  custom('C', Z.z8);
+  render('Render', Icons.layers_outlined, Color(0xFF6FB1FF)),
+  input('Input', Icons.touch_app_outlined, Color(0xFF5ED6A4)),
+  logic('Logic', Icons.account_tree_outlined, Color(0xFFB58CFF)),
+  physics('Physics', Icons.blur_circular_outlined, Color(0xFFFF8FA8)),
+  motion('Motion', Icons.animation, Color(0xFFF2C94C)),
+  custom('Custom', Icons.extension_outlined, Z.z8);
 
-  const Family(this.letter, this.color);
-  final String letter;
+  const Family(this.label, this.icon, this.color);
+  final String label;
+  final IconData icon;
   final Color color;
 
   static Family of(String type) => switch (type) {
@@ -39,13 +47,15 @@ enum Family {
     'Sprite' ||
     'SpriteAnimation' ||
     'Text' ||
-    'Tween' ||
     'Camera' ||
     'Parallax' ||
     'Tilemap' ||
     'Hud' ||
     'Panel' ||
-    'ProgressBar' => render,
+    'ProgressBar' ||
+    'Wheel' ||
+    'VarSprite' => render,
+    'Tween' || 'Animator' => motion,
     'OnTap' || 'OnKey' || 'Move8' || 'GridMove' || 'Button' || 'Draggable' => input,
     'Timer' ||
     'Spawner' ||
@@ -70,40 +80,32 @@ enum Family {
   };
 }
 
-/// One text size inside panels; rank comes from weight, case and rules.
+/// Type scale: 12px working size, 11px for secondary, 13px for titles. Barlow throughout.
 abstract final class T {
-  static const size = 13.0;
-  static const body = TextStyle(fontFamily: 'Barlow', fontSize: size, height: 18 / size, color: Z.z10);
-  static const value = TextStyle(
+  static const size = 12.0;
+  static const _tnum = [FontFeature.tabularFigures()];
+  static const body = TextStyle(fontFamily: 'Barlow', fontSize: size, height: 16 / size, color: Z.z10);
+  static const value = TextStyle(fontFamily: 'Barlow', fontSize: size, color: Z.z10, fontFeatures: _tnum);
+  static const label = TextStyle(fontFamily: 'Barlow', fontSize: size, fontWeight: FontWeight.w500, color: Z.z8);
+  static const small = TextStyle(fontFamily: 'Barlow', fontSize: 11, fontWeight: FontWeight.w500, color: Z.z7);
+  static const head = TextStyle(
     fontFamily: 'Barlow',
     fontSize: size,
-    color: Z.z10,
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
-  static const label = TextStyle(
-    fontFamily: 'BarlowSemiCondensed',
-    fontSize: size,
     fontWeight: FontWeight.w600,
-    letterSpacing: 0.9,
-    color: Z.z8,
-  );
-  static const head = TextStyle(
-    fontFamily: 'BarlowSemiCondensed',
-    fontSize: size,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 1.3,
+    letterSpacing: 0.2,
     color: Z.z9,
   );
+  static const title = TextStyle(fontFamily: 'Barlow', fontSize: 13, fontWeight: FontWeight.w600, color: Z.z10);
   static const code = TextStyle(
-    fontFamily: 'BarlowSemiCondensed',
-    fontSize: size,
-    fontWeight: FontWeight.w600,
+    fontFamily: 'Barlow',
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
     color: Z.z8,
-    fontFeatures: [FontFeature.tabularFigures()],
+    fontFeatures: _tnum,
   );
 }
 
-/// Short face text for a behavior counter: its key factors.
+/// Short summary of a behavior shown dim beside its name.
 String factorOf(BehaviorData b) {
   final p = Props(b.props);
   String n(String k) {
@@ -130,6 +132,7 @@ String factorOf(BehaviorData b) {
     'Patrol' => '${p.string('points').split(';').where((x) => x.trim().isNotEmpty).length} points',
     'Wander' => '${n('speed')} px/s',
     'Text' => p.string('text'),
+    'Animator' => '${p.list('tracks').length} tracks · ${n('duration')}s',
     'Tween' => switch (p.string('kind')) {
       'rotateBy' => '${n('x')} rad / ${n('duration')}s',
       _ => '${n('x')}·${n('y')} / ${n('duration')}s',
@@ -155,7 +158,7 @@ String factorOf(BehaviorData b) {
 }
 
 ThemeData kilnTheme() {
-  const r = BorderRadius.all(Radius.circular(2));
+  const r = BorderRadius.all(Radius.circular(4));
   OutlineInputBorder border(Color c) => OutlineInputBorder(
     borderRadius: r,
     borderSide: BorderSide(color: c),
@@ -163,8 +166,8 @@ ThemeData kilnTheme() {
   final scheme = const ColorScheme.dark(
     surface: Z.z2,
     onSurface: Z.z10,
-    primary: Z.mark,
-    onPrimary: Z.z1,
+    primary: Z.accent,
+    onPrimary: Z.z0,
     secondary: Z.z8,
     error: Z.danger,
     outline: Z.z4,
@@ -176,12 +179,13 @@ ThemeData kilnTheme() {
     fontFamily: 'Barlow',
     visualDensity: VisualDensity.compact,
     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    splashFactory: NoSplash.splashFactory,
     textTheme: const TextTheme(
       bodyMedium: T.body,
       bodySmall: T.body,
       bodyLarge: T.body,
       titleSmall: T.head,
-      titleMedium: T.head,
+      titleMedium: T.title,
       labelLarge: T.label,
     ),
     dividerTheme: const DividerThemeData(color: Z.z3, thickness: 1, space: 1),
@@ -190,21 +194,21 @@ ThemeData kilnTheme() {
       isDense: true,
       filled: true,
       fillColor: Z.z1,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       border: border(Z.z4),
-      enabledBorder: border(Z.z4),
-      focusedBorder: border(Z.mark),
+      enabledBorder: border(Colors.transparent),
+      focusedBorder: border(Z.accent),
       errorBorder: border(Z.danger),
       hintStyle: T.body.copyWith(color: Z.z7),
     ),
     textSelectionTheme: TextSelectionThemeData(
-      cursorColor: Z.mark,
-      selectionColor: Z.mark.withValues(alpha: 0.32),
-      selectionHandleColor: Z.mark,
+      cursorColor: Z.accent,
+      selectionColor: Z.accent.withValues(alpha: 0.32),
+      selectionHandleColor: Z.accent,
     ),
     scrollbarTheme: ScrollbarThemeData(
       thickness: const WidgetStatePropertyAll(6),
-      radius: const Radius.circular(1),
+      radius: const Radius.circular(3),
       thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.hovered) ? Z.z6 : Z.z5),
     ),
     tooltipTheme: TooltipThemeData(
@@ -214,6 +218,7 @@ ThemeData kilnTheme() {
         borderRadius: r,
       ),
       textStyle: T.body,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       waitDuration: const Duration(milliseconds: 500),
     ),
     snackBarTheme: SnackBarThemeData(
@@ -224,35 +229,35 @@ ThemeData kilnTheme() {
       width: 420,
       shape: const RoundedRectangleBorder(borderRadius: r),
     ),
-    // Overlays separate by a z4 rule and a tone step, never by shadow.
     dialogTheme: DialogThemeData(
       backgroundColor: Z.z2,
-      elevation: 0,
+      elevation: 24,
+      shadowColor: Colors.black,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: r,
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
         side: const BorderSide(color: Z.z4),
       ),
-      titleTextStyle: T.head.copyWith(color: Z.z10),
+      titleTextStyle: T.title,
       contentTextStyle: T.body,
     ),
     popupMenuTheme: PopupMenuThemeData(
-      color: Z.z0,
-      elevation: 0,
+      color: Z.z2,
+      elevation: 16,
+      shadowColor: Colors.black,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: r,
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         side: const BorderSide(color: Z.z4),
       ),
       textStyle: T.body,
       menuPadding: const EdgeInsets.symmetric(vertical: 4),
     ),
-    // Square marker box, not a pill: matches the 2px-corner world.
     checkboxTheme: CheckboxThemeData(
-      shape: const RoundedRectangleBorder(borderRadius: r),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(3))),
       side: const BorderSide(color: Z.z6),
-      fillColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Z.mark : Z.z1),
-      checkColor: const WidgetStatePropertyAll(Z.z1),
+      fillColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Z.accent : Z.z1),
+      checkColor: const WidgetStatePropertyAll(Z.z0),
       overlayColor: const WidgetStatePropertyAll(Z.z4),
       visualDensity: VisualDensity.compact,
     ),
@@ -260,7 +265,7 @@ ThemeData kilnTheme() {
       style: ButtonStyle(
         foregroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.disabled) ? Z.z6 : Z.z9),
         overlayColor: const WidgetStatePropertyAll(Z.z4),
-        textStyle: const WidgetStatePropertyAll(T.label),
+        textStyle: const WidgetStatePropertyAll(T.head),
         shape: const WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: r)),
         padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 10)),
         minimumSize: const WidgetStatePropertyAll(Size(0, 28)),

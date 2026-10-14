@@ -9,9 +9,12 @@ import 'package:flutter/services.dart';
 import 'package:kiln/kiln.dart';
 
 import 'editor_state.dart';
+import 'inspector.dart';
 import 'panels.dart';
 import 'project.dart';
 import 'theme.dart';
+import 'timeline.dart';
+import 'widgets.dart';
 
 void main() => runApp(const KilnEditorApp());
 
@@ -129,14 +132,14 @@ class _EditorPageState extends State<EditorPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('DISCARD UNSAVED CHANGES?'),
+        title: const Text('Discard unsaved changes?'),
         content: Text('Changes to ${s.doc.name} since the last save will be lost.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('KEEP EDITING')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Keep editing')),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Z.danger),
             onPressed: () => Navigator.pop(c, true),
-            child: const Text('DISCARD'),
+            child: const Text('Discard'),
           ),
         ],
       ),
@@ -237,7 +240,7 @@ class _EditorPageState extends State<EditorPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(
-                      width: 248,
+                      width: 252,
                       child: ColoredBox(
                         color: Z.z2,
                         child: Column(
@@ -251,17 +254,24 @@ class _EditorPageState extends State<EditorPage> {
                     ),
                     const VerticalDivider(width: 1),
                     Expanded(
-                      child: _play == null
-                          ? SceneView(s, registry)
-                          : SceneFrame(
-                              size: _play!.scene.size,
-                              caption: 'Playing',
-                              child: GameWidget(key: ObjectKey(_play), game: _play!, focusNode: _playFocus),
-                            ),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: _play == null
+                                ? SceneView(s, registry)
+                                : SceneFrame(
+                                    size: _play!.scene.size,
+                                    caption: 'Playing',
+                                    child: GameWidget(key: ObjectKey(_play), game: _play!, focusNode: _playFocus),
+                                  ),
+                          ),
+                          SizedBox(height: s.timelineOpen ? s.timelineHeight : 36, child: TimelineDock(s)),
+                        ],
+                      ),
                     ),
                     const VerticalDivider(width: 1),
                     SizedBox(
-                      width: 340,
+                      width: 328,
                       child: ColoredBox(color: Z.z2, child: InspectorPanel(s, registry)),
                     ),
                   ],
@@ -277,57 +287,66 @@ class _EditorPageState extends State<EditorPage> {
   Widget _toolbar(BuildContext context) {
     final project = s.projectDir?.split('/').last;
     final playing = _play != null;
-    Widget btn(String label, String tip, VoidCallback? onPressed) => Tooltip(
-      message: tip,
-      child: TextButton(onPressed: onPressed, child: Text(label)),
-    );
     return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: const BoxDecoration(
         color: Z.z0,
         border: Border(bottom: BorderSide(color: Z.z3)),
       ),
-      child: Row(
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          btn('NEW', 'New (⌘N)', _new),
-          btn('PROJECT', 'Open project folder', _openProject),
-          btn('OPEN', 'Open (⌘O)', _open),
-          btn('SAVE', 'Save (⌘S)', _save),
-          const _Sep(),
-          btn('UNDO', 'Undo (⌘Z)', s.canUndo ? s.undo : null),
-          btn('REDO', 'Redo (⇧⌘Z)', s.canRedo ? s.redo : null),
-          const _Sep(),
+          Row(
+            children: [
+              Container(
+                width: 22,
+                height: 22,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: Z.accent, borderRadius: BorderRadius.circular(6)),
+                child: const Icon(Icons.local_fire_department, size: 14, color: Z.z0),
+              ),
+              const SizedBox(width: 12),
+              IconBtn(Icons.note_add_outlined, 'New (⌘N)', _new),
+              IconBtn(Icons.folder_open_outlined, 'Open project folder', _openProject),
+              IconBtn(Icons.file_open_outlined, 'Open (⌘O)', _open),
+              IconBtn(Icons.save_outlined, 'Save (⌘S)', _save),
+              const _Sep(),
+              IconBtn(Icons.undo, 'Undo (⌘Z)', s.canUndo ? s.undo : null),
+              IconBtn(Icons.redo, 'Redo (⇧⌘Z)', s.canRedo ? s.redo : null),
+              const SizedBox(width: 16),
+              if (project != null) ...[
+                Text(project, style: T.label),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6),
+                  child: Text('/', style: T.small),
+                ),
+              ],
+              Flexible(
+                child: Text(s.path?.split('/').last ?? 'Untitled', style: T.title, overflow: TextOverflow.ellipsis),
+              ),
+              if (s.dirty)
+                Tooltip(
+                  message: 'Unsaved changes',
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    margin: const EdgeInsets.only(left: 8),
+                    decoration: const BoxDecoration(color: Z.accent, shape: BoxShape.circle),
+                  ),
+                ),
+            ],
+          ),
           Tooltip(
             message: playing ? 'Stop (⌘P)' : 'Play (⌘P)',
-            child: TextButton.icon(
-              onPressed: _togglePlay,
-              style: TextButton.styleFrom(
-                backgroundColor: playing ? Colors.transparent : Z.mark,
-                foregroundColor: playing ? Z.danger : Z.z1,
-                side: BorderSide(color: playing ? Z.danger : Z.mark),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-              ),
-              icon: Icon(playing ? Icons.stop : Icons.play_arrow, size: 16),
-              label: Text(playing ? 'STOP' : 'PLAY'),
+            child: Cmd(
+              playing ? 'Stop' : 'Play',
+              _togglePlay,
+              icon: playing ? Icons.stop : Icons.play_arrow,
+              primary: !playing,
+              danger: playing,
             ),
           ),
-          const SizedBox(width: 18),
-          if (project != null) ...[
-            Text(project, style: T.head.copyWith(color: Z.z8)),
-            Text('  /  ', style: T.head.copyWith(color: Z.z6)),
-          ],
-          Text(s.path?.split('/').last ?? 'Untitled', style: T.head.copyWith(color: Z.z10)),
-          if (s.dirty)
-            Tooltip(
-              message: 'Unsaved changes',
-              child: Container(
-                width: 7,
-                height: 7,
-                margin: const EdgeInsets.only(left: 8),
-                decoration: const BoxDecoration(color: Z.mark, shape: BoxShape.circle),
-              ),
-            ),
         ],
       ),
     );
@@ -339,5 +358,5 @@ class _Sep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Container(width: 1, height: 20, margin: const EdgeInsets.symmetric(horizontal: 8), color: Z.z4);
+      Container(width: 1, height: 18, margin: const EdgeInsets.symmetric(horizontal: 8), color: Z.z4);
 }
