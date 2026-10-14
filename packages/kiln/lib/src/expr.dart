@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flame/components.dart' show Vector2;
 import 'package:flutter/foundation.dart';
 
 import 'builtins.dart';
@@ -142,6 +143,9 @@ final _funcs = <String, (int, int, Object? Function(ExprScope s, List<Object?> a
   'count': (1, 1, (s, a) => s.game.targets(s.self, _str(a[0]), other: s.other).length.toDouble()),
   'exists': (1, 1, (s, a) => s.game.targets(s.self, _str(a[0]), other: s.other).isNotEmpty),
   'nearest': (1, 1, (s, a) => s.game.nearest(s.self, _str(a[0]))),
+  'tile': (2, 2, (s, a) => (s.game.tilemaps.firstOrNull?.tileAt(_n(a[0]).floor(), _n(a[1]).floor()) ?? -1).toDouble()),
+  'cellX': (1, 1, (s, a) => (s.game.tilemaps.firstOrNull?.cellAt(Vector2(_n(a[0]), 0)).$1 ?? 0).toDouble()),
+  'cellY': (1, 1, (s, a) => (s.game.tilemaps.firstOrNull?.cellAt(Vector2(0, _n(a[0]))).$2 ?? 0).toDouble()),
   'dist': (
     2,
     2,
@@ -364,6 +368,7 @@ class _Parser {
       'self' => (s) => s.self,
       'other' => (s) => s.other,
       'time' => (s) => s.game.time,
+      'pointer' => (s) => {'x': s.game.pointer.x, 'y': s.game.pointer.y, 'down': s.game.pointerDown},
       _ => (s) => s.locals.containsKey(name) ? s.locals[name] : s.game.vars[name],
     };
   }

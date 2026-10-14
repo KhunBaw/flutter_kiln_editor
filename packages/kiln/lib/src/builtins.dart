@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui' show Image;
 
+import 'package:flame/camera.dart' show Viewport;
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -12,6 +13,7 @@ import 'package:flutter/services.dart';
 
 import 'animation.dart';
 import 'expr.dart';
+import 'pointer.dart';
 import 'game.dart';
 import 'registry.dart';
 import 'tilemap.dart';
@@ -174,6 +176,24 @@ final builtinBehaviors = <BehaviorDef>[
     // [{from: "state" or "*", to: "state", when: "formula"}]
     PropDef('transitions', PropKind.json, []),
   ], (e, p) => StateMachine(p)),
+  BehaviorDef('OnPointer', const [
+    // Pointer (mouse/touch) anywhere on screen; formulas read pointer.x, pointer.y, pointer.down.
+    PropDef('down', PropKind.actions, []),
+    PropDef('move', PropKind.actions, []),
+    PropDef('up', PropKind.actions, []),
+  ], (e, p) => OnPointer(p)),
+  BehaviorDef(
+    'Joystick',
+    const [
+      // Drag inside this entity: variables get -1..1; speed > 0 also moves `target`.
+      PropDef('varX', PropKind.string, 'joyX'),
+      PropDef('varY', PropKind.string, 'joyY'),
+      PropDef('speed', PropKind.number, 0),
+      PropDef('target', PropKind.string, ''),
+    ],
+    (e, p) =>
+        Joystick(varX: p.string('varX'), varY: p.string('varY'), speed: p.number('speed'), target: p.string('target')),
+  ),
   BehaviorDef('Collider', const [
     PropDef('shape', PropKind.choice, 'rect', options: ['rect', 'circle']),
     // Solid hitboxes also collide when one box lies fully inside the other (a small marker under a crate).
@@ -594,6 +614,42 @@ final builtinActions = <ActionDef>[
     final m = self.children.whereType<StateMachine>().firstOrNull;
     m == null ? debugPrint('kiln: SetState on ${self.node.name}: no StateMachine') : m.go(a.string('state'));
   }),
+  ActionDef(
+    'SetTile',
+    const [PropDef('c', PropKind.number, 0), PropDef('r', PropKind.number, 0), PropDef('tile', PropKind.number, 1)],
+    (self, a) {
+      final m = self.children.whereType<Tilemap>().firstOrNull;
+      m == null
+          ? debugPrint('kiln: SetTile on ${self.node.name}: no Tilemap')
+          : m.setTile(a.number('c').floor(), a.number('r').floor(), a.number('tile').floor());
+    },
+  ),
+  ActionDef(
+    'FillTiles',
+    const [
+      PropDef('c', PropKind.number, 0),
+      PropDef('r', PropKind.number, 0),
+      PropDef('w', PropKind.number, 1),
+      PropDef('h', PropKind.number, 1),
+      PropDef('tile', PropKind.number, 0),
+    ],
+    (self, a) {
+      final m = self.children.whereType<Tilemap>().firstOrNull;
+      if (m == null) return debugPrint('kiln: FillTiles on ${self.node.name}: no Tilemap');
+      final c0 = a.number('c').floor(), r0 = a.number('r').floor();
+      for (var r = r0; r < r0 + min(a.number('h').floor(), m.rows); r++) {
+        for (var c = c0; c < c0 + min(a.number('w').floor(), m.cols); c++) {
+          m.setTile(c, r, a.number('tile').floor());
+        }
+      }
+    },
+  ),
+  ActionDef('CameraShake', const [PropDef('strength', PropKind.number, 8), PropDef('time', PropKind.number, 0.3)], (
+    self,
+    a,
+  ) {
+    if (!self.game.editing) self.game.camera.viewport.add(_Shake(a.number('strength'), max(0.01, a.number('time'))));
+  }, targeted: false),
   ..._dataActions,
   ActionDef(
     'Animate',
@@ -1545,6 +1601,34 @@ class StateMachine extends Component with ParentIsA<KilnEntity> {
       if (src.isNotEmpty && truthy(evalExpr(src, ExprScope(parent.game, parent)))) {
         return go(t.string('to'));
       }
+    }
+  }
+}
+
+/// Offsets the viewport by a decaying random amount, then puts it back.
+class _Shake extends Component {
+  _Shake(this.strength, this.time);
+
+  final double strength, time;
+  late final Vector2 _base;
+  late final Viewport _view;
+  double _t = 0;
+
+  @override
+  void onMount() {
+    super.onMount();
+    _view = parent! as Viewport;
+    _base = _view.position.clone();
+  }
+
+  @override
+  void update(double dt) {
+    _t += dt;
+    final double k = 1.0 - min(1.0, _t / time);
+    _view.position = _base + Vector2((_rng.nextDouble() - 0.5) * 2, (_rng.nextDouble() - 0.5) * 2) * strength * k;
+    if (_t >= time) {
+      _view.position = _base;
+      removeFromParent();
     }
   }
 }

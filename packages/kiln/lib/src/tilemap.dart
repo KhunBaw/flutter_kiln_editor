@@ -52,6 +52,14 @@ class Tilemap extends Solid {
 
   Vector2 centerOf(int c, int r) => _origin + Vector2((c + 0.5) * tile, (r + 0.5) * tile);
 
+  /// Tile number at a cell, or -1 outside the grid.
+  int tileAt(int c, int r) => c < 0 || r < 0 || c >= cols || r >= rows ? -1 : tiles[r * cols + c];
+
+  /// Sets one cell; cells outside the grid are ignored.
+  void setTile(int c, int r, int id) {
+    if (tileAt(c, r) >= 0) tiles[r * cols + c] = id;
+  }
+
   /// Outside the grid counts as blocked, so walkers can't leave the map.
   bool blocked(int c, int r) => c < 0 || r < 0 || c >= cols || r >= rows || solid.contains(tiles[r * cols + c]);
 

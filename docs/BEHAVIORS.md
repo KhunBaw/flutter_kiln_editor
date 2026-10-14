@@ -101,6 +101,23 @@ No properties.
 | `states` | json | `[]` |
 | `transitions` | json | `[]` |
 
+### OnPointer
+
+| Property | Kind | Default |
+|---|---|---|
+| `down` | actions | `[]` |
+| `move` | actions | `[]` |
+| `up` | actions | `[]` |
+
+### Joystick
+
+| Property | Kind | Default |
+|---|---|---|
+| `varX` | string | `joyX` |
+| `varY` | string | `joyY` |
+| `speed` | number | `0` |
+| `target` | string | `` |
+
 ### Collider
 
 | Property | Kind | Default |
@@ -380,6 +397,31 @@ No properties.
 | Property | Kind | Default |
 |---|---|---|
 | `state` | string | `` |
+
+### SetTile
+
+| Property | Kind | Default |
+|---|---|---|
+| `c` | number | `0` |
+| `r` | number | `0` |
+| `tile` | number | `1` |
+
+### FillTiles
+
+| Property | Kind | Default |
+|---|---|---|
+| `c` | number | `0` |
+| `r` | number | `0` |
+| `w` | number | `1` |
+| `h` | number | `1` |
+| `tile` | number | `0` |
+
+### CameraShake
+
+| Property | Kind | Default |
+|---|---|---|
+| `strength` | number | `8` |
+| `time` | number | `0.3` |
 
 ### ListAdd
 

@@ -313,6 +313,58 @@
       ]
     },
     {
+      "type": "OnPointer",
+      "props": [
+        {
+          "key": "down",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        },
+        {
+          "key": "move",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        },
+        {
+          "key": "up",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Joystick",
+      "props": [
+        {
+          "key": "varX",
+          "kind": "string",
+          "default": "joyX",
+          "options": []
+        },
+        {
+          "key": "varY",
+          "kind": "string",
+          "default": "joyY",
+          "options": []
+        },
+        {
+          "key": "speed",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "target",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ]
+    },
+    {
       "type": "Collider",
       "props": [
         {
@@ -1392,6 +1444,82 @@
           "options": []
         }
       ]
+    },
+    {
+      "type": "SetTile",
+      "props": [
+        {
+          "key": "c",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "r",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "tile",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "FillTiles",
+      "props": [
+        {
+          "key": "c",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "r",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "w",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        },
+        {
+          "key": "h",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        },
+        {
+          "key": "tile",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "CameraShake",
+      "props": [
+        {
+          "key": "strength",
+          "kind": "number",
+          "default": 8,
+          "options": []
+        },
+        {
+          "key": "time",
+          "kind": "number",
+          "default": 0.3,
+          "options": []
+        }
+      ],
+      "targeted": false
     },
     {
       "type": "ListAdd",

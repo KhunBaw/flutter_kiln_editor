@@ -13,6 +13,7 @@ import 'package:flutter/widgets.dart';
 import 'animation.dart';
 import 'builtins.dart';
 import 'controller.dart';
+import 'pointer.dart';
 import 'registry.dart';
 import 'scene.dart';
 import 'tilemap.dart';
@@ -174,6 +175,33 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
 
   /// Drop targets for Draggable entities.
   final Set<DropZone> dropZones = {};
+
+  /// Last pointer position in world space, whether a button/finger is down, and who listens (OnPointer, Joystick).
+  final Vector2 pointer = Vector2.zero();
+  bool pointerDown = false;
+  final List<void Function(String phase)> pointerListeners = [];
+  PointerLayer? _pointerLayer;
+
+  void ensurePointerLayer() {
+    if (_pointerLayer != null) return;
+    camera.viewport.add(_pointerLayer = PointerLayer(scene.size));
+  }
+
+  /// [phase] is down, move or up; an up without a matching down is dropped.
+  void pointerEvent(String phase, Vector2 at) {
+    pointer.setFrom(at);
+    if (phase == 'down') {
+      if (pointerDown) return;
+      pointerDown = true;
+    } else if (phase == 'up') {
+      if (!pointerDown) return;
+      pointerDown = false;
+    }
+    for (final l in [...pointerListeners]) {
+      l(phase);
+    }
+  }
+
   int _spawned = 0;
 
   /// Top-level entities with a Prefab behavior, by name; hidden at play time and cloned by Spawner.
