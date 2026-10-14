@@ -35,10 +35,10 @@ enum Family {
   final Color color;
 
   static Family of(String type) => switch (type) {
-    'Shape' || 'Sprite' || 'Text' || 'Tween' => render,
-    'OnTap' => input,
-    'Timer' || 'Spawner' || 'Condition' || 'Prefab' => logic,
-    'Collider' || 'OnCollide' => physics,
+    'Shape' || 'Sprite' || 'SpriteAnimation' || 'Text' || 'Tween' || 'Camera' => render,
+    'OnTap' || 'OnKey' => input,
+    'Timer' || 'Spawner' || 'Condition' || 'Prefab' || 'OnEvent' || 'OffScreen' => logic,
+    'Collider' || 'OnCollide' || 'Velocity' => physics,
     _ => custom,
   };
 }
@@ -87,6 +87,13 @@ String factorOf(BehaviorData b) {
   return switch (b.type) {
     'Shape' => p.string('shape'),
     'Sprite' => p.string('image').isEmpty ? 'no image' : p.string('image'),
+    'SpriteAnimation' => p.string('image').isEmpty ? 'no image' : '${n('cols')}×${n('rows')} · ${n('fps')} fps',
+    'Camera' =>
+      p.number('deadzoneW') == 0 && p.number('deadzoneH') == 0 ? 'follow' : 'zone ${n('deadzoneW')}×${n('deadzoneH')}',
+    'OnKey' => '${p.string('key')} ${p.string('on')}',
+    'OnEvent' => p.string('event'),
+    'OffScreen' => 'leaves ${p.string('area')}',
+    'Velocity' => '${n('vx')}·${n('vy')} px/s',
     'Text' => p.string('text'),
     'Tween' => switch (p.string('kind')) {
       'rotateBy' => '${n('x')} rad / ${n('duration')}s',

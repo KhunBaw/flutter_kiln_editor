@@ -2,17 +2,29 @@ import 'package:flame/components.dart';
 
 /// Scene file format. Bump [SceneDoc.version] and migrate in [SceneDoc.fromJson] on breaking changes.
 class SceneDoc {
-  SceneDoc({this.name = 'scene', Vector2? size, Map<String, Object?>? variables, List<EntityNode>? entities})
-    : size = size ?? Vector2(400, 700),
-      variables = variables ?? {},
-      entities = entities ?? [];
+  SceneDoc({
+    this.name = 'scene',
+    Vector2? size,
+    this.world,
+    Map<String, Object?>? variables,
+    List<EntityNode>? entities,
+  }) : size = size ?? Vector2(400, 700),
+       variables = variables ?? {},
+       entities = entities ?? [];
 
   static const version = 1;
 
   String name;
+
+  /// The view (screen) size; the camera shows this much of the world.
   Vector2 size;
+
+  /// World size when it is larger than the view; null means the world is the view.
+  Vector2? world;
   Map<String, Object?> variables;
   List<EntityNode> entities;
+
+  Vector2 get worldSize => world ?? size;
 
   factory SceneDoc.fromJson(Object? json) {
     if (json is! Map<String, Object?>) {
@@ -25,6 +37,7 @@ class SceneDoc {
     return SceneDoc(
       name: _str(json['name'], 'scene'),
       size: _vec(json['size'], Vector2(400, 700)),
+      world: json['world'] == null ? null : _vec(json['world'], Vector2(400, 700)),
       variables: json['variables'] is Map<String, Object?> ? {...json['variables'] as Map<String, Object?>} : null,
       entities: _list(json['entities']).map(EntityNode.fromJson).toList(),
     );
@@ -34,6 +47,7 @@ class SceneDoc {
     'kiln': version,
     'name': name,
     'size': [size.x, size.y],
+    if (world case final w?) 'world': [w.x, w.y],
     'variables': variables,
     'entities': [for (final e in entities) e.toJson()],
   };
@@ -46,10 +60,12 @@ class EntityNode {
     Vector2? position,
     Vector2? size,
     this.angle = 0,
+    List<String>? tags,
     List<BehaviorData>? behaviors,
     List<EntityNode>? children,
   }) : position = position ?? Vector2.zero(),
        size = size ?? Vector2.all(64),
+       tags = tags ?? [],
        behaviors = behaviors ?? [],
        children = children ?? [];
 
@@ -62,6 +78,9 @@ class EntityNode {
 
   /// Radians.
   double angle;
+
+  /// Group names; actions address them as `#tag`.
+  List<String> tags;
   List<BehaviorData> behaviors;
   List<EntityNode> children;
 
@@ -73,6 +92,10 @@ class EntityNode {
       position: _vec(m['position'], Vector2.zero()),
       size: _vec(m['size'], Vector2.all(64)),
       angle: _num(m['angle']),
+      tags: [
+        for (final t in _list(m['tags']))
+          if (t is String && t.isNotEmpty) t,
+      ],
       behaviors: _list(m['behaviors']).map(BehaviorData.fromJson).toList(),
       children: _list(m['children']).map(EntityNode.fromJson).toList(),
     );
@@ -84,6 +107,7 @@ class EntityNode {
     'position': [position.x, position.y],
     'size': [size.x, size.y],
     'angle': angle,
+    if (tags.isNotEmpty) 'tags': tags,
     'behaviors': [for (final b in behaviors) b.toJson()],
     'children': [for (final c in children) c.toJson()],
   };

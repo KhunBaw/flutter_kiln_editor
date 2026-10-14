@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show Offset;
+import 'package:flame/components.dart' show Vector2;
 import 'package:kiln/kiln.dart';
 
 /// Holds the scene being edited. Every mutation goes through [edit] so undo/redo covers it.
@@ -19,6 +21,26 @@ class EditorState extends ChangeNotifier {
 
   /// Bumped on every doc change; the scene view rebuilds its preview game on change.
   int revision = 0;
+
+  /// Bumped when project files may have changed (open, import); the asset list re-reads on change.
+  int assetsRevision = 0;
+
+  // Scene view framing and snapping: editor-only, never saved or undone.
+  double zoom = 1;
+  Offset pan = Offset.zero;
+
+  /// Snap step in scene pixels; 0 = whole pixels only.
+  double grid = 0;
+
+  void setView({double? zoom, Offset? pan, double? grid}) {
+    this.zoom = (zoom ?? this.zoom).clamp(0.1, 16);
+    this.pan = pan ?? this.pan;
+    this.grid = grid ?? this.grid;
+    notifyListeners();
+  }
+
+  /// Rounds [v] to the grid (or to whole pixels with no grid).
+  double snap(double v) => grid > 0 ? (v / grid).roundToDouble() * grid : v.roundToDouble();
 
   // shortcut: undo stores whole-scene JSON snapshots; switch to diff commands if scenes get big.
   final _undo = <String>[];
@@ -67,21 +89,36 @@ class EditorState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addEntity() {
+  /// Adds a top-level entity (default: a blue rect at the view centre) and selects it.
+  void addEntity({String? name, Vector2? at, Vector2? size, List<BehaviorData>? behaviors}) {
     final id = 'e${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}';
     edit(
       (d) => d.entities.add(
         EntityNode(
           id: id,
-          name: 'Entity ${d.entities.length + 1}',
-          position: d.size / 2,
-          behaviors: [
-            BehaviorData('Shape', {'shape': 'rect', 'color': '#4488FF'}),
-          ],
+          name: name ?? 'Entity ${d.entities.length + 1}',
+          position: at ?? d.size / 2,
+          size: size,
+          behaviors:
+              behaviors ??
+              [
+                BehaviorData('Shape', {'shape': 'rect', 'color': '#4488FF'}),
+              ],
         ),
       ),
     );
     select(id);
+  }
+
+  /// Project files under `assets/<sub>/` (images, audio), sorted; empty without a project.
+  Future<List<String>> assetFiles(String sub) async {
+    final dir = Directory('$projectDir/assets/$sub');
+    if (projectDir == null || !await dir.exists()) return const [];
+    final names = [
+      await for (final f in dir.list())
+        if (f is File && !f.uri.pathSegments.last.startsWith('.')) f.uri.pathSegments.last,
+    ];
+    return names..sort();
   }
 
   void removeEntity(String id) => edit((d) => _remove(d.entities, id));
@@ -94,6 +131,7 @@ class EditorState extends ChangeNotifier {
     final added = await schema.exists() ? registry.loadSchema(jsonDecode(await schema.readAsString())) : <String>[];
     projectDir = dir;
     revision++;
+    assetsRevision++;
     notifyListeners();
     return added;
   }
@@ -113,6 +151,7 @@ class EditorState extends ChangeNotifier {
     }
     await File(src).copy('${out.path}/$name');
     revision++;
+    assetsRevision++;
     notifyListeners();
     return name;
   }

@@ -45,11 +45,14 @@ class BehaviorDef {
 }
 
 class ActionDef {
-  const ActionDef(this.type, this.props, this.run);
+  const ActionDef(this.type, this.props, this.run, {this.targeted = true});
 
   final String type;
   final List<PropDef> props;
   final ActionFn run;
+
+  /// False for game-wide actions (variables, events, scenes, music): they run once and ignore `target`.
+  final bool targeted;
 }
 
 /// Built-ins are pre-registered; apps add custom Dart behaviors/actions with [register]/[registerAction].
@@ -68,7 +71,9 @@ class KilnRegistry {
   /// What the editor needs to show app-registered behaviors/actions. Write it to `kiln.schema.json`.
   Map<String, Object?> schemaJson() => {
     'behaviors': [for (final d in behaviors.values) _schemaOf(d.type, d.props)],
-    'actions': [for (final d in actions.values) _schemaOf(d.type, d.props)],
+    'actions': [
+      for (final d in actions.values) {..._schemaOf(d.type, d.props), if (!d.targeted) 'targeted': false},
+    ],
   };
 
   static Map<String, Object?> _schemaOf(String type, List<PropDef> props) => {
@@ -94,7 +99,10 @@ class KilnRegistry {
     }
     for (final raw in m.list('actions')) {
       if (parse(raw) case (final type, final props) when !actions.containsKey(type)) {
-        registerAction(ActionDef(type, props, (self, a) => debugPrint('kiln: action "$type" has no code here')));
+        final targeted = raw is Map && raw['targeted'] != false;
+        registerAction(
+          ActionDef(type, props, (self, a) => debugPrint('kiln: action "$type" has no code here'), targeted: targeted),
+        );
         added.add(type);
       }
     }
@@ -109,9 +117,15 @@ class KilnRegistry {
         debugPrint('kiln: unknown action "${args.string('type')}"');
         continue;
       }
-      def.run(self, args.withDefaults(def.props));
+      final full = args.withDefaults(def.props);
+      for (final t in def.targeted ? self.game.targets(self, args.string(targetKey)) : [self]) {
+        def.run(t, full);
+      }
     }
   }
+
+  /// Every action accepts this arg: empty/`self`, an entity name, or `#tag`.
+  static const targetKey = 'target';
 }
 
 /// Type-safe reads over untrusted JSON props: wrong types fall back instead of throwing.

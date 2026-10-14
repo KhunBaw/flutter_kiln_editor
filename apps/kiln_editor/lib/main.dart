@@ -40,8 +40,31 @@ class _EditorPageState extends State<EditorPage> {
 
   /// Running copy of the scene; edits made while playing don't affect it (like Unity).
   KilnGame? _play;
+  AudioPlayer? _music;
 
-  void _togglePlay() => setState(() => _play = _play == null ? _playGame(s.copyDoc()) : null);
+  /// Keyboard goes to the running game (OnKey) while playing.
+  final _playFocus = FocusNode(debugLabel: 'play');
+
+  void _togglePlay() {
+    if (_play != null) _setMusic(null);
+    setState(() => _play = _play == null ? _playGame(s.copyDoc()) : null);
+    if (_play != null) _playFocus.requestFocus();
+  }
+
+  /// One looping music player for Play mode; null stops it.
+  void _setMusic(String? file) {
+    _music?.dispose();
+    _music = null;
+    final dir = s.projectDir;
+    if (file == null || dir == null) return;
+    final p = _music = AudioPlayer();
+    p.setReleaseMode(ReleaseMode.loop);
+    p.play(DeviceFileSource('$dir/assets/audio/$file')).catchError((Object e) {
+      if (_music == p) _music = null;
+      p.dispose();
+      _toast('Music failed: $e');
+    });
+  }
 
   /// Play-mode game; with a project open, images/audio/LoadScene read from the project folder.
   KilnGame _playGame(SceneDoc doc) {
@@ -59,10 +82,13 @@ class _EditorPageState extends State<EditorPage> {
           _toast('Sound failed: $e');
         });
       },
+      playMusic: _setMusic,
       onLoadScene: (asset) async {
         try {
           final next = SceneDoc.fromJson(jsonDecode(await File('$dir/$asset').readAsString()));
-          if (mounted && _play != null) setState(() => _play = _playGame(next));
+          if (!mounted || _play == null) return;
+          setState(() => _play = _playGame(next));
+          _playFocus.requestFocus();
         } catch (e) {
           _toast('LoadScene failed: $e');
         }
@@ -89,6 +115,8 @@ class _EditorPageState extends State<EditorPage> {
 
   @override
   void dispose() {
+    _music?.dispose();
+    _playFocus.dispose();
     s.dispose();
     super.dispose();
   }
@@ -210,7 +238,16 @@ class _EditorPageState extends State<EditorPage> {
                   children: [
                     SizedBox(
                       width: 248,
-                      child: ColoredBox(color: Z.z2, child: HierarchyPanel(s)),
+                      child: ColoredBox(
+                        color: Z.z2,
+                        child: Column(
+                          children: [
+                            Expanded(flex: 3, child: HierarchyPanel(s)),
+                            const Divider(),
+                            Expanded(flex: 2, child: AssetsPanel(s)),
+                          ],
+                        ),
+                      ),
                     ),
                     const VerticalDivider(width: 1),
                     Expanded(
@@ -219,7 +256,7 @@ class _EditorPageState extends State<EditorPage> {
                           : SceneFrame(
                               size: _play!.scene.size,
                               caption: 'Playing',
-                              child: GameWidget(key: ObjectKey(_play), game: _play!),
+                              child: GameWidget(key: ObjectKey(_play), game: _play!, focusNode: _playFocus),
                             ),
                     ),
                     const VerticalDivider(width: 1),

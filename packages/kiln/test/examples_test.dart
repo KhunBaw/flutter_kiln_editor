@@ -1,0 +1,70 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flame_test/flame_test.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kiln/kiln.dart';
+
+const _scenes = '../../examples/tap_game/assets/scenes';
+
+SceneDoc _load(String name) => SceneDoc.fromJson(jsonDecode(File('$_scenes/$name').readAsStringSync()));
+
+KeyEvent _key(LogicalKeyboardKey k, {bool down = true}) => down
+    ? KeyDownEvent(physicalKey: PhysicalKeyboardKey.space, logicalKey: k, timeStamp: Duration.zero)
+    : KeyUpEvent(physicalKey: PhysicalKeyboardKey.space, logicalKey: k, timeStamp: Duration.zero);
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('every example scene loads and every behavior/action type is registered', () {
+    final reg = KilnRegistry();
+    final files = Directory(_scenes).listSync().whereType<File>().where((f) => f.path.endsWith('.kiln.json'));
+    expect(files, isNotEmpty);
+    for (final f in files) {
+      final doc = SceneDoc.fromJson(jsonDecode(f.readAsStringSync()));
+      void walk(List<EntityNode> list) {
+        for (final e in list) {
+          for (final b in e.behaviors) {
+            expect(reg.behaviors, contains(b.type), reason: '${f.path}: ${e.name}');
+            for (final a in Props(b.props).list('actions')) {
+              expect(reg.actions, contains((a as Map)['type']), reason: '${f.path}: ${e.name}');
+            }
+          }
+          walk(e.children);
+        }
+      }
+
+      walk(doc.entities);
+    }
+  });
+
+  final sounds = <String>[];
+  testWithGame(
+    'sandbox: Space fires a bullet that hits a target; ArrowRight scrolls the camera',
+    () => KilnGame(_load('sandbox.kiln.json'), playSound: sounds.add),
+    (g) async {
+      g.onKeyEvent(_key(LogicalKeyboardKey.space), {});
+      g.onKeyEvent(_key(LogicalKeyboardKey.space, down: false), {});
+      await g.ready(); // let the spawned bullet load (a real game gets this between frames)
+      for (var i = 0; i < 20; i++) {
+        g.update(0.05);
+      }
+      await g.ready();
+      expect(sounds, ['pop.wav']);
+      expect(g.vars['score'], 1);
+      expect(g.world.children.whereType<KilnEntity>().where((e) => e.node.name == 'Bullet'), isEmpty);
+
+      g.onKeyEvent(_key(LogicalKeyboardKey.arrowRight), {});
+      for (var i = 0; i < 30; i++) {
+        g.update(0.1);
+      }
+      g.onKeyEvent(_key(LogicalKeyboardKey.arrowRight, down: false), {});
+      g.update(0.1);
+      final player = g.world.children.whereType<KilnEntity>().firstWhere((e) => e.node.name == 'Player');
+      expect(player.x, closeTo(200 + 220 * 3, 1e-6));
+      // Deadzone 120 wide: the player rests 60px right of the view centre.
+      expect(g.camera.viewfinder.position.x, closeTo(player.x - 200 - 60, 1e-6));
+    },
+  );
+}
