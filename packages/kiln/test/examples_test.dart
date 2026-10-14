@@ -13,6 +13,7 @@ const _examples = [
   '../../examples/shooter/assets/scenes',
   '../../examples/sokoban/assets/scenes',
   '../../examples/card/assets/scenes',
+  '../../examples/wheel/assets/scenes',
 ];
 const _scenes = '../../examples/tap_game/assets/scenes';
 

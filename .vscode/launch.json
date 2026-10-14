@@ -41,6 +41,14 @@
             "program": "lib/main.dart",
             "deviceId": "macos"
         },
+    {
+            "name": "wheel (macOS)",
+            "request": "launch",
+            "type": "dart",
+            "cwd": "examples/wheel",
+            "program": "lib/main.dart",
+            "deviceId": "macos"
+        },
         {
             "name": "launcher (macOS)",
             "request": "launch",

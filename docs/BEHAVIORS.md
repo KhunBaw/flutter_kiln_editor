@@ -73,6 +73,15 @@ No properties.
 | `duration` | number | `1` |
 | `loop` | choice (once, repeat, pingpong) | `pingpong` |
 
+### Animator
+
+| Property | Kind | Default |
+|---|---|---|
+| `duration` | number | `1` |
+| `loop` | choice (once, loop, pingpong) | `loop` |
+| `autoplay` | bool | `true` |
+| `tracks` | keyframes | `[]` |
+
 ### Condition
 
 | Property | Kind | Default |
@@ -178,6 +187,29 @@ No properties.
 | `accept` | string | `` |
 | `snap` | bool | `true` |
 | `actions` | actions | `[]` |
+
+### Wheel
+
+| Property | Kind | Default |
+|---|---|---|
+| `slices` | string | `Coins|coin.png|40;Gem|gem.png|10;Star|star.png|1` |
+| `variable` | string | `slices` |
+| `resultVar` | string | `result` |
+| `limit` | number | `0` |
+| `limitVar` | string | `limit` |
+| `spinsVar` | string | `spins` |
+| `leftVar` | string | `left` |
+| `revealTime` | number | `2.5` |
+| `spinTime` | number | `4` |
+| `minTurns` | number | `4` |
+| `spinEvent` | string | `spin` |
+
+### VarSprite
+
+| Property | Kind | Default |
+|---|---|---|
+| `variable` | string | `background` |
+| `image` | image | `` |
 
 ### OnEvent
 
@@ -314,6 +346,12 @@ No properties.
 |---|---|---|
 | `name` | string | `score` |
 | `value` | string | `` |
+
+### Animate
+
+| Property | Kind | Default |
+|---|---|---|
+| `mode` | choice (restart, pause, resume) | `restart` |
 
 ### Destroy
 

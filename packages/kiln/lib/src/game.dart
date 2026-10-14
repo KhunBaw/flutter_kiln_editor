@@ -10,6 +10,7 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'animation.dart';
 import 'builtins.dart';
 import 'controller.dart';
 import 'registry.dart';
@@ -121,6 +122,9 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
   /// Editor preview: time is frozen (no timers/tweens/spawns) and prefabs stay visible.
   final bool editing;
 
+  /// Editor preview only: clip time Animators are posed at.
+  double poseTime = 0;
+
   /// Called by the LoadScene action with the target scene asset.
   final void Function(String scene)? onLoadScene;
 
@@ -161,8 +165,41 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
       if (e.behaviors.any((b) => b.type == 'Prefab')) e.name: e,
   };
 
+  /// Sound files the scene plays (PlaySound/PlayMusic), found anywhere in its behavior props.
+  Set<String> get soundFiles {
+    final out = <String>{};
+    void walk(Object? v) {
+      if (v is Map) {
+        if ((v['type'] == 'PlaySound' || v['type'] == 'PlayMusic') && v['file'] is String && v['file'] != '') {
+          out.add(v['file'] as String);
+        }
+        v.values.forEach(walk);
+      } else if (v is List) {
+        v.forEach(walk);
+      }
+    }
+
+    void entity(EntityNode e) {
+      for (final b in e.behaviors) {
+        walk(b.props);
+      }
+      e.children.forEach(entity);
+    }
+
+    scene.entities.forEach(entity);
+    return out;
+  }
+
   @override
   Future<void> onLoad() async {
+    // Decode default-player sounds up front so the first tap doesn't stall on loading them.
+    if (!editing && playSound == null) {
+      try {
+        await FlameAudio.audioCache.loadAll(soundFiles.toList());
+      } catch (e) {
+        debugPrint('kiln: sound preload failed: $e');
+      }
+    }
     camera.viewfinder.anchor = Anchor.topLeft;
     final hidden = editing ? const <EntityNode>{} : prefabs.values.toSet();
     await world.addAll(scene.entities.where((e) => !hidden.contains(e)).map(KilnEntity.new));
@@ -272,6 +309,8 @@ class KilnEntity extends PositionComponent
     : super(position: node.position.clone(), size: node.size.clone(), angle: node.angle, anchor: Anchor.center);
 
   final EntityNode node;
+  /// Set by the Animator behavior; the Animate action drives it.
+  AnimatorComponent? animator;
   final List<VoidCallback> tapHandlers = [];
   final List<void Function(KilnEntity other)> collideHandlers = [];
   final List<VoidCallback> landHandlers = [];
@@ -282,6 +321,9 @@ class KilnEntity extends PositionComponent
 
   /// Initial world velocity for a spawned projectile; applied to [motion] once behaviors load.
   Vector2? launch;
+
+  /// Whole-entity opacity (0..1), driven by Animator; children draw through one layer when below 1.
+  double alpha = 1;
 
   /// Next game time each cooldown key (e.g. a Shoot prefab) is ready again.
   final Map<String, double> readyAt = {};
@@ -300,6 +342,15 @@ class KilnEntity extends PositionComponent
     }
     if (launch case final v?) motionOf(this).v.setFrom(v);
     await addAll(node.children.map(KilnEntity.new));
+  }
+
+  @override
+  void renderTree(Canvas canvas) {
+    if (alpha >= 1) return super.renderTree(canvas);
+    if (alpha <= 0) return;
+    canvas.saveLayer(null, Paint()..color = Color.fromRGBO(0, 0, 0, alpha));
+    super.renderTree(canvas);
+    canvas.restore();
   }
 
   /// [other] is the entity on the far side of a collision; actions can target it as `other`.

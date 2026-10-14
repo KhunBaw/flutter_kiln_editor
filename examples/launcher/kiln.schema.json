@@ -206,6 +206,39 @@
       ]
     },
     {
+      "type": "Animator",
+      "props": [
+        {
+          "key": "duration",
+          "kind": "number",
+          "default": 1,
+          "options": []
+        },
+        {
+          "key": "loop",
+          "kind": "choice",
+          "default": "loop",
+          "options": [
+            "once",
+            "loop",
+            "pingpong"
+          ]
+        },
+        {
+          "key": "autoplay",
+          "kind": "bool",
+          "default": true,
+          "options": []
+        },
+        {
+          "key": "tracks",
+          "kind": "keyframes",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
       "type": "Condition",
       "props": [
         {
@@ -556,6 +589,94 @@
           "key": "actions",
           "kind": "actions",
           "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Wheel",
+      "props": [
+        {
+          "key": "slices",
+          "kind": "string",
+          "default": "Coins|coin.png|40;Gem|gem.png|10;Star|star.png|1",
+          "options": []
+        },
+        {
+          "key": "variable",
+          "kind": "string",
+          "default": "slices",
+          "options": []
+        },
+        {
+          "key": "resultVar",
+          "kind": "string",
+          "default": "result",
+          "options": []
+        },
+        {
+          "key": "limit",
+          "kind": "number",
+          "default": 0,
+          "options": []
+        },
+        {
+          "key": "limitVar",
+          "kind": "string",
+          "default": "limit",
+          "options": []
+        },
+        {
+          "key": "spinsVar",
+          "kind": "string",
+          "default": "spins",
+          "options": []
+        },
+        {
+          "key": "leftVar",
+          "kind": "string",
+          "default": "left",
+          "options": []
+        },
+        {
+          "key": "revealTime",
+          "kind": "number",
+          "default": 2.5,
+          "options": []
+        },
+        {
+          "key": "spinTime",
+          "kind": "number",
+          "default": 4,
+          "options": []
+        },
+        {
+          "key": "minTurns",
+          "kind": "number",
+          "default": 4,
+          "options": []
+        },
+        {
+          "key": "spinEvent",
+          "kind": "string",
+          "default": "spin",
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "VarSprite",
+      "props": [
+        {
+          "key": "variable",
+          "kind": "string",
+          "default": "background",
+          "options": []
+        },
+        {
+          "key": "image",
+          "kind": "image",
+          "default": "",
           "options": []
         }
       ]
@@ -1154,6 +1275,21 @@
         }
       ],
       "targeted": false
+    },
+    {
+      "type": "Animate",
+      "props": [
+        {
+          "key": "mode",
+          "kind": "choice",
+          "default": "restart",
+          "options": [
+            "restart",
+            "pause",
+            "resume"
+          ]
+        }
+      ]
     },
     {
       "type": "Destroy",

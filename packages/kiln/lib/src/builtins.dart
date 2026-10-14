@@ -10,10 +10,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 
+import 'animation.dart';
 import 'game.dart';
 import 'registry.dart';
 import 'tilemap.dart';
 import 'ui.dart';
+import 'wheel.dart';
 
 final builtinBehaviors = <BehaviorDef>[
   BehaviorDef('Shape', const [
@@ -21,7 +23,7 @@ final builtinBehaviors = <BehaviorDef>[
     PropDef('color', PropKind.color, '#4488FF'),
   ], (e, p) => _Shape(oval: p.string('shape') == 'oval', paint: Paint()..color = p.color('color'))),
   BehaviorDef('Sprite', const [PropDef('image', PropKind.image, '')], (e, p) async {
-    final img = await _image(e, 'Sprite', p.string('image'));
+    final img = await loadKilnImage(e, 'Sprite', p.string('image'));
     return img == null ? null : SpriteComponent(sprite: Sprite(img), size: e.size);
   }),
   BehaviorDef(
@@ -37,7 +39,7 @@ final builtinBehaviors = <BehaviorDef>[
       PropDef('loop', PropKind.bool, true),
     ],
     (e, p) async {
-      final img = await _image(e, 'SpriteAnimation', p.string('image'));
+      final img = await loadKilnImage(e, 'SpriteAnimation', p.string('image'));
       if (img == null) return null;
       final cols = max(1, p.number('cols').round()), rows = max(1, p.number('rows').round());
       final cell = Vector2(img.width / cols, img.height / rows);
@@ -139,6 +141,21 @@ final builtinBehaviors = <BehaviorDef>[
       };
     },
   ),
+  BehaviorDef(
+    'Animator',
+    const [
+      PropDef('duration', PropKind.number, 1),
+      PropDef('loop', PropKind.choice, 'loop', options: animLoops),
+      PropDef('autoplay', PropKind.bool, true),
+      // [{prop, keys: [{t, v, ease}]}] edited in the editor's Timeline.
+      PropDef('tracks', PropKind.keyframes, []),
+    ],
+    (e, p) {
+      final a = AnimatorComponent(p);
+      e.animator = a;
+      return a;
+    },
+  ),
   BehaviorDef('Condition', const [
     PropDef('variable', PropKind.string, 'score'),
     PropDef('op', PropKind.choice, '>=', options: ['==', '!=', '>', '>=', '<', '<=']),
@@ -189,7 +206,7 @@ final builtinBehaviors = <BehaviorDef>[
       cols: max(1, p.number('cols').round()),
       tiles: [for (final t in p.list('tiles')) t is num ? t.toInt() : 0],
       solid: parseIds(p.string('solid')),
-      image: await _image(e, 'Tilemap', p.string('image')),
+      image: await loadKilnImage(e, 'Tilemap', p.string('image')),
     ),
   ),
   BehaviorDef(
@@ -281,7 +298,7 @@ final builtinBehaviors = <BehaviorDef>[
       color: p.color('color'),
       border: p.color('border'),
       radius: p.number('radius'),
-      box: nineSlice(await _image(e, 'Panel', p.string('image')), p.number('slice')),
+      box: nineSlice(await loadKilnImage(e, 'Panel', p.string('image')), p.number('slice')),
     ),
   ),
   BehaviorDef(
@@ -311,6 +328,42 @@ final builtinBehaviors = <BehaviorDef>[
     // Runs on the zone after a drop; `other` is the dropped entity.
     PropDef('actions', PropKind.actions, []),
   ], (e, p) => DropZone(accept: p.string('accept'), snap: p.flag('snap'), actions: p.list('actions'))),
+  BehaviorDef(
+    'Wheel',
+    const [
+      // Slices as `label|image|weight|#colour;...`; the variable below overrides it when set (app-controlled).
+      PropDef('slices', PropKind.string, 'Coins|coin.png|40;Gem|gem.png|10;Star|star.png|1'),
+      PropDef('variable', PropKind.string, 'slices'),
+      PropDef('resultVar', PropKind.string, 'result'),
+      // Spin limit: 0 = unlimited; the number in the `limitVar` variable overrides it. Spins count into `spinsVar`; `leftVar` shows what remains.
+      PropDef('limit', PropKind.number, 0),
+      PropDef('limitVar', PropKind.string, 'limit'),
+      PropDef('spinsVar', PropKind.string, 'spins'),
+      PropDef('leftVar', PropKind.string, 'left'),
+      PropDef('revealTime', PropKind.number, 2.5),
+      PropDef('spinTime', PropKind.number, 4),
+      PropDef('minTurns', PropKind.number, 4),
+      PropDef('spinEvent', PropKind.string, 'spin'),
+    ],
+    (e, p) => Wheel(
+      spec: p.string('slices'),
+      variable: p.string('variable'),
+      resultVar: p.string('resultVar'),
+      limit: p.number('limit'),
+      limitVar: p.string('limitVar'),
+      spinsVar: p.string('spinsVar'),
+      leftVar: p.string('leftVar'),
+      revealTime: p.number('revealTime'),
+      spinTime: p.number('spinTime'),
+      minTurns: p.number('minTurns'),
+      spinEvent: p.string('spinEvent'),
+      random: _rng,
+    ),
+  ),
+  BehaviorDef('VarSprite', const [
+    PropDef('variable', PropKind.string, 'background'),
+    PropDef('image', PropKind.image, ''),
+  ], (e, p) => VarSprite(variable: p.string('variable'), image: p.string('image'))),
   BehaviorDef('OnEvent', const [
     PropDef('event', PropKind.string, 'event'),
     // Variable that receives the event's value (e.g. sent by the app) before the actions run.
@@ -466,7 +519,7 @@ final Map<String, LogicalKeyboardKey> _keys = {
 };
 
 /// A missing image must not break the whole scene, so failures log and return null.
-Future<Image?> _image(KilnEntity e, String type, String src) async {
+Future<Image?> loadKilnImage(KilnEntity e, String type, String src) async {
   if (src.isEmpty) return null;
   final images = e.game.images;
   try {
@@ -505,6 +558,21 @@ final builtinActions = <ActionDef>[
     (self, a) => self.game.vars[a.string('name')] = a['value'],
     targeted: false,
   ),
+  ActionDef('Animate', const [PropDef('mode', PropKind.choice, 'restart', options: ['restart', 'pause', 'resume'])], (
+    self,
+    a,
+  ) {
+    final an = self.animator;
+    if (an == null) return debugPrint('kiln: Animate on ${self.node.name}: no Animator behavior');
+    switch (a.string('mode')) {
+      case 'pause':
+        an.pause();
+      case 'resume':
+        an.resume();
+      default:
+        an.restart();
+    }
+  }),
   ActionDef('Destroy', const [], (self, a) => self.removeFromParent()),
   ActionDef('PlaySound', const [PropDef('file', PropKind.audio, '')], (self, a) {
     final file = a.string('file');

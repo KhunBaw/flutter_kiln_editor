@@ -1,0 +1,226 @@
+{
+  "kiln": 1,
+  "name": "wheel",
+  "size": [
+    400.0,
+    700.0
+  ],
+  "variables": {
+    "slices": "Coins|coin.png|40;Clover|clover.png|30;Heart|heart.png|15;Gift|gift.png|10;Gem|gem.png|4;Star|star.png|1",
+    "background": "bg_night.png",
+    "result": "-",
+    "spins": 0,
+    "limit": 5,
+    "left": 5
+  },
+  "entities": [
+    {
+      "id": "e1",
+      "name": "Background",
+      "position": [
+        200.0,
+        350.0
+      ],
+      "size": [
+        400.0,
+        700.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#1E2A24"
+          }
+        },
+        {
+          "type": "VarSprite",
+          "props": {
+            "variable": "background"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e2",
+      "name": "Title",
+      "position": [
+        200.0,
+        50.0
+      ],
+      "size": [
+        360.0,
+        40.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Hud",
+          "props": {}
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Spins left {left}",
+            "fontSize": 22,
+            "color": "#E8E4D8"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e3",
+      "name": "Wheel",
+      "position": [
+        200.0,
+        330.0
+      ],
+      "size": [
+        320.0,
+        320.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "shape": "oval",
+            "color": "#FFFFFF"
+          }
+        },
+        {
+          "type": "Wheel",
+          "props": {
+            "slices": "",
+            "variable": "slices",
+            "resultVar": "result",
+            "spinTime": 4,
+            "minTurns": 4,
+            "spinEvent": "spin"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e4",
+      "name": "Pointer",
+      "position": [
+        200.0,
+        150.0
+      ],
+      "size": [
+        28.0,
+        36.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#E8606A"
+          }
+        },
+        {
+          "type": "Animator",
+          "props": {
+            "duration": 1.0,
+            "loop": "pingpong",
+            "autoplay": true,
+            "tracks": [
+              {
+                "prop": "y",
+                "keys": [
+                  {
+                    "t": 0.0,
+                    "v": 150.0
+                  },
+                  {
+                    "t": 1.0,
+                    "v": 130.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e5",
+      "name": "Result",
+      "position": [
+        200.0,
+        560.0
+      ],
+      "size": [
+        360.0,
+        44.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Hud",
+          "props": {}
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "{result}",
+            "fontSize": 28,
+            "color": "#E8B04A"
+          }
+        },
+        {
+          "type": "OnEvent",
+          "props": {
+            "event": "nospins",
+            "actions": [
+              {
+                "type": "SetVariable",
+                "name": "result",
+                "value": "No spins left"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e6",
+      "name": "Spin",
+      "position": [
+        200.0,
+        640.0
+      ],
+      "size": [
+        160.0,
+        48.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Hud",
+          "props": {}
+        },
+        {
+          "type": "Button",
+          "props": {
+            "label": "Spin",
+            "actions": [
+              {
+                "type": "Emit",
+                "event": "spin"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

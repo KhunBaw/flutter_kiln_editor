@@ -12,3 +12,4 @@ workspace:
   - examples/sokoban
   - examples/launcher
   - examples/card
+  - examples/wheel
