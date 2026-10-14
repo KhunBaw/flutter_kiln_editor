@@ -690,10 +690,7 @@ Widget _actions(
                   height: 28,
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: 34,
-                        child: Text('$caseNo.${i + 1}', style: T.code.copyWith(color: Z.mark)),
-                      ),
+                      SizedBox(width: 34, child: Text('$caseNo.${i + 1}', style: T.code)),
                       Expanded(
                         child: Text('${raw['type']}', style: T.body.copyWith(fontWeight: FontWeight.w600)),
                       ),

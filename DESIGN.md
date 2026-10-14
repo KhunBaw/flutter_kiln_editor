@@ -14,7 +14,7 @@ colors:
   z9: "#BDBFB4"
   z10: "#E8E6DC"
   mark: "#E9C548"
-  danger: "#E0775A"
+  danger: "#E8606A"
   family-render: "#C9B57A"
   family-input: "#7C93A8"
   family-logic: "#C96A42"
@@ -189,7 +189,7 @@ Edit and Play share one `SceneFrame`, so pressing Play swaps the game in place a
 The palette is a warm olive-grey night with four faded print inks and one marker yellow.
 
 ### Primary
-- **Marker Chit Yellow** (`Z.mark`): the selection and live-state colour. It is used for the Play button fill, the 3px inset bar on the selected hierarchy row and its code, the scene selection rule, corner tabs and code tag, the inspector's entity code, action case numbers (`4.1`), the dirty dot, the focused input border, the text cursor, selection highlight (32% alpha) and the checked checkbox fill. It maps to `ColorScheme.primary`.
+- **Marker Chit Yellow** (`Z.mark`): the selection and live-state colour. It is used for the Play button fill, the 3px inset bar on the selected hierarchy row and its code, the scene selection rule, corner tabs and code tag, the inspector's entity code, the dirty dot, the focused input border, the text cursor, selection highlight (32% alpha) and the checked checkbox fill. It maps to `ColorScheme.primary`.
 
 ### Secondary
 - **Render Khaki** (`Family.render`): the counter field and hierarchy stripe for Shape, Sprite, Text and Tween.
@@ -199,7 +199,7 @@ The palette is a warm olive-grey night with four faded print inks and one marker
 - **Custom** (`Family.custom`, reuses `Z.z8`): used for any app-registered type. A custom type gets a neutral field rather than a new hue.
 
 ### Tertiary
-- **Burnt Signal** (`Z.danger`): used for the Stop button (outline and text), the Discard dialog action and the input error border. It maps to `ColorScheme.error`.
+- **Signal Red** (`Z.danger`): a cool-leaning red held well apart from the logic rust, so a destructive action never reads as a behavior family. Used for the Stop button (outline and text), the Discard dialog action and the input error border. It maps to `ColorScheme.error`.
 
 ### Neutral
 - **Board Black** (`Z.z0`): the toolbar, the scene map board, tooltips, popup menus and dropdown menus.
@@ -250,7 +250,7 @@ The board (`SceneFrame`) fits the scene with 40px padding on every side and a mi
 
 ## Elevation & Depth
 
-The system is flat and uses tonal layering. Depth is a step on the `Z` ramp: the board (`z0`) sits below the sheet (`z1`), which sits below the panel (`z2`). Edges are 1px rules in `z3`–`z5`. `kilnTheme()` defines no shadows. Overlays (dialog, popup menu, tooltip, snackbar) are separated from the surface by a `z4` outline and a tone change, not by authored elevation. Inspector counter heads stay pinned (`SliverPersistentHeader`, 34px) while their body scrolls, so the family field never scrolls out of view.
+The system is flat and uses tonal layering. Depth is a step on the `Z` ramp: the board (`z0`) sits below the sheet (`z1`), which sits below the panel (`z2`). Edges are 1px rules in `z3`–`z5`. `kilnTheme()` defines no shadows and zeroes Material's default elevation and surface tint on dialogs, popup menus and snackbars. Overlays (dialog, popup menu, tooltip, snackbar) are separated from the surface by a `z4` outline and a tone change. The one exception is the choice dropdown menu, which has no outline and keeps Material's default elevation as its only edge. Inspector counter heads stay pinned (`SliverPersistentHeader`, 34px) while their body scrolls, so the family field never scrolls out of view.
 
 ### Named Rules
 **The Rule-Not-Shadow Rule.** Separation is a 1px line or a ramp step. Do not add `BoxShadow` for depth.
@@ -291,7 +291,7 @@ The form language is square and printed. Corners are 2px on buttons, inputs, too
 Tapping the head collapses or expands the counter. The body is a `Z.z1` slab ruled on three sides with 10/10/4px padding, holding the property editors generated from `PropDef`.
 
 ### Action Chain
-Actions inside a counter sit under a `_Rule` (uppercase `T.head` over a `Divider`). Each case is indented 4px and hangs off one 1px `Z.z5` connector rule on its left with 10px inner padding. Its 28px header row carries the case number (`4.1`) in `T.code` `Z.mark` (34px column), the action type in `T.body` 600 and a remove button.
+Actions inside a counter sit under a `_Rule` (uppercase `T.head` over a `Divider`). Each case is indented 4px and hangs off one 1px `Z.z5` connector rule on its left with 10px inner padding. Its 28px header row carries the case number (`4.1`) in `T.code` `Z.z8` (34px column; it is an address, not a selection), the action type in `T.body` 600 and a remove button.
 
 ### Scene Board
 `SceneFrame` paints the `_BoardPainter` map board, which is `Z.z0` with `Z.z3` dots every 24px. The scene sits at fit scale inside a 1px `Z.z5` frame, with an uppercase caption: mode · size · scale%. In Edit mode `SceneView` overlays the selection marker: a `Z.mark` 1px rule, two 8px tabs and a `Z.mark` code tag reading `E2 · BALLOON` in `T.head` `Z.z1` (+0.8 tracking). In Play mode the same frame hosts the `GameWidget`.

@@ -17,7 +17,9 @@ abstract final class Z {
 
   /// Marker chit: selection and Play only.
   static const mark = Color(0xFFE9C548);
-  static const danger = Color(0xFFE0775A);
+
+  /// Signal red: destructive and error only; kept clear of the logic rust hue.
+  static const danger = Color(0xFFE8606A);
 }
 
 /// Counter families: every behavior type belongs to one.
@@ -94,7 +96,10 @@ String factorOf(BehaviorData b) {
     'Spawner' => '${p.string('prefab')} / ${n('interval')}s',
     'Condition' => '${p.string('variable')} ${p.string('op')} ${n('value')}',
     'Collider' => p.string('shape'),
-    'OnTap' || 'OnCollide' => '${p.list('actions').length} cases',
+    'OnTap' || 'OnCollide' => switch (p.list('actions').length) {
+      1 => '1 case',
+      final c => '$c cases',
+    },
     'Prefab' => 'template',
     _ => '',
   };
@@ -164,13 +169,17 @@ ThemeData kilnTheme() {
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: Z.z4,
+      elevation: 0,
       contentTextStyle: T.body,
       behavior: SnackBarBehavior.floating,
       width: 420,
       shape: const RoundedRectangleBorder(borderRadius: r),
     ),
+    // Overlays separate by a z4 rule and a tone step, never by shadow.
     dialogTheme: DialogThemeData(
       backgroundColor: Z.z2,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: r,
         side: const BorderSide(color: Z.z4),
@@ -180,6 +189,8 @@ ThemeData kilnTheme() {
     ),
     popupMenuTheme: PopupMenuThemeData(
       color: Z.z0,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: r,
         side: const BorderSide(color: Z.z4),

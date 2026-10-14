@@ -8,6 +8,7 @@ import 'package:kiln/kiln.dart';
 import 'package:kiln_editor/editor_state.dart';
 import 'package:kiln_editor/main.dart';
 import 'package:kiln_editor/panels.dart';
+import 'package:kiln_editor/theme.dart';
 
 void main() {
   test('undo/redo with merged keystrokes', () {
@@ -119,5 +120,14 @@ void main() {
     expect(find.byType(SceneView), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 1));
+  });
+
+  test('action counters pluralize their case count', () {
+    String f(int n) => factorOf(
+      BehaviorData('OnTap', {
+        'actions': List.filled(n, <String, Object?>{'type': 'Destroy'}),
+      }),
+    );
+    expect([f(0), f(1), f(2)], ['0 cases', '1 case', '2 cases']);
   });
 }
