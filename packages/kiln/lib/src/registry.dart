@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/foundation.dart';
 
 import 'builtins.dart';
+import 'expr.dart';
 import 'game.dart';
 
 /// `image`/`audio` are file names under the app's `assets/images/` and `assets/audio/`.
@@ -109,6 +110,9 @@ class KilnRegistry {
     return added;
   }
 
+  /// Collision partner of the action list now running; nested lists (If) read it to keep `other`.
+  KilnEntity? other;
+
   void runActions(KilnEntity self, List<Object?> list, {KilnEntity? other}) {
     for (final raw in list) {
       final args = Props(raw is Map<String, Object?> ? raw : const {});
@@ -117,9 +121,20 @@ class KilnRegistry {
         debugPrint('kiln: unknown action "${args.string('type')}"');
         continue;
       }
-      final full = args.withDefaults(def.props);
-      for (final t in def.targeted ? self.game.targets(self, args.string(targetKey), other: other) : [self]) {
-        def.run(t, full);
+      final scope = ExprScope(self.game, self, other: other);
+      final full = Props({
+        for (final MapEntry(:key, :value) in args.withDefaults(def.props).map.entries)
+          // "=..." string props are formulas; the result replaces the string before the action sees it.
+          key: value is String && value.startsWith('=') ? evalExpr(value.substring(1), scope) : value,
+      });
+      final outer = this.other;
+      this.other = other;
+      try {
+        for (final t in def.targeted ? self.game.targets(self, args.string(targetKey), other: other) : [self]) {
+          def.run(t, full);
+        }
+      } finally {
+        this.other = outer;
       }
     }
   }

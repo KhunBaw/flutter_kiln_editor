@@ -11,6 +11,7 @@ import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 
 import 'animation.dart';
+import 'expr.dart';
 import 'game.dart';
 import 'registry.dart';
 import 'tilemap.dart';
@@ -160,6 +161,10 @@ final builtinBehaviors = <BehaviorDef>[
     PropDef('variable', PropKind.string, 'score'),
     PropDef('op', PropKind.choice, '>=', options: ['==', '!=', '>', '>=', '<', '<=']),
     PropDef('value', PropKind.number, 10),
+    // Formula (e.g. "=self.x > 300 && score >= 3"); when set it replaces variable/op/value.
+    PropDef('expr', PropKind.string, ''),
+    // frame = re-check every update (needed for self.x, time); change = only when a variable changes.
+    PropDef('check', PropKind.choice, 'change', options: ['change', 'frame']),
     PropDef('actions', PropKind.actions, []),
   ], (e, p) => _Condition(e, p)),
   BehaviorDef('Collider', const [
@@ -478,6 +483,7 @@ var _rng = Random();
 
 @visibleForTesting
 void seedKilnRandom(int seed) => _rng = Random(seed);
+Random get kilnRng => _rng;
 
 /// Parses "idle:0-3, run:4-9, hit:10" into inclusive frame ranges clamped to [0, frames).
 Map<String, (int, int)> parseClips(String spec, int frames) {
@@ -558,21 +564,45 @@ final builtinActions = <ActionDef>[
     (self, a) => self.game.vars[a.string('name')] = a['value'],
     targeted: false,
   ),
-  ActionDef('Animate', const [PropDef('mode', PropKind.choice, 'restart', options: ['restart', 'pause', 'resume'])], (
-    self,
-    a,
-  ) {
-    final an = self.animator;
-    if (an == null) return debugPrint('kiln: Animate on ${self.node.name}: no Animator behavior');
-    switch (a.string('mode')) {
-      case 'pause':
-        an.pause();
-      case 'resume':
-        an.resume();
-      default:
-        an.restart();
-    }
-  }),
+  ActionDef(
+    'If',
+    const [
+      PropDef('expr', PropKind.string, '=score > 0'),
+      PropDef('then', PropKind.actions, []),
+      PropDef('else', PropKind.actions, []),
+    ],
+    (self, a) {
+      // "=..." props arrive already evaluated; a bare formula is evaluated here.
+      final v = a['expr'];
+      final ok = truthy(v is String ? evalExpr(v, ExprScope(self.game, self, other: self.game.registry.other)) : v);
+      self.runActions(a.list(ok ? 'then' : 'else'), other: self.game.registry.other);
+    },
+    targeted: false,
+  ),
+  ActionDef(
+    'Log',
+    const [PropDef('value', PropKind.string, '')],
+    (self, a) => debugPrint('kiln: ${a['value']}'),
+    targeted: false,
+  ),
+  ActionDef(
+    'Animate',
+    const [
+      PropDef('mode', PropKind.choice, 'restart', options: ['restart', 'pause', 'resume']),
+    ],
+    (self, a) {
+      final an = self.animator;
+      if (an == null) return debugPrint('kiln: Animate on ${self.node.name}: no Animator behavior');
+      switch (a.string('mode')) {
+        case 'pause':
+          an.pause();
+        case 'resume':
+          an.resume();
+        default:
+          an.restart();
+      }
+    },
+  ),
   ActionDef('Destroy', const [], (self, a) => self.removeFromParent()),
   ActionDef('PlaySound', const [PropDef('file', PropKind.audio, '')], (self, a) {
     final file = a.string('file');
@@ -594,7 +624,11 @@ final builtinActions = <ActionDef>[
     const [PropDef('event', PropKind.string, 'event'), PropDef('value', PropKind.string, '')],
     (self, a) => self.game.emit(
       a.string('event'),
-      value: a.string('value').isEmpty ? null : fillTemplate(a.string('value'), self.game.vars),
+      value: switch (a['value']) {
+        null || '' => null,
+        String s => fillTemplate(s, self.game.vars),
+        final v => v, // a "=formula" result keeps its type
+      },
     ),
     targeted: false,
   ),
@@ -1271,6 +1305,9 @@ class _Condition extends Component {
   bool _was = false;
 
   bool _test() {
+    // Props resolve "=..." only inside actions, so a behavior formula is evaluated here.
+    final src = p.string('expr').replaceFirst(RegExp(r'^\s*='), '');
+    if (src.isNotEmpty) return truthy(evalExpr(src, ExprScope(e.game, e)));
     final v = e.game.vars[p.string('variable')];
     if (v is! num) return false;
     final x = p.number('value');
@@ -1288,6 +1325,11 @@ class _Condition extends Component {
     final now = _test();
     if (now && !_was) e.runActions(p.list('actions'));
     _was = now;
+  }
+
+  @override
+  void update(double dt) {
+    if (!e.game.editing && p.string('check') == 'frame') _check();
   }
 
   @override

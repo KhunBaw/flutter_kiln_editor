@@ -89,6 +89,8 @@ No properties.
 | `variable` | string | `score` |
 | `op` | choice (==, !=, >, >=, <, <=) | `>=` |
 | `value` | number | `10` |
+| `expr` | string | `` |
+| `check` | choice (change, frame) | `change` |
 | `actions` | actions | `[]` |
 
 ### Collider
@@ -345,6 +347,20 @@ No properties.
 | Property | Kind | Default |
 |---|---|---|
 | `name` | string | `score` |
+| `value` | string | `` |
+
+### If
+
+| Property | Kind | Default |
+|---|---|---|
+| `expr` | string | `=score > 0` |
+| `then` | actions | `[]` |
+| `else` | actions | `[]` |
+
+### Log
+
+| Property | Kind | Default |
+|---|---|---|
 | `value` | string | `` |
 
 ### Animate

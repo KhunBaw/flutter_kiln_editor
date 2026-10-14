@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:kiln/kiln.dart' show exprError;
 import 'package:flutter/services.dart';
 
 import 'theme.dart';
@@ -356,7 +357,7 @@ class _FieldState extends State<Field> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onHorizontalDragStart: (_) {
-          _scrubFrom = (widget.value as num?)?.toDouble() ?? 0;
+          _scrubFrom = widget.value is num ? (widget.value as num).toDouble() : 0;
           _scrubDx = 0;
           setState(() => _scrubbing = true);
           _focus.unfocus();
@@ -397,20 +398,29 @@ class _FieldState extends State<Field> {
           : null,
       prefixIconConstraints: const BoxConstraints(),
       contentPadding: EdgeInsets.fromLTRB(widget.compact ? 0 : 8, 6, 8, 6),
-      fillColor: _focus.hasFocus ? Z.z0 : Z.z1,
+      fillColor: _formulaError != null ? Z.danger.withAlpha(48) : (_focus.hasFocus ? Z.z0 : Z.z1),
     ),
     onChanged: (t) {
       final v = _parse(t);
       if (v != null && v != widget.value) widget.onChanged(v);
+      setState(() {});
     },
   );
+
+  /// Parse error of a "=formula" in the field, else null.
+  String? get _formulaError {
+    final t = _c.text.trimLeft();
+    return t.startsWith('=') ? exprError(t.substring(1)) : null;
+  }
 
   @override
   Widget build(BuildContext context) {
     final field = Row(
       children: [
         ?widget.leading,
-        Expanded(child: _input()),
+        Expanded(
+          child: Tooltip(message: _formulaError ?? '', child: _input()),
+        ),
         ?widget.trailing,
       ],
     );
@@ -419,7 +429,9 @@ class _FieldState extends State<Field> {
   }
 }
 
+/// A number, or a "=formula" string evaluated at play time.
 Object? parseNumber(String t) {
+  if (t.trimLeft().startsWith('=')) return t.trim();
   final d = double.tryParse(t);
   return d != null && d.isFinite ? d : null;
 }

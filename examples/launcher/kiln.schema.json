@@ -267,6 +267,21 @@
           "options": []
         },
         {
+          "key": "expr",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "check",
+          "kind": "choice",
+          "default": "change",
+          "options": [
+            "change",
+            "frame"
+          ]
+        },
+        {
           "key": "actions",
           "kind": "actions",
           "default": [],
@@ -1267,6 +1282,42 @@
           "default": "score",
           "options": []
         },
+        {
+          "key": "value",
+          "kind": "string",
+          "default": "",
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "If",
+      "props": [
+        {
+          "key": "expr",
+          "kind": "string",
+          "default": "=score > 0",
+          "options": []
+        },
+        {
+          "key": "then",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        },
+        {
+          "key": "else",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ],
+      "targeted": false
+    },
+    {
+      "type": "Log",
+      "props": [
         {
           "key": "value",
           "kind": "string",
