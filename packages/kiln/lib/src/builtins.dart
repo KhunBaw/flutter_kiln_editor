@@ -607,7 +607,7 @@ final builtinActions = <ActionDef>[
   ActionDef(
     'Log',
     const [PropDef('value', PropKind.string, '')],
-    (self, a) => debugPrint('kiln: ${a['value']}'),
+    (self, a) => self.game.log('${a['value']}'),
     targeted: false,
   ),
   ActionDef('SetState', const [PropDef('state', PropKind.string, '')], (self, a) {

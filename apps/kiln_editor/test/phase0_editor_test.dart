@@ -147,6 +147,34 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('Play: Watch panel shows variables, the selected entity\'s variables and Log lines', (tester) async {
+    final s = await boot(tester);
+    s.addEntity(
+      name: 'hero',
+      behaviors: [
+        BehaviorData('Timer', {
+          'interval': 0.05,
+          'repeat': false,
+          'actions': [
+            {'type': 'SetVariable', 'name': 'coins', 'value': '=2 + 3'},
+            {'type': 'Log', 'value': '=\'hp is \' + self.hp'},
+          ],
+        }),
+      ],
+    );
+    s.selected!.variables['hp'] = 7;
+    await tester.pump();
+    await tester.tap(find.byTooltip('Play (⌘P)'));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(find.textContaining('coins'), findsWidgets);
+    expect(find.textContaining('hp is 7'), findsOneWidget);
+    expect(find.textContaining('hp  7', findRichText: true), findsWidgets);
+    await tester.tap(find.byTooltip('Stop (⌘P)'));
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('Tilemap: PAINT in the inspector, pick a tile, click and drag the scene', (tester) async {
     final s = await boot(tester);
     s.setTimeline(open: false); // give the scene its full height

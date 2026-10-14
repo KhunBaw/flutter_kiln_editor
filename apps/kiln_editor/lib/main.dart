@@ -14,6 +14,7 @@ import 'panels.dart';
 import 'project.dart';
 import 'theme.dart';
 import 'timeline.dart';
+import 'watch.dart';
 import 'widgets.dart';
 
 void main() => runApp(const KilnEditorApp());
@@ -265,6 +266,7 @@ class _EditorPageState extends State<EditorPage> {
                                     child: GameWidget(key: ObjectKey(_play), game: _play!, focusNode: _playFocus),
                                   ),
                           ),
+                          if (_play != null) WatchPanel(_play!, s.selected?.name),
                           SizedBox(height: s.timelineOpen ? s.timelineHeight : 36, child: TimelineDock(s)),
                         ],
                       ),

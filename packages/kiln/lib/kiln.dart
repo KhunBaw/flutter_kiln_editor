@@ -1,6 +1,6 @@
 export 'src/builtins.dart' show Motion;
 export 'src/controller.dart';
-export 'src/expr.dart' show ExprScope, evalExpr, exprError;
+export 'src/expr.dart' show ExprScope, evalExpr, exprError, expressionsMarkdown;
 export 'src/game.dart';
 export 'src/registry.dart';
 export 'src/scene.dart';

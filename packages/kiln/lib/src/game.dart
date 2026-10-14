@@ -43,6 +43,9 @@ class GameVariables extends ChangeNotifier {
   };
   bool flag(String key) => _values[key] == true;
 
+  /// Read-only view of every variable (the editor's Watch panel).
+  Map<String, Object?> get all => Map.unmodifiable(_values);
+
   /// Lists and maps are replaced, never mutated in place, so listeners (identity check in `[]=`) see the change.
   List<Object?> list(String key) => switch (_values[key]) {
     List v => v,
@@ -274,6 +277,15 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
     } else {
       FlameAudio.bgm.play(file).catchError((Object err) => debugPrint('kiln: PlayMusic "$file": $err'));
     }
+  }
+
+  /// Lines from the Log action, newest last (capped); the editor's Watch panel shows them.
+  final ValueNotifier<List<String>> logs = ValueNotifier(const []);
+
+  void log(String message) {
+    debugPrint('kiln: $message');
+    final l = [...logs.value, message];
+    logs.value = l.length > 100 ? l.sublist(l.length - 100) : l;
   }
 
   /// Seconds of play so far (frozen while editing).

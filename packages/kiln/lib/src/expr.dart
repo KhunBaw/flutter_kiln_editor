@@ -156,6 +156,60 @@ final _funcs = <String, (int, int, Object? Function(ExprScope s, List<Object?> a
   ),
 };
 
+const _funcDocs = <String, String>{
+  'min': 'min(a, b) — smaller of two numbers',
+  'max': 'max(a, b) — larger of two numbers',
+  'abs': 'abs(x) — absolute value',
+  'floor': 'floor(x) — round down',
+  'round': 'round(x) — round to nearest',
+  'sqrt': 'sqrt(x) — square root (0 for negatives)',
+  'sin': 'sin(radians) — sine',
+  'cos': 'cos(radians) — cosine',
+  'atan2': 'atan2(y, x) — angle in radians',
+  'rand': 'rand(a, b) — random number from a up to b',
+  'randi': 'randi(a, b) — random whole number from a to b, both included',
+  'pick': 'pick(list) — random item of a list',
+  'len': 'len(x) — length of a list, map or text',
+  'count': "count('#tag') — how many entities match a name or #tag",
+  'exists': "exists('Name') — true when some entity matches",
+  'nearest': "nearest('#tag') — closest matching entity to self (null if none)",
+  'tile': 'tile(c, r) — tile number of the first tilemap at a cell (-1 outside)',
+  'cellX': 'cellX(x) — tilemap column of a world x',
+  'cellY': 'cellY(y) — tilemap row of a world y',
+  'dist': 'dist(a, b) — distance between two entities (entity, name or #tag)',
+};
+
+/// Markdown reference of the formula language, generated so it cannot drift from the function table.
+String expressionsMarkdown() {
+  final b = StringBuffer('''# Kiln formulas
+
+Generated from `lib/src/expr.dart`; do not edit by hand.
+
+Start a text or number field with `=` to make it a formula, e.g. `=self.x + 20` or `=score * 2`.
+`If.expr` and `Condition.expr` take a formula without the `=`.
+
+## Values
+
+- numbers `1`, `2.5`; text `'hi'` or `"hi"`; `true`, `false`, `null`; lists `[1, 2]`; maps `{'k': 1}`
+- a game variable by name (`score`), or a loop local (`i`, `item`)
+- `self` / `other` (the collision partner) with `.x .y .angle .width .height .vx .vy .spin .visible .name`, or the entity's own variables (`self.hp`, `self.state`, `self.stateTime`)
+- `pointer.x`, `pointer.y`, `pointer.down` (needs an OnPointer or Joystick), `time` (seconds of play)
+- `list[i]`, `map.key`, `map['key']`
+
+## Operators
+
+From tightest to loosest: `^` (power), unary `- !`, `* / %`, `+ -` (`+` joins text when either side is text), `< <= > >=`, `== !=`, `&&`, `||`, `cond ? a : b`.
+Dividing by zero gives 0. A bad formula logs `kiln: expr ...` and gives `null`; it never stops the game.
+
+## Functions
+
+''');
+  for (final d in _funcDocs.values) {
+    b.writeln('- `${d.replaceFirst(' — ', '` — ')}');
+  }
+  return b.toString();
+}
+
 /// Recursive descent over a single string; every rule returns a closure over [ExprScope].
 class _Parser {
   _Parser(this.src);

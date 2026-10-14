@@ -290,4 +290,33 @@ void main() {
       expect(a.vars['state'], 'run');
     },
   );
+
+  test('every formula function is documented', () {
+    final md = expressionsMarkdown();
+    for (final f in [
+      'min',
+      'max',
+      'abs',
+      'floor',
+      'round',
+      'sqrt',
+      'sin',
+      'cos',
+      'atan2',
+      'rand',
+      'randi',
+      'pick',
+      'len',
+      'count',
+      'exists',
+      'nearest',
+      'tile',
+      'cellX',
+      'cellY',
+      'dist',
+    ]) {
+      expect(md, contains('`$f('), reason: f);
+      expect(exprError('$f()'), isNot(contains('unknown function')), reason: f);
+    }
+  });
 }

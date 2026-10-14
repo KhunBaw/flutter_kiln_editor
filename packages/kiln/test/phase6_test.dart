@@ -61,6 +61,16 @@ void main() {
     expect(next, contains('### Tilemap'));
   });
 
+  test('docs/EXPRESSIONS.md is up to date and documents every function', () {
+    final next = expressionsMarkdown();
+    final file = File('../../docs/EXPRESSIONS.md');
+    if (!file.existsSync() || file.readAsStringSync() != next) file.writeAsStringSync(next);
+    expect(file.readAsStringSync(), next);
+    for (final f in ['min', 'randi', 'nearest', 'tile', 'dist']) {
+      expect(next, contains('`$f('));
+    }
+  });
+
   testWithGame<KilnGame>(
     '600 moving entities with colliders step well inside a frame budget',
     () => KilnGame(
