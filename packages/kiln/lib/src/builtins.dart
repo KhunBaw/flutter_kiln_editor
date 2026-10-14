@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'game.dart';
 import 'registry.dart';
 import 'tilemap.dart';
+import 'ui.dart';
 
 final builtinBehaviors = <BehaviorDef>[
   BehaviorDef('Shape', const [
@@ -237,6 +238,79 @@ final builtinBehaviors = <BehaviorDef>[
       actions: p.list('actions'),
     ),
   ),
+  // UI layer: Hud pins to the screen; Button/Panel/ProgressBar draw themselves.
+  BehaviorDef('Hud', const [], (e, p) => Hud()),
+  BehaviorDef(
+    'Button',
+    const [
+      PropDef('label', PropKind.string, 'Button'),
+      PropDef('fontSize', PropKind.number, 20),
+      PropDef('textColor', PropKind.color, '#FFFFFF'),
+      PropDef('color', PropKind.color, '#3A6FD8'),
+      PropDef('pressedColor', PropKind.color, '#2A4F9A'),
+      PropDef('radius', PropKind.number, 8),
+      PropDef('actions', PropKind.actions, []),
+    ],
+    (e, p) {
+      final box = UiBox(
+        color: p.color('color'),
+        pressed: p.color('pressedColor'),
+        border: const Color(0x00000000),
+        radius: p.number('radius'),
+        label: p.string('label'),
+        style: TextStyle(fontSize: p.number('fontSize'), color: p.color('textColor')),
+      );
+      e.tapHandlers.add(() {
+        box.press();
+        e.runActions(p.list('actions'));
+      });
+      return box;
+    },
+  ),
+  BehaviorDef(
+    'Panel',
+    const [
+      PropDef('color', PropKind.color, '#222A33'),
+      PropDef('border', PropKind.color, '#44525F'),
+      PropDef('radius', PropKind.number, 10),
+      // Optional 9-slice image: a 3×3 grid of `slice`-px cells that stretches to the entity size.
+      PropDef('image', PropKind.image, ''),
+      PropDef('slice', PropKind.number, 16),
+    ],
+    (e, p) async => UiBox(
+      color: p.color('color'),
+      border: p.color('border'),
+      radius: p.number('radius'),
+      box: nineSlice(await _image(e, 'Panel', p.string('image')), p.number('slice')),
+    ),
+  ),
+  BehaviorDef(
+    'ProgressBar',
+    const [
+      PropDef('variable', PropKind.string, 'hp'),
+      PropDef('max', PropKind.number, 100),
+      PropDef('color', PropKind.color, '#6CC070'),
+      PropDef('background', PropKind.color, '#2B3138'),
+    ],
+    (e, p) => ProgressBar(
+      variable: p.string('variable'),
+      max: p.number('max'),
+      fill: p.color('color'),
+      back: p.color('background'),
+    ),
+  ),
+  BehaviorDef('Draggable', const [
+    PropDef('snapBack', PropKind.bool, true),
+    // Runs on the dragged entity after a drop; `other` is the zone.
+    PropDef('actions', PropKind.actions, []),
+  ], (e, p) => Draggable(snapBack: p.flag('snapBack'), actions: p.list('actions'))),
+  BehaviorDef('DropZone', const [
+    // Name or #tag of entities this zone takes; empty takes any.
+    PropDef('accept', PropKind.string, ''),
+    PropDef('snap', PropKind.bool, true),
+    // Runs on the zone after a drop; `other` is the dropped entity.
+    PropDef('actions', PropKind.actions, []),
+  ], (e, p) => DropZone(accept: p.string('accept'), snap: p.flag('snap'), actions: p.list('actions'))),
   BehaviorDef('OnEvent', const [
     PropDef('event', PropKind.string, 'event'),
     // Variable that receives the event's value (e.g. sent by the app) before the actions run.

@@ -11,3 +11,4 @@ workspace:
   - examples/shooter
   - examples/sokoban
   - examples/launcher
+  - examples/card

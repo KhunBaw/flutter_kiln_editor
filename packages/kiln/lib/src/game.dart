@@ -15,6 +15,7 @@ import 'controller.dart';
 import 'registry.dart';
 import 'scene.dart';
 import 'tilemap.dart';
+import 'ui.dart';
 
 class GameVariables extends ChangeNotifier {
   GameVariables(Map<String, Object?> initial) : _values = {...initial};
@@ -149,6 +150,9 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
 
   /// Tilemaps in play; GridMove, pathfinding and Follow read their cells.
   final Set<Tilemap> tilemaps = {};
+
+  /// Drop targets for Draggable entities.
+  final Set<DropZone> dropZones = {};
   int _spawned = 0;
 
   /// Top-level entities with a Prefab behavior, by name; hidden at play time and cloned by Spawner.
@@ -335,7 +339,14 @@ class KilnEntity extends PositionComponent
 /// Embed point for apps: loads a `.kiln.json` asset and runs it.
 /// Give it a [controller] to read variables, send events and change scenes from the app.
 class KilnGameWidget extends StatefulWidget {
-  const KilnGameWidget({super.key, required this.asset, this.registry, this.controller, this.onEvent});
+  const KilnGameWidget({
+    super.key,
+    required this.asset,
+    this.registry,
+    this.controller,
+    this.onEvent,
+    this.fade = Duration.zero,
+  });
 
   final String asset;
   final KilnRegistry? registry;
@@ -343,6 +354,9 @@ class KilnGameWidget extends StatefulWidget {
 
   /// Shortcut for listening to [KilnController.events].
   final void Function(String event, Object? value)? onEvent;
+
+  /// Cross-fade time when the scene changes (LoadScene); zero swaps instantly.
+  final Duration fade;
 
   @override
   State<KilnGameWidget> createState() => _KilnGameWidgetState();
@@ -382,13 +396,16 @@ class _KilnGameWidgetState extends State<KilnGameWidget> {
     super.dispose();
   }
 
+  Widget _fade(Widget child) =>
+      widget.fade == Duration.zero ? child : AnimatedSwitcher(duration: widget.fade, child: child);
+
   @override
   Widget build(BuildContext context) => FutureBuilder(
     future: _game,
     builder: (context, snap) => switch (snap) {
-      AsyncSnapshot(:final data?) => GameWidget(key: ObjectKey(data), game: data),
+      AsyncSnapshot(:final data?) => _fade(GameWidget(key: ObjectKey(data), game: data)),
       AsyncSnapshot(:final error?) => Center(child: Text('Failed to load $_asset: $error')),
-      _ => const SizedBox.shrink(),
+      _ => _fade(const SizedBox.shrink()),
     },
   );
 }

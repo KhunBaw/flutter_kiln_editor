@@ -104,6 +104,19 @@ SaveGame/LoadGame write JSON through a `KilnStorage` (default: files in the app 
 
 Example: `examples/sokoban`.
 
+### UI and drag-and-drop
+
+| Behavior | What it does |
+|---|---|
+| `Hud` | Pins a top-level entity to the screen: its position is a view offset and it ignores camera scrolling. Draws above world entities. |
+| `Button` | Rounded rect with a `{variable}` label; flashes `pressedColor` on tap and runs `actions`. |
+| `Panel` | Rounded rect with border, or a 9-slice `image` (3×3 grid of `slice` px cells). |
+| `ProgressBar` | Fill = `variable / max`. |
+| `Draggable` | Drag the entity; on release it drops onto the nearest overlapping `DropZone` that accepts it, else returns home when `snapBack`. |
+| `DropZone` | `accept` (name or `#tag`, empty = any), `snap` to its centre, `actions` run on the zone with the card as `other`. |
+
+`KilnGameWidget(fade: Duration(milliseconds: 250))` cross-fades between scenes on `LoadScene`. See `examples/card`.
+
 ### Physics (`kiln_forge2d`)
 
 An optional package on [Forge2D](https://pub.dev/packages/forge2d). Add it to the app and register it where you build the registry:

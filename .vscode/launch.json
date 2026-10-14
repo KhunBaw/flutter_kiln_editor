@@ -34,6 +34,14 @@
             "deviceId": "macos"
         },
         {
+            "name": "card (macOS)",
+            "request": "launch",
+            "type": "dart",
+            "cwd": "examples/card",
+            "program": "lib/main.dart",
+            "deviceId": "macos"
+        },
+        {
             "name": "launcher (macOS)",
             "request": "launch",
             "type": "dart",

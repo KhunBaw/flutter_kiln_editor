@@ -406,6 +406,161 @@
       ]
     },
     {
+      "type": "Hud",
+      "props": []
+    },
+    {
+      "type": "Button",
+      "props": [
+        {
+          "key": "label",
+          "kind": "string",
+          "default": "Button",
+          "options": []
+        },
+        {
+          "key": "fontSize",
+          "kind": "number",
+          "default": 20,
+          "options": []
+        },
+        {
+          "key": "textColor",
+          "kind": "color",
+          "default": "#FFFFFF",
+          "options": []
+        },
+        {
+          "key": "color",
+          "kind": "color",
+          "default": "#3A6FD8",
+          "options": []
+        },
+        {
+          "key": "pressedColor",
+          "kind": "color",
+          "default": "#2A4F9A",
+          "options": []
+        },
+        {
+          "key": "radius",
+          "kind": "number",
+          "default": 8,
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Panel",
+      "props": [
+        {
+          "key": "color",
+          "kind": "color",
+          "default": "#222A33",
+          "options": []
+        },
+        {
+          "key": "border",
+          "kind": "color",
+          "default": "#44525F",
+          "options": []
+        },
+        {
+          "key": "radius",
+          "kind": "number",
+          "default": 10,
+          "options": []
+        },
+        {
+          "key": "image",
+          "kind": "image",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "slice",
+          "kind": "number",
+          "default": 16,
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "ProgressBar",
+      "props": [
+        {
+          "key": "variable",
+          "kind": "string",
+          "default": "hp",
+          "options": []
+        },
+        {
+          "key": "max",
+          "kind": "number",
+          "default": 100,
+          "options": []
+        },
+        {
+          "key": "color",
+          "kind": "color",
+          "default": "#6CC070",
+          "options": []
+        },
+        {
+          "key": "background",
+          "kind": "color",
+          "default": "#2B3138",
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "Draggable",
+      "props": [
+        {
+          "key": "snapBack",
+          "kind": "bool",
+          "default": true,
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "type": "DropZone",
+      "props": [
+        {
+          "key": "accept",
+          "kind": "string",
+          "default": "",
+          "options": []
+        },
+        {
+          "key": "snap",
+          "kind": "bool",
+          "default": true,
+          "options": []
+        },
+        {
+          "key": "actions",
+          "kind": "actions",
+          "default": [],
+          "options": []
+        }
+      ]
+    },
+    {
       "type": "OnEvent",
       "props": [
         {

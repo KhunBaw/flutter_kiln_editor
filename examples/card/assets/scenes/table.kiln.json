@@ -1,0 +1,323 @@
+{
+  "kiln": 1,
+  "name": "table",
+  "size": [
+    400,
+    700
+  ],
+  "variables": {
+    "placed": 0,
+    "score": 0
+  },
+  "entities": [
+    {
+      "id": "e1",
+      "name": "Background",
+      "position": [
+        200,
+        350
+      ],
+      "size": [
+        400,
+        700
+      ],
+      "tags": [],
+      "behaviors": [
+        {
+          "type": "Shape",
+          "props": {
+            "color": "#1E2A24"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e2",
+      "name": "Bar",
+      "position": [
+        200,
+        30
+      ],
+      "size": [
+        360,
+        28
+      ],
+      "tags": [],
+      "behaviors": [
+        {
+          "type": "Hud",
+          "props": {}
+        },
+        {
+          "type": "ProgressBar",
+          "props": {
+            "variable": "placed",
+            "max": 3,
+            "color": "#E8B04A"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e3",
+      "name": "Label",
+      "position": [
+        200,
+        70
+      ],
+      "size": [
+        360,
+        24
+      ],
+      "tags": [],
+      "behaviors": [
+        {
+          "type": "Hud",
+          "props": {}
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "{placed} / 3 placed   score {score}",
+            "fontSize": 18,
+            "color": "#E8E4D8"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e4",
+      "name": "RedSlot",
+      "position": [
+        110,
+        230
+      ],
+      "size": [
+        130,
+        170
+      ],
+      "tags": [],
+      "behaviors": [
+        {
+          "type": "Panel",
+          "props": {
+            "color": "#3A1F24",
+            "border": "#E8606A"
+          }
+        },
+        {
+          "type": "DropZone",
+          "props": {
+            "accept": "#red",
+            "actions": [
+              {
+                "type": "AddVariable",
+                "name": "placed",
+                "value": 1
+              },
+              {
+                "type": "AddVariable",
+                "name": "score",
+                "value": 10
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e5",
+      "name": "BlueSlot",
+      "position": [
+        290,
+        230
+      ],
+      "size": [
+        130,
+        170
+      ],
+      "tags": [],
+      "behaviors": [
+        {
+          "type": "Panel",
+          "props": {
+            "color": "#1F2A3A",
+            "border": "#5A8FE8"
+          }
+        },
+        {
+          "type": "DropZone",
+          "props": {
+            "accept": "#blue",
+            "actions": [
+              {
+                "type": "AddVariable",
+                "name": "placed",
+                "value": 1
+              },
+              {
+                "type": "AddVariable",
+                "name": "score",
+                "value": 10
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e6",
+      "name": "Card1",
+      "position": [
+        80,
+        520
+      ],
+      "size": [
+        100,
+        140
+      ],
+      "tags": [
+        "red"
+      ],
+      "behaviors": [
+        {
+          "type": "Panel",
+          "props": {
+            "color": "#B8434E",
+            "border": "#F2EEE0"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Red",
+            "fontSize": 22,
+            "color": "#FFFFFF"
+          }
+        },
+        {
+          "type": "Draggable",
+          "props": {
+            "snapBack": true
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e7",
+      "name": "Card2",
+      "position": [
+        200,
+        520
+      ],
+      "size": [
+        100,
+        140
+      ],
+      "tags": [
+        "blue"
+      ],
+      "behaviors": [
+        {
+          "type": "Panel",
+          "props": {
+            "color": "#3F6FC0",
+            "border": "#F2EEE0"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Blue",
+            "fontSize": 22,
+            "color": "#FFFFFF"
+          }
+        },
+        {
+          "type": "Draggable",
+          "props": {
+            "snapBack": true
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e8",
+      "name": "Card3",
+      "position": [
+        320,
+        520
+      ],
+      "size": [
+        100,
+        140
+      ],
+      "tags": [
+        "red"
+      ],
+      "behaviors": [
+        {
+          "type": "Panel",
+          "props": {
+            "color": "#B8434E",
+            "border": "#F2EEE0"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Red",
+            "fontSize": 22,
+            "color": "#FFFFFF"
+          }
+        },
+        {
+          "type": "Draggable",
+          "props": {
+            "snapBack": true
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "e9",
+      "name": "Restart",
+      "position": [
+        200,
+        650
+      ],
+      "size": [
+        160,
+        44
+      ],
+      "tags": [],
+      "behaviors": [
+        {
+          "type": "Hud",
+          "props": {}
+        },
+        {
+          "type": "Button",
+          "props": {
+            "label": "Restart",
+            "actions": [
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/table.kiln.json"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

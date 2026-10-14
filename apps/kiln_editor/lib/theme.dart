@@ -35,8 +35,18 @@ enum Family {
   final Color color;
 
   static Family of(String type) => switch (type) {
-    'Shape' || 'Sprite' || 'SpriteAnimation' || 'Text' || 'Tween' || 'Camera' || 'Parallax' || 'Tilemap' => render,
-    'OnTap' || 'OnKey' || 'Move8' || 'GridMove' => input,
+    'Shape' ||
+    'Sprite' ||
+    'SpriteAnimation' ||
+    'Text' ||
+    'Tween' ||
+    'Camera' ||
+    'Parallax' ||
+    'Tilemap' ||
+    'Hud' ||
+    'Panel' ||
+    'ProgressBar' => render,
+    'OnTap' || 'OnKey' || 'Move8' || 'GridMove' || 'Button' || 'Draggable' => input,
     'Timer' ||
     'Spawner' ||
     'Condition' ||
@@ -45,7 +55,8 @@ enum Family {
     'OffScreen' ||
     'OnLand' ||
     'Health' ||
-    'Dialogue' => logic,
+    'Dialogue' ||
+    'DropZone' => logic,
     'Collider' ||
     'OnCollide' ||
     'Velocity' ||
@@ -136,6 +147,9 @@ String factorOf(BehaviorData b) {
       '${n('cols')}×${(p.list('tiles').length / (p.number('cols') < 1 ? 1 : p.number('cols'))).ceil()} · ${n('tile')} px',
     'GridMove' => '${n('cell')} px',
     'Dialogue' => '${p.string('lines').split('|').length} lines',
+    'Button' => p.string('label'),
+    'ProgressBar' => '${p.string('variable')} / ${n('max')}',
+    'DropZone' => p.string('accept').isEmpty ? 'any' : p.string('accept'),
     _ => '',
   };
 }
