@@ -1,0 +1,88 @@
+{
+  "kiln": 1,
+  "name": "win",
+  "size": [
+    640.0,
+    360.0
+  ],
+  "variables": {},
+  "entities": [
+    {
+      "id": "title",
+      "name": "Title",
+      "position": [
+        320.0,
+        150.0
+      ],
+      "size": [
+        600.0,
+        50.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "FLAG REACHED",
+            "fontSize": 40,
+            "color": "#E9C548"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "hint",
+      "name": "Hint",
+      "position": [
+        320.0,
+        210.0
+      ],
+      "size": [
+        600.0,
+        30.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "Press Space to run again",
+            "fontSize": 18,
+            "color": "#BDBFB4"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "restart",
+      "name": "Restart",
+      "position": [
+        320.0,
+        300.0
+      ],
+      "size": [
+        10.0,
+        10.0
+      ],
+      "angle": 0.0,
+      "behaviors": [
+        {
+          "type": "OnKey",
+          "props": {
+            "key": "Space",
+            "on": "down",
+            "actions": [
+              {
+                "type": "LoadScene",
+                "scene": "assets/scenes/level1.kiln.json"
+              }
+            ]
+          }
+        }
+      ],
+      "children": []
+    }
+  ]
+}

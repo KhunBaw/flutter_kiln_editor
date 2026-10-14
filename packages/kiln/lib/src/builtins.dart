@@ -175,6 +175,30 @@ final builtinBehaviors = <BehaviorDef>[
     PropDef('deadzoneH', PropKind.number, 0),
     PropDef('clamp', PropKind.bool, true),
   ], (e, p) => _Camera(Vector2(p.number('deadzoneW'), p.number('deadzoneH')), clamp: p.flag('clamp'))),
+  BehaviorDef(
+    'Body',
+    const [
+      PropDef('gravity', PropKind.number, 1400),
+      PropDef('maxFall', PropKind.number, 900),
+      PropDef('friction', PropKind.number, 0),
+      PropDef('coyote', PropKind.number, 0.1),
+    ],
+    (e, p) => Body(
+      gravity: p.number('gravity'),
+      maxFall: p.number('maxFall'),
+      friction: p.number('friction'),
+      coyote: p.number('coyote'),
+    ),
+  ),
+  BehaviorDef('Solid', const [PropDef('oneWay', PropKind.bool, false)], (e, p) => Solid(oneWay: p.flag('oneWay'))),
+  BehaviorDef('OnLand', const [PropDef('actions', PropKind.actions, [])], (e, p) {
+    e.landHandlers.add(() => e.runActions(p.list('actions')));
+    return null;
+  }),
+  BehaviorDef('Parallax', const [
+    PropDef('factorX', PropKind.number, 0.5),
+    PropDef('factorY', PropKind.number, 0),
+  ], (e, p) => _Parallax(Vector2(p.number('factorX'), p.number('factorY')))),
   BehaviorDef('OffScreen', const [
     PropDef('area', PropKind.choice, 'view', options: ['view', 'world']),
     PropDef('margin', PropKind.number, 0),
@@ -305,6 +329,25 @@ final builtinActions = <ActionDef>[
       }
     },
   ),
+  ActionDef('Jump', const [PropDef('force', PropKind.number, 600), PropDef('air', PropKind.bool, false)], (self, a) {
+    final body = self.children.whereType<Body>().firstOrNull;
+    if (body != null && (a.flag('air') || body.canJump)) body.jump(a.number('force'));
+  }),
+  ActionDef(
+    'Flip',
+    const [
+      PropDef('face', PropKind.choice, 'toggle', options: ['toggle', 'left', 'right']),
+    ],
+    (self, a) {
+      final left = self.isFlippedHorizontally;
+      final want = switch (a.string('face')) {
+        'left' => true,
+        'right' => false,
+        _ => !left,
+      };
+      if (want != left) self.flipHorizontallyAroundCenter();
+    },
+  ),
   ActionDef('PlayAnim', const [PropDef('clip', PropKind.string, '')], (self, a) {
     for (final g in self.children.whereType<SpriteAnimationGroupComponent<String>>()) {
       if (g.animations?.containsKey(a.string('clip')) ?? false) g.current = a.string('clip');
@@ -343,6 +386,111 @@ void _setProp(KilnEntity e, String prop, double v, {required bool add}) {
       final l = vel();
       l.spin = next(l.spin);
   }
+}
+
+/// Kinematic platformer body: gravity, then axis-separated AABB moves against [Solid]s (angles ignored).
+/// It is a [Motion], so SetProp vx/vy drive it and a separate Velocity is not needed.
+class Body extends Motion {
+  Body({required this.gravity, required this.maxFall, required this.friction, required this.coyote}) : super(0, 0, 0);
+
+  final double gravity, maxFall, friction, coyote;
+  bool onGround = false;
+  double _air = double.infinity;
+
+  /// Grounded, or left the ground less than [coyote] seconds ago.
+  bool get canJump => _air <= coyote;
+
+  void jump(double force) {
+    v.y = -force;
+    _air = double.infinity;
+    onGround = false;
+  }
+
+  @override
+  void update(double dt) {
+    v.y = min(v.y + gravity * dt, maxFall);
+    if (onGround && friction > 0) v.x = v.x.sign * max(0, v.x.abs() - friction * dt);
+    final was = onGround;
+    onGround = false;
+    final d = v * dt;
+    // Sub-steps keep fast bodies from tunnelling through thin solids.
+    final steps = max(1, (max(d.x.abs(), d.y.abs()) / 8).ceil());
+    for (var i = 0; i < steps; i++) {
+      _move(0, d.x / steps);
+      _move(1, d.y / steps);
+    }
+    _air = onGround ? 0 : _air + dt;
+    if (onGround && !was) {
+      for (final h in [...parent.landHandlers]) {
+        h();
+      }
+    }
+    parent.angle += spin * dt;
+  }
+
+  void _move(int axis, double delta) {
+    if (delta == 0) return;
+    final before = parent.toAbsoluteRect();
+    axis == 0 ? parent.x += delta : parent.y += delta;
+    for (final s in parent.game.solids) {
+      if (s.parent == parent) continue;
+      final me = parent.toAbsoluteRect(), r = s.parent.toAbsoluteRect();
+      if (!me.overlaps(r)) continue;
+      if (axis == 0) {
+        if (s.oneWay) continue;
+        parent.x += delta > 0 ? r.left - me.right : r.right - me.left;
+        v.x = 0;
+      } else if (delta > 0) {
+        // One-way platforms only stop bodies that were above them before this step.
+        if (s.oneWay && before.bottom > r.top + 0.01) continue;
+        parent.y += r.top - me.bottom;
+        v.y = 0;
+        onGround = true;
+      } else if (!s.oneWay) {
+        parent.y += r.bottom - me.top;
+        v.y = 0;
+      }
+    }
+  }
+}
+
+class Solid extends Component with ParentIsA<KilnEntity> {
+  Solid({required this.oneWay});
+
+  final bool oneWay;
+
+  @override
+  void onMount() {
+    super.onMount();
+    parent.game.solids.add(this);
+  }
+
+  @override
+  void onRemove() => parent.game.solids.remove(this);
+}
+
+/// Offsets its entity by the camera scroll × (1 − factor): 0 pins it to the screen (HUD), 1 is normal world.
+class _Parallax extends Component with ParentIsA<KilnEntity> {
+  _Parallax(this.factor);
+
+  final Vector2 factor;
+  Vector2 _base = Vector2.zero();
+
+  // Runs after the whole tree updated, so it reads this frame's camera (no one-frame jitter).
+  void _apply() {
+    final cam = parent.game.camera.viewfinder.position;
+    parent.position.setValues(_base.x + cam.x * (1 - factor.x), _base.y + cam.y * (1 - factor.y));
+  }
+
+  @override
+  void onMount() {
+    super.onMount();
+    _base = parent.position.clone();
+    parent.game.afterUpdate.add(_apply);
+  }
+
+  @override
+  void onRemove() => parent.game.afterUpdate.remove(_apply);
 }
 
 /// Moves its entity each frame; `local` velocity is rotated by the entity's angle.

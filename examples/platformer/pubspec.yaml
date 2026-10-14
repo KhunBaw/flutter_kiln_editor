@@ -1,0 +1,23 @@
+name: platformer
+description: "Kiln example: run, jump, collect coins, reach the flag. Built from scene files only."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.1
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  kiln:
+    path: ../../packages/kiln
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/scenes/

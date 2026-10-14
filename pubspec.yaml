@@ -6,3 +6,4 @@ workspace:
   - packages/kiln
   - apps/kiln_editor
   - examples/tap_game
+  - examples/platformer

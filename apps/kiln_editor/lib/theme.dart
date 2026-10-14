@@ -35,10 +35,10 @@ enum Family {
   final Color color;
 
   static Family of(String type) => switch (type) {
-    'Shape' || 'Sprite' || 'SpriteAnimation' || 'Text' || 'Tween' || 'Camera' => render,
+    'Shape' || 'Sprite' || 'SpriteAnimation' || 'Text' || 'Tween' || 'Camera' || 'Parallax' => render,
     'OnTap' || 'OnKey' => input,
-    'Timer' || 'Spawner' || 'Condition' || 'Prefab' || 'OnEvent' || 'OffScreen' => logic,
-    'Collider' || 'OnCollide' || 'Velocity' => physics,
+    'Timer' || 'Spawner' || 'Condition' || 'Prefab' || 'OnEvent' || 'OffScreen' || 'OnLand' => logic,
+    'Collider' || 'OnCollide' || 'Velocity' || 'Body' || 'Solid' => physics,
     _ => custom,
   };
 }
@@ -94,6 +94,9 @@ String factorOf(BehaviorData b) {
     'OnEvent' => p.string('event'),
     'OffScreen' => 'leaves ${p.string('area')}',
     'Velocity' => '${n('vx')}·${n('vy')} px/s',
+    'Body' => 'g ${n('gravity')}',
+    'Solid' => p.flag('oneWay') ? 'one-way' : 'solid',
+    'Parallax' => '×${n('factorX')}·${n('factorY')}',
     'Text' => p.string('text'),
     'Tween' => switch (p.string('kind')) {
       'rotateBy' => '${n('x')} rad / ${n('duration')}s',
@@ -103,7 +106,7 @@ String factorOf(BehaviorData b) {
     'Spawner' => '${p.string('prefab')} / ${n('interval')}s',
     'Condition' => '${p.string('variable')} ${p.string('op')} ${n('value')}',
     'Collider' => p.string('shape'),
-    'OnTap' || 'OnCollide' => switch (p.list('actions').length) {
+    'OnTap' || 'OnCollide' || 'OnLand' => switch (p.list('actions').length) {
       1 => '1 case',
       final c => '$c cases',
     },

@@ -66,6 +66,12 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
   final Map<String, Set<VoidCallback>> _events = {};
   int _emitDepth = 0;
   final Set<void Function(KeyEvent event)> keyListeners = {};
+
+  /// Run once per frame after every component updated (camera-relative placement).
+  final Set<VoidCallback> afterUpdate = {};
+
+  /// Static colliders that Body behaviors move against.
+  final Set<Solid> solids = {};
   int _spawned = 0;
 
   /// Top-level entities with a Prefab behavior, by name; hidden at play time and cloned by Spawner.
@@ -82,7 +88,12 @@ class KilnGame extends FlameGame with HasCollisionDetection, KeyboardEvents {
   }
 
   @override
-  void updateTree(double dt) => super.updateTree(editing ? 0 : dt);
+  void updateTree(double dt) {
+    super.updateTree(editing ? 0 : dt);
+    for (final f in [...afterUpdate]) {
+      f();
+    }
+  }
 
   @override
   void onRemove() {
@@ -160,6 +171,7 @@ class KilnEntity extends PositionComponent
   final EntityNode node;
   final List<VoidCallback> tapHandlers = [];
   final List<void Function(KilnEntity other)> collideHandlers = [];
+  final List<VoidCallback> landHandlers = [];
 
   /// Set when an action adds a Motion at runtime, before it mounts.
   Motion? motion;
